@@ -40,6 +40,11 @@ class ShapeRenderer {
         for (shape in shapes) {
             shape.onRender(canvas, paint, shapePath, shadowPath)
         }
+
+        paint.style = Paint.Style.FILL
+        paint.color = 0xff0000
+
+        canvas.drawRoundRect(renderBounds.left, renderBounds.top, renderBounds.right, renderBounds.bottom, 0f, 0f,  paint)
     }
 
     fun delegateTouchEvent(motionEvent: MotionEvent, x: Float, y: Float) {

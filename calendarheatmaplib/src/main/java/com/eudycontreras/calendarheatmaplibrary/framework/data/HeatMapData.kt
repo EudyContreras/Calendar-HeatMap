@@ -15,33 +15,35 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class HeatMapData(
-    val style: HeatMapStyle?,
-    val options: HeatMapOptions,
-    val calendar: Calendar
+    @Dimension var cellGap: Float? = null,
+    @Dimension var cellSize: Float? = null,
+    val timeSpan: TimeSpan,
+    val style: HeatMapStyle? = null,
+    val options: HeatMapOptions? = null
 )
 
 @Serializable
 data class HeatMapStyle(
-    @ColorInt val minColor: Int,
-    @ColorInt val maxColor: Int,
-    @ColorInt val emptyColor: Int,
-    @Dimension val cellGap: Float,
-    @Dimension val cellSize: Float
+    @ColorInt var minColor: Int = 0x00000000,
+    @ColorInt var maxColor: Int = 0x00000000,
+    @ColorInt var emptyColor: Int = 0x00000000
 )
 
 @Serializable
 data class HeatMapOptions(
-    val showMonthLabels: Boolean = true,
-    val showDayLabels: Boolean = true
+    var showMonthLabels: Boolean = true,
+    var showDayLabels: Boolean = true
 )
 
 @Serializable
-data class Calendar(
+data class TimeSpan(
     val months: List<Month>
 )
 
 @Serializable
 data class Month(
+    val index: Int,
+    val year: Int,
     val label: String,
     val weeks: List<Week>
 )
@@ -54,7 +56,9 @@ data class Week(
 
 @Serializable
 data class WeekDay(
-    val dayName: String,
+    val index: Int,
+    val label: String,
+    val activeLabel: Boolean,
     val frequencyData: Frequency
 )
 

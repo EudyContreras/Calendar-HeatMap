@@ -7,10 +7,13 @@ import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.*
 import android.widget.ScrollView
+import androidx.annotation.ColorInt
 import androidx.core.widget.NestedScrollView
 import com.eudycontreras.calendarheatmaplibrary.findScrollParent
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
 import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapData
+import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapOptions
+import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapStyle
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 
 /**
@@ -27,12 +30,15 @@ interface CalHeatMap {
     var onFullyVisible: ((CalHeatMap) -> Unit)?
 }
 
-class CalHeatMapView  : View, CalHeatMap {
+class CalHeatMapView : View, CalHeatMap {
 
     private var sizeRatio = 0.5f
 
     private var fullyVisible: Boolean = false
     private var initialized: Boolean = false
+
+    private var calHeatMapStyle: HeatMapStyle = HeatMapStyle()
+    private var calHeatMapOptions: HeatMapOptions = HeatMapOptions()
 
     private var shapeRenderer: ShapeRenderer = ShapeRenderer()
     private var heatMapBuilder: CalHeatMapBuilder = CalHeatMapBuilder(shapeRenderer)
@@ -41,7 +47,11 @@ class CalHeatMapView  : View, CalHeatMap {
 
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
-    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
+        context,
+        attrs,
+        defStyleAttr
+    )
 
     private fun initializeValues() {
         val width = width
@@ -59,26 +69,56 @@ class CalHeatMapView  : View, CalHeatMap {
 
         initialized = true
 
-        if(scrollingParent == null) {
+        if (scrollingParent == null) {
             fullyVisible = true
             onFullyVisible?.invoke(this)
         }
     }
 
     fun setCalHeatMapData(calHeatMapData: HeatMapData) {
+        heatMapBuilder.setStyleContext { calHeatMapStyle }
+        heatMapBuilder.setOptionsContext { calHeatMapOptions }
         heatMapBuilder.buildWith(calHeatMapData)
+    }
+
+    fun setCalHeatMapStyle(calHeatMapStyle: HeatMapStyle) {
+        this.calHeatMapStyle = calHeatMapStyle
+    }
+
+    fun setCalHeatMapOptions(calHeatMapOptions: HeatMapOptions) {
+        this.calHeatMapOptions = calHeatMapOptions
+    }
+
+    fun setCellColorMin(@ColorInt minColor: Int) {
+        this.calHeatMapStyle.minColor = minColor
+    }
+
+    fun setCellColorMax(@ColorInt maxColor: Int) {
+        this.calHeatMapStyle.maxColor = maxColor
+    }
+
+    fun setCellColorEmpty(@ColorInt emptyColor: Int) {
+        this.calHeatMapStyle.emptyColor = emptyColor
+    }
+
+    fun showShowDayLabels(showDayLabels: Boolean) {
+        this.calHeatMapOptions.showDayLabels = showDayLabels
+    }
+
+    fun showMonthLabels(showMonthLabels: Boolean) {
+        this.calHeatMapOptions.showMonthLabels = showMonthLabels
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        initializeValues()
+        invalidate()
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        if (!initialized) {
-            initializeValues()
-            shapeRenderer.renderShapes(canvas)
-            invalidate()
-        } else {
-            shapeRenderer.renderShapes(canvas)
-        }
+        shapeRenderer.renderShapes(canvas)
     }
 
     override var onFullyVisible: ((CalHeatMap) -> Unit)? = null
@@ -132,7 +172,7 @@ class CalHeatMapView  : View, CalHeatMap {
         }
     }
 
-    private val myListener =  object : GestureDetector.SimpleOnGestureListener() {
+    private val myListener = object : GestureDetector.SimpleOnGestureListener() {
         override fun onDown(event: MotionEvent): Boolean {
             return true
         }
