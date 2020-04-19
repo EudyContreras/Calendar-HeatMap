@@ -11,10 +11,9 @@ import androidx.annotation.ColorInt
 import androidx.core.widget.NestedScrollView
 import com.eudycontreras.calendarheatmaplibrary.findScrollParent
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
-import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapData
-import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapOptions
-import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapStyle
+import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
+
 
 /**
  * Copyright (C) 2020 Project X
@@ -35,13 +34,16 @@ class CalHeatMapView : View, CalHeatMap {
     private var sizeRatio = 0.5f
 
     private var fullyVisible: Boolean = false
-    private var initialized: Boolean = false
 
     private var calHeatMapStyle: HeatMapStyle = HeatMapStyle()
     private var calHeatMapOptions: HeatMapOptions = HeatMapOptions()
 
     private var shapeRenderer: ShapeRenderer = ShapeRenderer()
-    private var heatMapBuilder: CalHeatMapBuilder = CalHeatMapBuilder(shapeRenderer)
+    private var heatMapBuilder: CalHeatMapBuilder = CalHeatMapBuilder(
+        shapeRenderer = shapeRenderer,
+        styleContext = { calHeatMapStyle },
+        optionsContext = { calHeatMapOptions }
+    )
 
     private var scrollingParent: ViewParent? = null
 
@@ -53,32 +55,8 @@ class CalHeatMapView : View, CalHeatMap {
         defStyleAttr
     )
 
-    private fun initializeValues() {
-        val width = width
-        val height = height
-
-        val paddingLeft = paddingLeft
-        val paddingRight = paddingRight
-        val paddingTop = paddingTop
-        val paddingBottom = paddingBottom
-
-        val usableWidth = width - (paddingLeft + paddingRight).toFloat()
-        val usableHeight = height - (paddingTop + paddingBottom).toFloat()
-
-        shapeRenderer.setBounds(Bounds(0f, 0f, usableWidth, usableHeight))
-
-        initialized = true
-
-        if (scrollingParent == null) {
-            fullyVisible = true
-            onFullyVisible?.invoke(this)
-        }
-    }
-
     fun setCalHeatMapData(calHeatMapData: HeatMapData) {
-        heatMapBuilder.setStyleContext { calHeatMapStyle }
-        heatMapBuilder.setOptionsContext { calHeatMapOptions }
-        heatMapBuilder.buildWith(calHeatMapData)
+        heatMapBuilder.buildWithData(calHeatMapData)
     }
 
     fun setCalHeatMapStyle(calHeatMapStyle: HeatMapStyle) {
@@ -109,9 +87,22 @@ class CalHeatMapView : View, CalHeatMap {
         this.calHeatMapOptions.showMonthLabels = showMonthLabels
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        initializeValues()
+    override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
+        super.onSizeChanged(width, height, oldWidth, oldHeight)
+        val paddingLeft = paddingLeft
+        val paddingRight = paddingRight
+        val paddingTop = paddingTop
+        val paddingBottom = paddingBottom
+
+        val usableWidth = width - (paddingLeft + paddingRight).toFloat()
+        val usableHeight = height - (paddingTop + paddingBottom).toFloat()
+
+        this.heatMapBuilder.buildWithBounds(Bounds(width = usableWidth, height = usableHeight))
+
+        if (scrollingParent == null) {
+            fullyVisible = true
+            onFullyVisible?.invoke(this)
+        }
         invalidate()
     }
 
@@ -119,6 +110,30 @@ class CalHeatMapView : View, CalHeatMap {
         super.onDraw(canvas)
 
         shapeRenderer.renderShapes(canvas)
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        val specHeight = MeasureSpec.getSize(heightMeasureSpec)
+
+        this.heatMapBuilder.getData()?.let {
+            val cellSize  = it.cellSize
+            val gapSize = it.cellGap ?: if (cellSize != null) { cellSize * HeatMapData.CELL_SIZE_RATIO } else {
+                (specHeight / TimeSpan.MAX_DAYS) * HeatMapData.CELL_SIZE_RATIO
+            }
+            val gapRatio = (gapSize * TimeSpan.MAX_DAYS)
+            val size = it.cellSize ?: ((specHeight  - gapRatio) / TimeSpan.MAX_DAYS)
+
+            val columnCount = it.getColumnCount()
+
+            val width = (size * columnCount) + (gapSize * columnCount)
+            val height = (size * TimeSpan.MAX_DAYS) + (gapSize * TimeSpan.MAX_DAYS)
+
+            setMeasuredDimension(
+                resolveSize(width.toInt(), widthMeasureSpec),
+                resolveSize(height.toInt(), heightMeasureSpec)
+            )
+        }
     }
 
     override var onFullyVisible: ((CalHeatMap) -> Unit)? = null

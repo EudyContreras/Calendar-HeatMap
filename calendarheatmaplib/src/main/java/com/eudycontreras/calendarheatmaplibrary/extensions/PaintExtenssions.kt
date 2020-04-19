@@ -14,6 +14,5 @@ fun Paint.recycle(){
     shader = null
     pathEffect = null
 
-    reset()
     clearShadowLayer()
 }

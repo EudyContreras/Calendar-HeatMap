@@ -20,14 +20,47 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            app:calHeatMapData="@{viewModel.demoData}"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+       <LinearLayout
+           android:orientation="vertical"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           app:layout_constraintBottom_toBottomOf="parent"
+           app:layout_constraintLeft_toLeftOf="parent"
+           app:layout_constraintRight_toRightOf="parent"
+           app:layout_constraintTop_toTopOf="parent">
+           <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
+               android:layout_width="match_parent"
+               android:layout_height="170dp"
+               app:calHeatMapData="@{viewModel.demoData}"
+               app:cellColorMin="@{@color/colorMin}"
+               app:cellColorMax="@{@color/colorMax}"
+               app:cellColorEmpty="@{@color/colorEmpty}" />
+
+           <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
+               android:layout_width="match_parent"
+               android:layout_height="170dp"
+               app:calHeatMapData="@{viewModel.demoData}"
+               app:cellColorMin="@{@color/colorMinAlt}"
+               app:cellColorMax="@{@color/colorMaxAlt}"
+               app:cellColorEmpty="@{@color/colorEmpty}"/>
+
+           <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
+               android:layout_width="match_parent"
+               android:layout_height="170dp"
+               app:calHeatMapData="@{viewModel.demoData}"
+               app:cellColorMin="@{@color/colorMin}"
+               app:cellColorMax="@{@color/colorMax}"
+               app:cellColorEmpty="@{@color/colorEmpty}" />
+
+           <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
+               android:layout_width="match_parent"
+               android:layout_height="170dp"
+               app:calHeatMapData="@{viewModel.demoData}"
+               app:cellColorMin="@{@color/colorMinAlt}"
+               app:cellColorMax="@{@color/colorMaxAlt}"
+               app:cellColorEmpty="@{@color/colorEmpty}"/>
+       </LinearLayout>
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

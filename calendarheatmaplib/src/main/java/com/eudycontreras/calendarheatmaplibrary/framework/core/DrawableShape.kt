@@ -1,8 +1,10 @@
 package com.eudycontreras.calendarheatmaplibrary.framework.core
 
 import android.graphics.Shader
+import android.util.SparseArray
 import android.view.MotionEvent
 import android.view.View
+import androidx.core.util.set
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
@@ -18,46 +20,57 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  * @since April 2020
  */
 
-abstract class DrawableShape: RenderTarget {
+internal abstract class DrawableShape: RenderTarget {
 
-    internal var id: Int = View.NO_ID
+    private val dataTags: SparseArray<Any> = SparseArray()
 
-    internal var color: MutableColor = MutableColor()
+    var id: Int = View.NO_ID
 
-    internal var bounds: Bounds = Bounds()
+    var color: MutableColor = MutableColor()
 
-    internal var elevation: Float = MIN_OFFSET
+    var bounds: Bounds = Bounds()
 
-    internal var strokeWidth: Float = MIN_OFFSET
+    var elevation: Float = MIN_OFFSET
 
-    internal var shadowAlpha: Int = MAX_COLOR
+    var strokeWidth: Float = MIN_OFFSET
 
-    internal var corners: CornerRadii = CornerRadii()
+    var shadowAlpha: Int = MAX_COLOR
 
-    internal val alpha: Float
+    var corners: CornerRadii = CornerRadii()
+
+    val alpha: Float
         get() = opacity.toFloat() / MAX_COLOR.toFloat()
 
-    internal var opacity: Int = MAX_COLOR
+    var opacity: Int = MAX_COLOR
         set(value) {
             field = value
             color.updateAlpha(opacity)
         }
 
-    internal val drawShadows: Boolean
+    val drawShadows: Boolean
         get() = elevation > MIN_OFFSET && shadowAlpha > MIN_OFFSET
 
-    internal var strokeColor: MutableColor? = null
+    var strokeColor: MutableColor? = null
 
-    internal var shadowColor: MutableColor? = null
+    var shadowColor: MutableColor? = null
 
-    internal var shader: Shader? = null
+    var shader: Shader? = null
 
-    internal var touchProcessor: ((DrawableShape, MotionEvent, Float, Float) -> Unit)? = null
+    var touchProcessor: ((DrawableShape, MotionEvent, Float, Float) -> Unit)? = null
 
-    internal var render: Boolean = true
+    var render: Boolean = true
 
-    internal var showStroke: Boolean = false
+    var showStroke: Boolean = false
         get() = field && strokeWidth > 0
+
+
+    fun getData(tag: Int): Any {
+        return dataTags[tag]
+    }
+
+    fun setData(tag: Int, data: Any) {
+        dataTags[tag] = data
+    }
 
     abstract fun build()
 
@@ -75,34 +88,34 @@ abstract class DrawableShape: RenderTarget {
         touchProcessor = null
     }
 
-    internal var x: Float
+    var x: Float
         get() = bounds.x
         set(value) {
             bounds.x = value
         }
 
-    internal var y: Float
+    var y: Float
         get() = bounds.y
         set(value) {
             bounds.y = value
         }
 
-    internal var width: Float
+    var width: Float
         get() = bounds.width
         set(value) {
             bounds.width = value
         }
 
-    internal var height: Float
+    var height: Float
         get() = bounds.height
         set(value) {
             bounds.height = value
         }
 
-    internal val radius: Float
+    val radius: Float
         get() = ((width + height) / 2) / 2
 
-    internal val radii: FloatArray
+    val radii: FloatArray
         get() = corners.corners
 
     val left: Float = bounds.left

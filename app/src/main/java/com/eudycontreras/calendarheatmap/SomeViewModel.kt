@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
+import com.eudycontreras.calendarheatmaplibrary.framework.data.Date
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.time.temporal.WeekFields
@@ -21,59 +22,50 @@ internal class SomeViewModel : ViewModel() {
     @SuppressLint("NewApi")
     private fun generateData(): HeatMapData {
         val dateTo = LocalDate.now()
-        val dateFrom = dateTo.minusYears(1)
+        val origin = dateTo.minusDays(365)
+        var dateFrom = dateTo.minusDays(365)
 
-        val months: MutableList<Month> = mutableListOf()
+        val weeks: MutableList<Week> = mutableListOf()
 
-        val monthsInYear = 12L
         val daysInWeek = 7
 
-        val weekFields: WeekFields = WeekFields.of(Locale.getDefault())
+        val weeksInYear = ChronoUnit.WEEKS.between(dateFrom, dateTo)
 
-        for (index in 0L..monthsInYear) {
-            val current = if (index > 0) {
-                dateFrom.plusMonths(index).withDayOfMonth(1)
-            } else {
-                dateFrom.plusMonths(index)
-            }
-            val nextMonth = if (index < monthsInYear) {
-                dateFrom.plusMonths(index + 1).withDayOfMonth(1)
-            } else {
-                dateTo
-            }
+        for (index in 0L..weeksInYear) {
+            val days: MutableList<WeekDay> = mutableListOf()
 
-            val weeksInMonth = ChronoUnit.WEEKS.between(current, nextMonth)
-
-            val weekdays: List<WeekDay> = List(daysInWeek, init = {
-                WeekDay(
-                    index = it,
-                    label = weekdays[it],
-                    activeLabel = daysInWeek % 2 != 0,
-                    frequencyData = Frequency(
-                        count = Random.nextInt(0, 12),
-                        data = null
+            for (day in 0 until daysInWeek) {
+                dateFrom = dateFrom.plusDays(1)
+                days.add(
+                    WeekDay(
+                        index = day,
+                        label = weekdays[day],
+                        date = dateFrom.toDate(),
+                        activeLabel = daysInWeek % 2 != 0,
+                        frequencyData = Frequency(
+                            count = if (day > 0 && day < daysInWeek - 1) {
+                                Random.nextInt(Frequency.MIN_VALUE, Frequency.MAX_VALUE)
+                            } else if (Random.nextBoolean()) { Random.nextInt(Frequency.MIN_VALUE, Frequency.MAX_VALUE / 2) } else 0,
+                            data = null
+                        )
                     )
                 )
-            })
+            }
 
-            val weeksData: List<Week> = List(weeksInMonth.toInt(), init = {
-                val weekNumber: Int = current.plusWeeks(it.toLong()).get(weekFields.weekOfWeekBasedYear())
-                Week(
-                    weekNumber = weekNumber,
-                    weekDays = weekdays
-                )
-            })
-
-            months.add(Month(
-                index = current.monthValue - 1,
-                year = current.year,
-                label = monthLabels[current.monthValue - 1],
-                weeks = weeksData
-            ))
+            weeks.add(Week(weekNumber = (index + 1L).toInt(), weekDays = days))
         }
 
         return HeatMapData(
-            timeSpan = TimeSpan(months)
+            timeSpan = TimeSpan(
+                dateMin = origin.toDate(),
+                dateMax = dateTo.toDate(),
+                weeks = weeks
+            )
         )
+    }
+
+    @SuppressLint("NewApi")
+    private fun LocalDate.toDate(): Date {
+        return Date(dayOfMonth,  Month(monthValue -1, monthLabels[monthValue - 1]), year)
     }
 }

@@ -2,6 +2,12 @@ package com.eudycontreras.calendarheatmaplibrary.framework.data
 
 import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
+import com.eudycontreras.calendarheatmaplibrary.AndroidColor
+import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
+import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
+import com.eudycontreras.calendarheatmaplibrary.mapRange
+import com.eudycontreras.calendarheatmaplibrary.properties.Color
+import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 import kotlinx.serialization.ContextualSerialization
 import kotlinx.serialization.Serializable
 
@@ -20,13 +26,17 @@ data class HeatMapData(
     val timeSpan: TimeSpan,
     val style: HeatMapStyle? = null,
     val options: HeatMapOptions? = null
-)
+) {
+    companion object {
+        const val CELL_SIZE_RATIO = 0.30f
+    }
+}
 
 @Serializable
 data class HeatMapStyle(
-    @ColorInt var minColor: Int = 0x00000000,
-    @ColorInt var maxColor: Int = 0x00000000,
-    @ColorInt var emptyColor: Int = 0x00000000
+    @ColorInt var minColor: Int = AndroidColor.TRANSPARENT,
+    @ColorInt var maxColor: Int = AndroidColor.TRANSPARENT,
+    @ColorInt var emptyColor: Int = AndroidColor.TRANSPARENT
 )
 
 @Serializable
@@ -37,15 +47,27 @@ data class HeatMapOptions(
 
 @Serializable
 data class TimeSpan(
-    val months: List<Month>
+    val dateMin: Date,
+    val dateMax: Date,
+    val weeks: List<Week>
+) {
+    companion object {
+        const val MAX_DAYS = 7
+    }
+}
+
+@Serializable
+data class Date(
+    val day: Int,
+    val month: Month,
+    val year: Int
 )
+
 
 @Serializable
 data class Month(
-    val index: Int,
-    val year: Int,
-    val label: String,
-    val weeks: List<Week>
+    val value: Int,
+    val label: String
 )
 
 @Serializable
@@ -58,6 +80,7 @@ data class Week(
 data class WeekDay(
     val index: Int,
     val label: String,
+    val date: Date,
     val activeLabel: Boolean,
     val frequencyData: Frequency
 )
@@ -66,7 +89,28 @@ data class WeekDay(
 data class Frequency(
     val count: Int,
     @ContextualSerialization val data: Any?
-)
+) {
+    companion object {
+        const val MIN_VALUE = 0
+        const val MAX_VALUE = 50
+    }
+}
 
-private const val MAX_WEEKS = 53
-private const val MAX_DAYS = 7
+fun HeatMapData.getColumnCount(): Int {
+    return timeSpan.weeks.count()
+}
+
+fun WeekDay.getColorValue(style: HeatMapStyle): Color {
+    val value = this.frequencyData.count
+
+    return if (value <= 0) {
+        MutableColor.fromColor(style.emptyColor)
+    } else {
+        val min = Frequency.MIN_VALUE.toFloat()
+        val max = Frequency.MAX_VALUE.toFloat()
+        val range = mapRange(value.toFloat(), min, max, MIN_OFFSET, MAX_OFFSET)
+        val colorMin = MutableColor.fromColor(style.minColor)
+        val colorMax = MutableColor.fromColor(style.maxColor)
+        MutableColor.interpolateColor(colorMin, colorMax, range)
+    }
+}

@@ -10,6 +10,7 @@ import com.eudycontreras.calendarheatmaplibrary.extensions.addRoundRect
 import com.eudycontreras.calendarheatmaplibrary.extensions.addShadowBounds
 import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
+import com.eudycontreras.calendarheatmaplibrary.properties.Color
 import com.eudycontreras.calendarheatmaplibrary.utilities.Shadow
 
 /**
@@ -20,7 +21,7 @@ import com.eudycontreras.calendarheatmaplibrary.utilities.Shadow
  * @since April 2020
  */
 
-class HeatMapCell : DrawableShape(), TouchableShape {
+internal class HeatMapCell : DrawableShape(), TouchableShape {
 
     private var shadowFilter: BlurMaskFilter? = null
 
@@ -46,50 +47,54 @@ class HeatMapCell : DrawableShape(), TouchableShape {
             return
         }
 
-        fun renderShadow() {
-            paint.recycle()
-            paint.shader = null
-            paint.maskFilter = shadowFilter
-            paint.color = shadowColor?.toColor() ?: Shadow.DEFAULT_COLOR
-
-            shadowPath.addShadowBounds(bounds, radii, elevation)
-
-            canvas.drawPath(shadowPath, paint)
-        }
-
-        fun renderShape() {
-            paint.recycle()
-            paint.style = Paint.Style.FILL
-            paint.color = color.toColor()
-
-            if (shader != null) {
-                paint.shader = shader
-            }
-
-            shapePath.addRoundRect(bounds, radii)
-
-            canvas.drawPath(shapePath, paint)
-        }
-
-        fun renderStroke() {
-            strokeColor?.let {
-                paint.recycle()
-                paint.style = Paint.Style.STROKE
-                paint.strokeWidth = strokeWidth
-                paint.color = it.toColor()
-
-                canvas.drawPath(shapePath, paint)
-            }
-        }
-
         if (drawShadows) {
-            renderShadow()
+            renderShadow(canvas, paint, shadowPath)
         }
 
-        renderShape()
+        renderShape(canvas, paint, shapePath)
 
         if (showStroke) {
-            renderStroke()
+            strokeColor?.let {
+                renderStroke(canvas, paint, shapePath, it)
+            }
         }
+    }
+
+
+    private fun renderShadow(canvas: Canvas, paint: Paint, shadowPath: Path) {
+        paint.recycle()
+        paint.shader = null
+        paint.maskFilter = shadowFilter
+        paint.color = shadowColor?.toColor() ?: Shadow.DEFAULT_COLOR
+
+        shadowPath.rewind()
+        shadowPath.addShadowBounds(bounds, radii, elevation)
+
+        canvas.drawPath(shadowPath, paint)
+    }
+
+    private fun renderShape(canvas: Canvas, paint: Paint, shapePath: Path) {
+        paint.recycle()
+        paint.style = Paint.Style.FILL
+        paint.color = color.toColor()
+
+        if (shader != null) {
+            paint.shader = shader
+        }
+
+        shapePath.rewind()
+        shapePath.addRoundRect(bounds, radii)
+
+        canvas.drawPath(shapePath, paint)
+    }
+
+    private fun renderStroke(canvas: Canvas, paint: Paint, shapePath: Path, stroke: Color) {
+        paint.recycle()
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = strokeWidth
+        paint.color = stroke.toColor()
+
+        shapePath.rewind()
+        canvas.drawPath(shapePath, paint)
     }
 }

@@ -49,6 +49,10 @@ abstract class Color(
         }
     }
 
+    override fun toString(): String {
+        return "#alpha=$alpha, red=$red, green=$green, blue=$blue"
+    }
+
     companion object {
 
         const val MAX_COLOR_F: Float = 255f

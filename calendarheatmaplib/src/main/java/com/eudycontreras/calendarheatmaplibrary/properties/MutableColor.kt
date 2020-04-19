@@ -3,6 +3,7 @@ package com.eudycontreras.calendarheatmaplibrary.properties
 import androidx.annotation.ColorInt
 import com.eudycontreras.calendarheatmaplibrary.AndroidColor
 import com.eudycontreras.calendarheatmaplibrary.common.Cloneable
+import com.eudycontreras.calendarheatmaplibrary.utilities.ColorUtility
 
 /**
  * Copyright (C) 2019 Project X
@@ -244,6 +245,13 @@ class MutableColor(
                 green = ((start.green + (end.green - start.green) * amount).toInt()),
                 blue = ((start.blue + (end.blue - start.blue) * amount).toInt())
             )
+        }
+
+        fun interpolateColor(start: MutableColor, end: MutableColor, amount: Float): MutableColor {
+            val minColor = start.toColor()
+            val maxColor = end.toColor()
+            val result = ColorUtility.interpolateColor(amount, minColor, maxColor)
+            return fromColor(result)
         }
 
         fun rgb(red: Int, green: Int, blue: Int): MutableColor {

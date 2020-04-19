@@ -3,7 +3,6 @@ package com.eudycontreras.calendarheatmaplibrary.framework.core
 import android.graphics.*
 import android.view.MotionEvent
 import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
-import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 
 /**
  * Copyright (C) 2020 Project X
@@ -13,7 +12,7 @@ import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
  * @since April 2020
  */
 
-class ShapeRenderer {
+internal class ShapeRenderer {
 
     private val shapePath: Path = Path()
 
@@ -26,25 +25,34 @@ class ShapeRenderer {
         xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
     }
 
-    var renderCapsule: ((Path, Paint, Canvas) -> Unit)? = null
-
     var renderShapes: Boolean = true
 
-    var renderBounds: Bounds = Bounds()
+    fun <T : DrawableShape> addShape(shape: T) {
+        shapes.add(shape)
+    }
 
-    fun setBounds(bounds: Bounds) {
-        this.renderBounds = bounds
+    fun <T : DrawableShape> addShape(shape: Array<T>) {
+        shapes.addAll(shape)
+    }
+
+    fun <T : DrawableShape> addShape(shape: List<T>) {
+        shapes.addAll(shape)
+    }
+
+    fun <T : DrawableShape> removeShape(shape: T) {
+        shapes.remove(shape)
+    }
+
+    fun <T : DrawableShape> removeShape(vararg shape: T) {
+        shapes.removeAll(shape)
     }
 
     fun renderShapes(canvas: Canvas) {
+        if (!renderShapes) return
+
         for (shape in shapes) {
             shape.onRender(canvas, paint, shapePath, shadowPath)
         }
-
-        paint.style = Paint.Style.FILL
-        paint.color = 0xff0000
-
-        canvas.drawRoundRect(renderBounds.left, renderBounds.top, renderBounds.right, renderBounds.bottom, 0f, 0f,  paint)
     }
 
     fun delegateTouchEvent(motionEvent: MotionEvent, x: Float, y: Float) {
