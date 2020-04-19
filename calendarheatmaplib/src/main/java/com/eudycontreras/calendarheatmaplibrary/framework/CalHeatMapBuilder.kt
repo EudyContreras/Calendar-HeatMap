@@ -1,11 +1,16 @@
 package com.eudycontreras.calendarheatmaplibrary.framework
 
-import com.eudycontreras.calendarheatmaplibrary.extensions.dp
+import android.util.SparseArray
+import androidx.core.util.set
+import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableRectangle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
-import com.eudycontreras.calendarheatmaplibrary.framework.shapes.HeatMapCell
+import com.eudycontreras.calendarheatmaplibrary.framework.elements.DayLabelArea
+import com.eudycontreras.calendarheatmaplibrary.framework.elements.LegendArea
+import com.eudycontreras.calendarheatmaplibrary.framework.elements.MonthLabelArea
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
+import kotlin.random.Random
 
 /**
  * Copyright (C) 2020 Project X
@@ -21,7 +26,7 @@ internal class CalHeatMapBuilder(
     private var optionsContext: () -> HeatMapOptions
 ) {
 
-    private var calHeatMapData: HeatMapData? = null
+    private var calHeatMapData: HeatMapData = generatePlaceholderData()
 
     fun getData(): HeatMapData? = calHeatMapData
 
@@ -31,30 +36,155 @@ internal class CalHeatMapBuilder(
 
         val data = calHeatMapData
 
-        if (data != null) {
-            val cellSize  = data.cellSize
-            val gapSize = data.cellGap ?: if (cellSize != null) { cellSize * 0.17f } else {
-                (bounds.height / TimeSpan.MAX_DAYS) * 0.17f
-            }
-            val gapRatio = (gapSize * TimeSpan.MAX_DAYS)
-            val size = data.cellSize ?: ((bounds.height  - gapRatio) / TimeSpan.MAX_DAYS)
-
-            var horizontalOffset = gapSize
-            for (week in data.timeSpan.weeks) {
-                var verticalOffset = 0f
-                for(day in week.weekDays) {
-                    val shape = HeatMapCell()
-                    shape.bounds = Bounds(horizontalOffset, verticalOffset, size, size)
-                    shape.color = MutableColor(day.getColorValue(style))
-                    verticalOffset += (size + gapSize)
-                    shapeRenderer.addShape(shape)
-                }
-                horizontalOffset += (size + gapSize)
-            }
+        val cellSize  = data.cellSize
+        val gapSize = data.cellGap ?: if (cellSize != null) { cellSize * HeatMapData.CELL_SIZE_RATIO } else {
+            (bounds.height / TimeSpan.MAX_DAYS) * HeatMapData.CELL_SIZE_RATIO
         }
+
+        val legendArea = buildLegendArea(options, bounds)
+        val dayLabelArea = buildDayLabelArea(options, bounds)
+        val monthLabelArea = buildMonthLabelArea(options, bounds)
+
+        val legendAreaHeight = legendArea?.bounds?.height ?: 0f
+        val monthAreaHeight = monthLabelArea?.bounds?.height ?: 0f
+        val dayAreaWidth = dayLabelArea?.bounds?.width ?: 0f
+
+        val gapRatio = (gapSize * TimeSpan.MAX_DAYS)
+        var matrixHeight = bounds.height
+
+        matrixHeight -= legendAreaHeight
+        matrixHeight -= monthAreaHeight
+
+        val size = data.cellSize ?: ((matrixHeight  - gapRatio) / TimeSpan.MAX_DAYS)
+
+        legendArea?.buildWith(size, gapSize, style)
+        dayLabelArea?.buildWith(size, gapSize, monthAreaHeight, style)
+
+        var horizontalOffset = (gapSize + bounds.left) + dayAreaWidth
+
+        val cellShapes = mutableListOf<DrawableRectangle>()
+        val monthIndexes = SparseArray< HeatMapLabel>()
+
+        for ((index, week) in data.timeSpan.weeks.withIndex()) {
+            var verticalOffset = monthAreaHeight
+            for(day in week.weekDays) {
+                val shape = DrawableRectangle()
+                shape.setData(Date.TAG, day.date)
+                shape.setData(Frequency.TAG, day.frequencyData)
+                shape.bounds = Bounds(horizontalOffset, verticalOffset, horizontalOffset + size, verticalOffset + size)
+                shape.color = MutableColor(day.getColorValue(style))
+                verticalOffset += (size + gapSize)
+                cellShapes.add(shape)
+            }
+            val label = options.monthLabels[week.getMonthLabel()]
+            if (index > 0) {
+                val lastWeek = data.timeSpan.weeks[index - 1]
+                if (!lastWeek.hasMonthLabel()) {
+                    if (week.hasMonthLabel()) {
+                        monthIndexes[index + 1] = label
+                    }
+                } else {
+                    if (week.weekDays[0].date.day == 1) {
+                        monthIndexes[index + 1] = label
+                    }
+                }
+            } else {
+                monthIndexes[index] = label
+            }
+            horizontalOffset += (size + gapSize)
+        }
+
+        monthLabelArea?.buildWith(size, gapSize, dayAreaWidth, monthIndexes, data.timeSpan.weeks, style)
+
+        shapeRenderer.addShape(cellShapes)
+        shapeRenderer.addShape(monthLabelArea?.getShapes())
+        shapeRenderer.addShape(dayLabelArea?.getShapes())
+        shapeRenderer.addShape(legendArea?.getShapes())
     }
+
+    private fun buildLegendArea(options: HeatMapOptions, bounds: Bounds): LegendArea? {
+        if (options.showLegend) {
+            return LegendArea(options, bounds.copy(
+                left = if (options.showDayLabels) { HeatMapOptions.DAY_LABEL_AREA_WIDTH } else 0f,
+                top = bounds.height - HeatMapOptions.LEGEND_AREA_HEIGHT
+            ))
+        }
+        return null
+    }
+
+    private fun buildMonthLabelArea(options: HeatMapOptions, bounds: Bounds): MonthLabelArea? {
+        if (options.showMonthLabels) {
+            return MonthLabelArea(options, bounds.copy(
+                left = if (options.showDayLabels) { HeatMapOptions.DAY_LABEL_AREA_WIDTH } else 0f,
+                bottom = HeatMapOptions.MONTH_LABEL_AREA_HEIGHT
+            ))
+        }
+        return null
+    }
+
+    private fun buildDayLabelArea(options: HeatMapOptions, bounds: Bounds): DayLabelArea? {
+        if (options.showDayLabels) {
+            return DayLabelArea(options, bounds.copy(
+                top = if (options.showMonthLabels) { HeatMapOptions.MONTH_LABEL_AREA_HEIGHT } else 0f,
+                right = HeatMapOptions.DAY_LABEL_AREA_WIDTH
+            ))
+        }
+        return null
+    }
+
 
     fun buildWithData(calHeatMapData: HeatMapData) {
         this.calHeatMapData = calHeatMapData
+    }
+
+    private fun generatePlaceholderData(): HeatMapData {
+        val weeks: MutableList<Week> = mutableListOf()
+        val months = HeatMapOptions.STANDARD_MONTH_LABELS.map { it.text }
+        val daysInWeek = 7
+        val weeksInYear = 52
+        var yearCounter = 0
+        var monthCounter = 0
+        var weekCounter = 0
+        var dayCounter = 0
+
+        for (index in 0L..weeksInYear) {
+
+            val days: MutableList<WeekDay> = mutableListOf()
+
+            for (day in 0 until daysInWeek) {
+                dayCounter++
+                val monthIndex = if (weekCounter >= 3 && day > 5 && monthCounter < 10) { (monthCounter + 1) } else monthCounter
+                days.add(
+                    WeekDay(
+                        index = day,
+                        date = Date(dayCounter, Month(monthCounter, months[monthIndex]), yearCounter),
+                        frequencyData = Frequency(count = 0, data = null)
+                    )
+                )
+            }
+            if (weekCounter < 3) {
+                weekCounter ++
+            } else {
+                weekCounter = 0
+                if (monthCounter < 11) {
+                    monthCounter ++
+                    dayCounter = 0
+                } else {
+                    monthCounter = 0
+                    yearCounter ++
+                }
+            }
+
+            weeks.add(Week(weekNumber = index.toInt(), weekDays = days))
+        }
+
+        return HeatMapData(
+            options = HeatMapOptions(),
+            timeSpan = TimeSpan(
+                dateMin = Date(0, Month(0, ""), 0),
+                dateMax = Date(0, Month(0, ""), 0),
+                weeks = weeks
+            )
+        )
     }
 }

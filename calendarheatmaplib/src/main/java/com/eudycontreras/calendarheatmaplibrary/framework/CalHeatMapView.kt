@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Rect
+import android.graphics.Typeface
 import android.util.AttributeSet
 import android.view.*
 import android.widget.ScrollView
@@ -13,6 +14,7 @@ import com.eudycontreras.calendarheatmaplibrary.findScrollParent
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
+import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
 
 /**
@@ -53,7 +55,9 @@ class CalHeatMapView : View, CalHeatMap {
         context,
         attrs,
         defStyleAttr
-    )
+    ) {
+        calHeatMapStyle.emptyCellColor = MutableColor(255, 235, 235, 235).toColor()
+    }
 
     fun setCalHeatMapData(calHeatMapData: HeatMapData) {
         heatMapBuilder.buildWithData(calHeatMapData)
@@ -67,23 +71,59 @@ class CalHeatMapView : View, CalHeatMap {
         this.calHeatMapOptions = calHeatMapOptions
     }
 
-    fun setCellColorMin(@ColorInt minColor: Int) {
-        this.calHeatMapStyle.minColor = minColor
+    fun setCellColorMin(@ColorInt minCellColor: Int) {
+        this.calHeatMapStyle.minCellColor = minCellColor
     }
 
-    fun setCellColorMax(@ColorInt maxColor: Int) {
-        this.calHeatMapStyle.maxColor = maxColor
+    fun setCellColorMax(@ColorInt maxCellColor: Int) {
+        this.calHeatMapStyle.maxCellColor = maxCellColor
     }
 
-    fun setCellColorEmpty(@ColorInt emptyColor: Int) {
-        this.calHeatMapStyle.emptyColor = emptyColor
+    fun setCellColorEmpty(@ColorInt emptyCellColor: Int) {
+        this.calHeatMapStyle.emptyCellColor = emptyCellColor
     }
 
-    fun showShowDayLabels(showDayLabels: Boolean) {
+    fun setMonthLabelColor(@ColorInt labelColor: Int) {
+        this.calHeatMapStyle.monthLabelStyle.textColor = labelColor
+    }
+
+    fun setMonthLabelFont(labelFont: Typeface) {
+        this.calHeatMapStyle.monthLabelStyle.typeFace = labelFont
+    }
+
+    fun setMonthLabelSize(labelSize: Float) {
+        this.calHeatMapStyle.monthLabelStyle.textSize = labelSize
+    }
+
+    fun setDayLabelColor(@ColorInt labelColor: Int) {
+        this.calHeatMapStyle.dayLabelStyle.textColor = labelColor
+    }
+
+    fun setDayLabelFont(labelFont: Typeface) {
+        this.calHeatMapStyle.dayLabelStyle.typeFace = labelFont
+    }
+
+    fun setDayLabelSize(labelSize: Float) {
+        this.calHeatMapStyle.dayLabelStyle.textSize = labelSize
+    }
+
+    fun setLegendLabelColor(@ColorInt labelColor: Int) {
+        this.calHeatMapStyle.legendLabelStyle.textColor = labelColor
+    }
+
+    fun setLegendLabelFont(labelFont: Typeface) {
+        this.calHeatMapStyle.legendLabelStyle.typeFace = labelFont
+    }
+
+    fun setLegendLabelSize(labelSize: Float) {
+        this.calHeatMapStyle.legendLabelStyle.textSize = labelSize
+    }
+
+    fun setShowShowDayLabels(showDayLabels: Boolean) {
         this.calHeatMapOptions.showDayLabels = showDayLabels
     }
 
-    fun showMonthLabels(showMonthLabels: Boolean) {
+    fun setShowMonthLabels(showMonthLabels: Boolean) {
         this.calHeatMapOptions.showMonthLabels = showMonthLabels
     }
 
@@ -97,7 +137,10 @@ class CalHeatMapView : View, CalHeatMap {
         val usableWidth = width - (paddingLeft + paddingRight).toFloat()
         val usableHeight = height - (paddingTop + paddingBottom).toFloat()
 
-        this.heatMapBuilder.buildWithBounds(Bounds(width = usableWidth, height = usableHeight))
+       if (!fullyVisible) {
+           this.heatMapBuilder.buildWithBounds(Bounds(right = usableWidth, bottom = usableHeight))
+           fullyVisible = true
+       }
 
         if (scrollingParent == null) {
             fullyVisible = true
@@ -116,22 +159,31 @@ class CalHeatMapView : View, CalHeatMap {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val specHeight = MeasureSpec.getSize(heightMeasureSpec)
 
-        this.heatMapBuilder.getData()?.let {
-            val cellSize  = it.cellSize
-            val gapSize = it.cellGap ?: if (cellSize != null) { cellSize * HeatMapData.CELL_SIZE_RATIO } else {
+        heatMapBuilder.getData()?.let { data ->
+
+            val cellSize  = data.cellSize
+            val gapSize = data.cellGap ?: if (cellSize != null) { cellSize * HeatMapData.CELL_SIZE_RATIO } else {
                 (specHeight / TimeSpan.MAX_DAYS) * HeatMapData.CELL_SIZE_RATIO
             }
+
+            val legendAreaHeight = if (calHeatMapOptions.showLegend) { HeatMapOptions.LEGEND_AREA_HEIGHT } else 0f
+            val monthAreaHeight = if (calHeatMapOptions.showMonthLabels) { HeatMapOptions.MONTH_LABEL_AREA_HEIGHT } else 0f
+            val dayAreaWidth = if (calHeatMapOptions.showDayLabels) { HeatMapOptions.DAY_LABEL_AREA_WIDTH } else 0f
+
             val gapRatio = (gapSize * TimeSpan.MAX_DAYS)
-            val size = it.cellSize ?: ((specHeight  - gapRatio) / TimeSpan.MAX_DAYS)
+            var matrixHeight = specHeight.toFloat()
 
-            val columnCount = it.getColumnCount()
+            matrixHeight -= legendAreaHeight
+            matrixHeight -= monthAreaHeight
 
-            val width = (size * columnCount) + (gapSize * columnCount)
-            val height = (size * TimeSpan.MAX_DAYS) + (gapSize * TimeSpan.MAX_DAYS)
+            val size = data.cellSize ?: ((matrixHeight  - gapRatio) / TimeSpan.MAX_DAYS)
+
+            val count = data.getColumnCount()
+            val width = dayAreaWidth + (size * count + (gapSize * count)) + (gapSize * 2)
 
             setMeasuredDimension(
                 resolveSize(width.toInt(), widthMeasureSpec),
-                resolveSize(height.toInt(), heightMeasureSpec)
+                resolveSize(specHeight, heightMeasureSpec)
             )
         }
     }

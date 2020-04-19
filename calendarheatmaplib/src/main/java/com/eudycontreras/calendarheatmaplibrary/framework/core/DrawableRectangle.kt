@@ -1,4 +1,4 @@
-package com.eudycontreras.calendarheatmaplibrary.framework.shapes
+package com.eudycontreras.calendarheatmaplibrary.framework.core
 
 import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
@@ -9,7 +9,6 @@ import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
 import com.eudycontreras.calendarheatmaplibrary.extensions.addRoundRect
 import com.eudycontreras.calendarheatmaplibrary.extensions.addShadowBounds
 import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
-import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
 import com.eudycontreras.calendarheatmaplibrary.properties.Color
 import com.eudycontreras.calendarheatmaplibrary.utilities.Shadow
 
@@ -21,11 +20,11 @@ import com.eudycontreras.calendarheatmaplibrary.utilities.Shadow
  * @since April 2020
  */
 
-internal class HeatMapCell : DrawableShape(), TouchableShape {
+internal class DrawableRectangle : DrawableShape(), TouchableShape {
 
     private var shadowFilter: BlurMaskFilter? = null
 
-    override fun build() {
+    init {
         shadowFilter = Shadow.getShadowFilter(elevation)
     }
 

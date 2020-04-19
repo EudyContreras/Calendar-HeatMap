@@ -1,6 +1,5 @@
 package com.eudycontreras.calendarheatmaplibrary.properties
 
-import com.eudycontreras.calendarheatmaplibrary.properties.Bounds.Side.*
 import kotlin.math.abs
 
 /**
@@ -12,22 +11,22 @@ import kotlin.math.abs
  */
 
 data class Bounds(
-    var x: Float = 0f,
-    var y: Float = 0f,
-    var width: Float = 0f,
-    var height: Float = 0f
+    var left: Float = 0f,
+    var top: Float = 0f,
+    var right: Float = 0f,
+    var bottom: Float = 0f
 ) {
-    val left: Float
-        get() = x
+    val x: Float
+        get() = left
 
-    val right: Float
-        get() = x + width
+    val y: Float
+        get() = top
 
-    val top: Float
-        get() = y
+    val width: Float
+        get() = right - left
 
-    val bottom: Float
-        get() = y + height
+    val height: Float
+        get() = bottom - top
 
     val centerX: Float
         get() = (left + right) * 0.5f
@@ -35,80 +34,6 @@ data class Bounds(
     val centerY: Float
         get() = (top + bottom) * 0.5f
 
-    fun toLeftOf(other: Bounds, gap: Float = 0f): Bounds {
-        return copy(
-            x = other.x + other.width + gap
-        )
-    }
-
-    fun toRightOF(other: Bounds, gap: Float = 0f): Bounds {
-        return copy(
-            x = other.x - width + gap
-        )
-    }
-
-    fun toTopOf(other: Bounds, gap: Float = 0f): Bounds {
-        return copy(
-            y = other.y - height + gap
-        )
-    }
-
-    fun toBottomOf(other: Bounds, gap: Float = 0f): Bounds {
-        return copy(
-            y = other.y + other.height + gap
-        )
-    }
-
-    fun pad(amount: Float, side: Side = ALL) {
-        return when (side) {
-            TOP ->  y += amount
-            LEFT -> y += amount
-            RIGHT -> width -= amount
-            BOTTOM -> height -= amount
-            ALL -> {
-                pad(amount, LEFT)
-                pad(amount, RIGHT)
-                pad(amount, TOP)
-                pad(amount, BOTTOM)
-            }
-        }
-    }
-
-    fun padPercent(percentage: Float, side: Side = ALL) {
-        return when (side) {
-            TOP -> y *= percentage
-            LEFT -> x *= percentage
-            RIGHT -> width *= (width * percentage)
-            BOTTOM -> height *= (height * percentage)
-            ALL -> {
-                padPercent(percentage, LEFT)
-                padPercent(percentage, RIGHT)
-                padPercent(percentage, TOP)
-                padPercent(percentage, BOTTOM)
-            }
-        }
-    }
-
-    operator fun plus(amount: Float): Bounds {
-        return this.copy(
-            width = width + amount,
-            height = height + amount
-        )
-    }
-
-    operator fun minus(amount: Float): Bounds {
-        return this.copy(
-            width = width - amount,
-            height = height - amount
-        )
-    }
-
-    operator fun times(amount: Float): Bounds {
-        return this.copy(
-            width = width * amount,
-            height = height * amount
-        )
-    }
 
     fun getVerticalOverlap(other: Bounds): Float {
         val top1 = this.top
@@ -125,10 +50,10 @@ data class Bounds(
     }
 
     fun reset() {
-        x = 0f
-        y = 0f
-        width = 0f
-        height = 0f
+        left = 0f
+        right = 0f
+        top = 0f
+        bottom = 0f
     }
 
     fun intercepts(other: Bounds): Boolean {

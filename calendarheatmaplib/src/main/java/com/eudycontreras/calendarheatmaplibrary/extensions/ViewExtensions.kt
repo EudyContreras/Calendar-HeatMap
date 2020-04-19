@@ -50,10 +50,10 @@ fun View.compareBounds(bounds: Bounds): Int {
 
 fun View.getBounds(): Bounds {
     return Bounds(
-        x = this.left.toFloat(),
-        y = this.top.toFloat(),
-        width = this.measuredWidth.toFloat(),
-        height = this.measuredHeight.toFloat()
+        left = this.left.toFloat(),
+        top = this.top.toFloat(),
+        right =  this.left.toFloat() + this.measuredWidth.toFloat(),
+        bottom = this.top.toFloat() + this.measuredHeight.toFloat()
     )
 }
 

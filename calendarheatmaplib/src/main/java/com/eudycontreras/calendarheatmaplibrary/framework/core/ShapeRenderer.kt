@@ -27,20 +27,20 @@ internal class ShapeRenderer {
 
     var renderShapes: Boolean = true
 
-    fun <T : DrawableShape> addShape(shape: T) {
-        shapes.add(shape)
+    fun <T : DrawableShape> addShape(shape: T?) {
+        shape?.let { shapes.add(it) }
     }
 
-    fun <T : DrawableShape> addShape(shape: Array<T>) {
-        shapes.addAll(shape)
+    fun <T : DrawableShape> addShape(shapes: Array<T>?) {
+        shapes?.let { this.shapes.addAll(it) }
     }
 
-    fun <T : DrawableShape> addShape(shape: List<T>) {
-        shapes.addAll(shape)
+    fun <T : DrawableShape> addShape(shapes: List<T>?) {
+        shapes?.let { this.shapes.addAll(it) }
     }
 
-    fun <T : DrawableShape> removeShape(shape: T) {
-        shapes.remove(shape)
+    fun <T : DrawableShape> removeShape(shape: T?) {
+        shape?.let { shapes.remove(it) }
     }
 
     fun <T : DrawableShape> removeShape(vararg shape: T) {

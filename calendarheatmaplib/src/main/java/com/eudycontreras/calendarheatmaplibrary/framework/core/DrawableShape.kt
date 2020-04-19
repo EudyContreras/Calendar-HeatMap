@@ -72,8 +72,6 @@ internal abstract class DrawableShape: RenderTarget {
         dataTags[tag] = data
     }
 
-    abstract fun build()
-
     fun reset() {
         color.reset()
         bounds.reset()
@@ -91,25 +89,25 @@ internal abstract class DrawableShape: RenderTarget {
     var x: Float
         get() = bounds.x
         set(value) {
-            bounds.x = value
+            bounds.left = value
         }
 
     var y: Float
         get() = bounds.y
         set(value) {
-            bounds.y = value
+            bounds.top = value
         }
 
     var width: Float
         get() = bounds.width
         set(value) {
-            bounds.width = value
+            bounds.right = bounds.left + value
         }
 
     var height: Float
         get() = bounds.height
         set(value) {
-            bounds.height = value
+            bounds.bottom = bounds.top + value
         }
 
     val radius: Float
