@@ -5,6 +5,14 @@ import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.extensions.sp
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
+/**
+ * Copyright (C) 2020 Project X
+ *
+ * @Project ProjectX
+ * @author Eudy Contreras.
+ * @since April 2020
+ */
+
 internal class DrawableText(
     val text: String
 ) : DrawableShape() {

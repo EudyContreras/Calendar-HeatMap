@@ -35,73 +35,6 @@ data class HeatMapData(
     }
 }
 
-data class TextStyle(
-    var typeFace: Typeface,
-    var textSize: Float,
-    @ColorInt var textColor: Int
-)
-
-data class HeatMapStyle(
-    var minCellColor: Int = AndroidColor.TRANSPARENT,
-    var maxCellColor: Int = AndroidColor.TRANSPARENT,
-    var emptyCellColor: Int = AndroidColor.TRANSPARENT,
-    var dayLabelStyle: TextStyle = TextStyle(Typeface.DEFAULT_BOLD, 12.sp, AndroidColor.DKGRAY),
-    var monthLabelStyle: TextStyle = TextStyle(Typeface.DEFAULT_BOLD, 12.sp, AndroidColor.DKGRAY),
-    var legendLabelStyle: TextStyle = TextStyle(Typeface.DEFAULT_BOLD, 12.sp, AndroidColor.DKGRAY)
-)
-
-@Serializable
-data class HeatMapLabel(
-    val text: String,
-    val value: Int,
-    val active: Boolean
-)
-
-@Serializable
-data class HeatMapOptions(
-    val legendLessLabel: String = LESS,
-    val legendMoreLabel: String = MORE,
-    var showMonthLabels: Boolean = true,
-    var showDayLabels: Boolean = true,
-    var showLegend: Boolean = true,
-    var legendAlignment: Alignment = Alignment.LEFT,
-    val dayLabels: List<HeatMapLabel> = STANDARD_DAY_LABELS,
-    val monthLabels: List<HeatMapLabel> = STANDARD_MONTH_LABELS
-) {
-    companion object {
-        const val LESS = "Less"
-        const  val MORE = "More"
-
-        val LEGEND_AREA_HEIGHT = 45.dp
-        val MONTH_LABEL_AREA_HEIGHT = 45.dp
-        val DAY_LABEL_AREA_WIDTH = 30.dp
-
-        val STANDARD_DAY_LABELS = listOf(
-            HeatMapLabel("Sun", 0, false),
-            HeatMapLabel("Mon", 1, true),
-            HeatMapLabel("Tus", 2, false),
-            HeatMapLabel("Wed", 3, true),
-            HeatMapLabel("Thu", 4, false),
-            HeatMapLabel("Fri", 5, true),
-            HeatMapLabel("Sat", 6, false)
-        )
-        val STANDARD_MONTH_LABELS = listOf(
-            HeatMapLabel("Jan", 0, true),
-            HeatMapLabel("Feb", 1, true),
-            HeatMapLabel("Mar", 2, true),
-            HeatMapLabel("Apr", 3, true),
-            HeatMapLabel("Maj", 4, true),
-            HeatMapLabel("Jun", 5, true),
-            HeatMapLabel("Jul", 6, true),
-            HeatMapLabel("Aug", 7, true),
-            HeatMapLabel("Sep", 8, true),
-            HeatMapLabel("Oct", 9, true),
-            HeatMapLabel("Nov", 10, true),
-            HeatMapLabel("Dec", 11, true)
-        )
-    }
-}
-
 @Serializable
 data class TimeSpan(
     val dateMin: Date,
@@ -121,6 +54,10 @@ data class Date(
 ) {
     companion object {
         const val TAG = 0x01
+    }
+
+    override fun toString(): String {
+        return "$year-${month.value + 1}-$day"
     }
 }
 
@@ -152,6 +89,10 @@ data class Frequency(
         const val MIN_VALUE = 0
         const val MAX_VALUE = 50
         const val TAG = 0x00
+    }
+
+    override fun toString(): String {
+       return "Frequency: $count"
     }
 }
 

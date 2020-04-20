@@ -12,6 +12,7 @@ import android.graphics.Paint
 
 fun Paint.recycle(){
     shader = null
+    maskFilter = null
     pathEffect = null
 
     clearShadowLayer()

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CalHeatMapView">
+
+        <!--| ======================================================================= |-->
+        <!--| ===================== Calendar HeatMap Attributes ===================== |-->
+        <!--| ======================================================================= |-->
+
+        <!-- Sets the data used for building the calendar HeatMap. This attribute
+        is only meant to be used with data-binding-->
+        <attr name="calHeatMapData" format="reference" />
+
+        <!-- Sets the style object containing the styling data used
+          for styling the calendar HeatMap view. This attribute
+        is only meant to be used with data-binding-->
+        <attr name="heatMapStyle" format="reference" />
+
+        <!-- Sets the options object containing settings data used
+        for building the calendar HeatMap view. This attribute
+        is only meant to be used with data-binding-->
+        <attr name="heatMapOptions" format="reference" />
+
+        <!-- Sets the min cell color for the HeatMap. This is the color used
+        for representing lowest values. This color will be used as the minimum
+        color spectrum. -->
+        <attr name="cellColorMin" format="color|reference" />
+
+        <!-- Sets the max cell color for the HeatMap. This is the color used
+        for representing highest values. This color will be used as the maximum
+        color spectrum. -->
+        <attr name="cellColorMax" format="color|reference" />
+
+        <!-- Sets the color for the labels representing the months of the time
+        span. -->
+        <attr name="monthLabelColor" format="color|reference" />
+
+        <!-- Sets the typeface for the labels representing the months of the time
+        span. -->
+        <attr name="monthLabelTypeFace" format="string|reference" />
+
+        <!-- Sets the text size for the labels representing the months of the time
+        span. -->
+        <attr name="monthLabelTextSize" format="dimension|reference" />
+
+        <!-- Sets the color for the labels representing the weekdays day of the time
+        span. -->
+        <attr name="weekDayLabelColor" format="color|reference" />
+
+        <!-- Sets the typeface for the labels representing the weekdays of the time
+        span. -->
+        <attr name="weekDayLabelTypeFace" format="string|reference" />
+
+        <!-- Sets the text size for the labels representing the weekdays of the time
+        span. -->
+        <attr name="weekDayLabelTextSize" format="dimension|reference" />
+
+        <!-- Sets the color for the labels used for informational legend. -->
+        <attr name="legendLabelColor" format="color|reference" />
+
+        <!-- Sets the typeface for the labels used for informational legend. -->
+        <attr name="legendLabelTypeFace" format="string|reference" />
+
+        <!-- Sets the text size for the labels used for informational legend. -->
+        <attr name="legendLabelTextSize" format="dimension|reference" />
+
+        <!-- Determines whether or not the legend information area should be shown -->
+        <attr name="showLegend" format="boolean"/>
+
+        <!-- Determines whether or not labels representing the months of the time
+         span should be shown. -->
+        <attr name="showMonthLabels" format="boolean"/>
+
+        <!-- Determines whether or not labels representing the days of the time
+        span should be shown. -->
+        <attr name="showDayLabels" format="boolean"/>
+
+        <!-- Sets the text that should be shown on the less label of the legend -->
+        <attr name="legendLessLabelText" format="string|reference"/>
+
+        <!-- Sets the text that should be shown on the more label of the legend -->
+        <attr name="legendMoreLabelText" format="string|reference"/>
+
+        <!-- Determines whether or not labels representing the days of the time
+            span should be shown. -->
+        <attr name="legendAlignment" format="enum">
+            <enum name="CENTER" value="0" />
+            <enum name="LEFT" value="1" />
+            <enum name="RIGHT" value="2" />
+        </attr>
+
+    </declare-styleable>
+</resources>

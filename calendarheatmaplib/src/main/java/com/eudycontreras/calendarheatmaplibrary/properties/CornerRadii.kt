@@ -20,6 +20,12 @@ class CornerRadii(
     bottomLeft: Float = 0f
 ): Cloneable<CornerRadii> {
 
+    val rx: Float
+        get() = corners[0]
+
+    val ry: Float
+        get() = corners[1]
+
     val topLeft: Float
         get() = corners[0]
 

@@ -1,6 +1,7 @@
 package com.eudycontreras.calendarheatmap
 
-import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -14,34 +15,52 @@ import kotlin.random.Random
 
 internal class SomeViewModel : ViewModel() {
 
-    private val monthLabels = arrayOf("Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Agu", "Sep", "Oct", "Nov", "Dec")
+    val demoData: LiveData<HeatMapData> = MutableLiveData(getSafeData())
 
-    val demoData: LiveData<HeatMapData> = MutableLiveData(generateData())
+    private fun getSafeData(): HeatMapData {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            generateData()
+        } else {
+            return HeatMapData(
+                options = HeatMapOptions(),
+                timeSpan = TimeSpan(
+                    dateMin = Date(0, Month(0, ""), 0),
+                    dateMax = Date(0, Month(0, ""), 0),
+                    weeks = emptyList()
+                )
+            )
+        }
+    }
 
-    @SuppressLint("NewApi")
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun generateData(): HeatMapData {
+        val daysInWeek = 7
+        val daysInYear = 365L
+
         val dateTo = LocalDate.now()
-        val origin = dateTo.minusDays(365)
-        var dateFrom = dateTo.minusDays(365)
+        val origin = dateTo.minusDays(daysInYear)
+        var dateFrom = dateTo.minusDays(daysInYear)
 
         val weeks: MutableList<Week> = mutableListOf()
 
-        val daysInWeek = 7
+        val monthLabels = HeatMapOptions.STANDARD_MONTH_LABELS.map { it.text }
 
         val weeksInYear = ChronoUnit.WEEKS.between(dateFrom, dateTo)
 
-        for (index in 0L..weeksInYear) {
+        weeks@ for (index in 0L..weeksInYear) {
             val weekFields: WeekFields = WeekFields.of(Locale.getDefault())
             val weekNumber = dateFrom.get(weekFields.weekOfWeekBasedYear())
 
             val days: MutableList<WeekDay> = mutableListOf()
 
-            for (day in 0 until daysInWeek) {
-                dateFrom = dateFrom.plusDays(1)
+            days@for (day in 0 until daysInWeek) {
+                if (dateFrom > dateTo) {
+                    break@days
+                }
                 days.add(
                     WeekDay(
                         index = day,
-                        date = dateFrom.toDate(),
+                        date = dateFrom.toDate(monthLabels),
                         frequencyData = Frequency(
                             count = if (day > 0 && day < daysInWeek - 1) {
                                 Random.nextInt(Frequency.MIN_VALUE, Frequency.MAX_VALUE)
@@ -50,6 +69,7 @@ internal class SomeViewModel : ViewModel() {
                         )
                     )
                 )
+                dateFrom = dateFrom.plusDays(1)
             }
 
             weeks.add(Week(weekNumber = weekNumber, weekDays = days))
@@ -58,15 +78,15 @@ internal class SomeViewModel : ViewModel() {
         return HeatMapData(
             options = HeatMapOptions(),
             timeSpan = TimeSpan(
-                dateMin = origin.toDate(),
-                dateMax = dateTo.toDate(),
+                dateMin = origin.toDate(monthLabels),
+                dateMax = dateTo.toDate(monthLabels),
                 weeks = weeks
             )
         )
     }
 
-    @SuppressLint("NewApi")
-    private fun LocalDate.toDate(): Date {
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun LocalDate.toDate(monthLabels: List<String>): Date {
         return Date(dayOfMonth,  Month(monthValue -1, monthLabels[monthValue - 1]), year)
     }
 }

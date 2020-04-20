@@ -2,6 +2,8 @@ package com.eudycontreras.calendarheatmaplibrary.framework.core
 
 import android.graphics.*
 import android.view.MotionEvent
+import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
+import com.eudycontreras.calendarheatmaplibrary.common.TouchConsumer
 import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
 
 /**
@@ -18,7 +20,7 @@ internal class ShapeRenderer {
 
     private val shadowPath: Path = Path()
 
-    private val shapes = ArrayList<DrawableShape>()
+    private val shapes = ArrayList<RenderTarget>()
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         isAntiAlias = true
@@ -27,23 +29,23 @@ internal class ShapeRenderer {
 
     var renderShapes: Boolean = true
 
-    fun <T : DrawableShape> addShape(shape: T?) {
+    fun <T : RenderTarget> addShape(shape: T?) {
         shape?.let { shapes.add(it) }
     }
 
-    fun <T : DrawableShape> addShape(shapes: Array<T>?) {
+    fun <T : RenderTarget> addShape(shapes: Array<T>?) {
         shapes?.let { this.shapes.addAll(it) }
     }
 
-    fun <T : DrawableShape> addShape(shapes: List<T>?) {
+    fun <T : RenderTarget> addShape(shapes: List<T>?) {
         shapes?.let { this.shapes.addAll(it) }
     }
 
-    fun <T : DrawableShape> removeShape(shape: T?) {
+    fun <T : RenderTarget> removeShape(shape: T?) {
         shape?.let { shapes.remove(it) }
     }
 
-    fun <T : DrawableShape> removeShape(vararg shape: T) {
+    fun <T : RenderTarget> removeShape(vararg shape: T) {
         shapes.removeAll(shape)
     }
 
@@ -57,7 +59,15 @@ internal class ShapeRenderer {
 
     fun delegateTouchEvent(motionEvent: MotionEvent, x: Float, y: Float) {
         for (shape in shapes) {
-            if (shape is TouchableShape && shape.touchProcessor != null) {
+            if (shape is TouchableShape) {
+                shape.onTouch(motionEvent, x, y, this)
+            }
+        }
+    }
+
+    fun delegateTouchEvent(motionEvent: MotionEvent, x: Float, y: Float, caller: TouchableShape) {
+        for (shape in shapes) {
+            if (shape is TouchConsumer && shape != caller) {
                 shape.onTouch(motionEvent, x, y)
             }
         }
@@ -66,7 +76,7 @@ internal class ShapeRenderer {
     fun delegateLongPressEvent(motionEvent: MotionEvent, x: Float, y: Float) {
         for (shape in shapes) {
             if (shape is TouchableShape) {
-                shape.onLongPressed(motionEvent, x, y)
+                shape.onLongPressed(motionEvent, x, y, this)
             }
         }
     }

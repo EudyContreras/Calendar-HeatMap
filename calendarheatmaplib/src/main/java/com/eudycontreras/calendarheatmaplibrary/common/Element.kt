@@ -9,6 +9,7 @@ import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
  * @author Eudy Contreras.
  * @since April 2020
  */
+
 internal interface Element {
     fun getShapes(): List<DrawableShape>
 }

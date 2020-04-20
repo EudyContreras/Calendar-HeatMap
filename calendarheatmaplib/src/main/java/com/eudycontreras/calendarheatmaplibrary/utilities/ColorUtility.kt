@@ -1,18 +1,18 @@
 package com.eudycontreras.calendarheatmaplibrary.utilities
 
-
 import androidx.annotation.ColorInt
 import com.eudycontreras.calendarheatmaplibrary.AndroidColor
-
 import com.eudycontreras.calendarheatmaplibrary.properties.Color
 import com.eudycontreras.calendarheatmaplibrary.properties.Color.Companion.MAX_COLOR
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 import kotlin.math.roundToInt
 
 /**
- * @Project MotionMorpher
+ * Copyright (C) 2020 Project X
+ *
+ * @Project ProjectX
  * @author Eudy Contreras.
- * @since September 19 2018
+ * @since March 2020
  */
 
 object ColorUtility {

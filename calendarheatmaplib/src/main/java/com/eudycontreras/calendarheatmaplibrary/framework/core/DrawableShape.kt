@@ -1,10 +1,7 @@
 package com.eudycontreras.calendarheatmaplibrary.framework.core
 
 import android.graphics.Shader
-import android.util.SparseArray
-import android.view.MotionEvent
 import android.view.View
-import androidx.core.util.set
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
@@ -21,8 +18,6 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  */
 
 internal abstract class DrawableShape: RenderTarget {
-
-    private val dataTags: SparseArray<Any> = SparseArray()
 
     var id: Int = View.NO_ID
 
@@ -56,21 +51,10 @@ internal abstract class DrawableShape: RenderTarget {
 
     var shader: Shader? = null
 
-    var touchProcessor: ((DrawableShape, MotionEvent, Float, Float) -> Unit)? = null
-
     var render: Boolean = true
 
     var showStroke: Boolean = false
         get() = field && strokeWidth > 0
-
-
-    fun getData(tag: Int): Any {
-        return dataTags[tag]
-    }
-
-    fun setData(tag: Int, data: Any) {
-        dataTags[tag] = data
-    }
 
     fun reset() {
         color.reset()
@@ -83,7 +67,6 @@ internal abstract class DrawableShape: RenderTarget {
         opacity = MAX_COLOR
         shader = null
         render = true
-        touchProcessor = null
     }
 
     var x: Float
@@ -109,9 +92,6 @@ internal abstract class DrawableShape: RenderTarget {
         set(value) {
             bounds.bottom = bounds.top + value
         }
-
-    val radius: Float
-        get() = ((width + height) / 2) / 2
 
     val radii: FloatArray
         get() = corners.corners

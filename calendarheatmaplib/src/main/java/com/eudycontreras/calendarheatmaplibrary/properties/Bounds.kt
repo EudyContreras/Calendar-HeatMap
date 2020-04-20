@@ -34,7 +34,6 @@ data class Bounds(
     val centerY: Float
         get() = (top + bottom) * 0.5f
 
-
     fun getVerticalOverlap(other: Bounds): Float {
         val top1 = this.top
         val top2 = other.top
@@ -54,6 +53,13 @@ data class Bounds(
         right = 0f
         top = 0f
         bottom = 0f
+    }
+
+    fun update(bounds: Bounds) {
+        this.left = bounds.left
+        this.top = bounds.top
+        this.right = bounds.right
+        this.bottom = bounds.bottom
     }
 
     fun intercepts(other: Bounds): Boolean {
@@ -82,9 +88,5 @@ data class Bounds(
 
     fun isInside(top: Float, left: Float, bottom: Float, right: Float): Boolean {
         return this.top >= top && this.left >= left && this.bottom <= bottom && this.right <= right
-    }
-
-    enum class Side {
-        TOP, LEFT, RIGHT, BOTTOM, ALL
     }
 }

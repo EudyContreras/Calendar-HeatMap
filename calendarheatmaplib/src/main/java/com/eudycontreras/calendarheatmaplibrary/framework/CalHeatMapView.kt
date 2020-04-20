@@ -1,7 +1,7 @@
 package com.eudycontreras.calendarheatmaplibrary.framework
 
-import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.TypedArray
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.Typeface
@@ -10,6 +10,8 @@ import android.view.*
 import android.widget.ScrollView
 import androidx.annotation.ColorInt
 import androidx.core.widget.NestedScrollView
+import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
+import com.eudycontreras.calendarheatmaplibrary.R
 import com.eudycontreras.calendarheatmaplibrary.findScrollParent
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
@@ -37,6 +39,8 @@ class CalHeatMapView : View, CalHeatMap {
 
     private var fullyVisible: Boolean = false
 
+    private var scrollingParent: ViewParent? = null
+
     private var calHeatMapStyle: HeatMapStyle = HeatMapStyle()
     private var calHeatMapOptions: HeatMapOptions = HeatMapOptions()
 
@@ -44,10 +48,9 @@ class CalHeatMapView : View, CalHeatMap {
     private var heatMapBuilder: CalHeatMapBuilder = CalHeatMapBuilder(
         shapeRenderer = shapeRenderer,
         styleContext = { calHeatMapStyle },
-        optionsContext = { calHeatMapOptions }
+        optionsContext = { calHeatMapOptions },
+        contextProvider = { context }
     )
-
-    private var scrollingParent: ViewParent? = null
 
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
@@ -56,7 +59,27 @@ class CalHeatMapView : View, CalHeatMap {
         attrs,
         defStyleAttr
     ) {
-        calHeatMapStyle.emptyCellColor = MutableColor(255, 235, 235, 235).toColor()
+        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.CalHeatMapView)
+        try {
+            setUpAttributes(typedArray)
+        } finally {
+            typedArray.recycle()
+        }
+    }
+
+    private fun setUpAttributes(typedArray: TypedArray) {
+        val defaultColor = MutableColor(255, 225, 225, 225).toColor()
+        calHeatMapStyle.emptyCellColor = defaultColor
+
+        typedArray.getColor(R.styleable.CalHeatMapView_legendLabelColor, -1).let {
+            calHeatMapStyle.legendLabelStyle.textColor = if (it != -1) { it } else defaultColor
+        }
+        typedArray.getColor(R.styleable.CalHeatMapView_monthLabelColor, -1).let {
+            calHeatMapStyle.monthLabelStyle.textColor = if (it != -1) { it } else defaultColor
+        }
+        typedArray.getColor(R.styleable.CalHeatMapView_weekDayLabelColor, -1).let {
+            calHeatMapStyle.dayLabelStyle.textColor = if (it != -1) { it } else defaultColor
+        }
     }
 
     fun setCalHeatMapData(calHeatMapData: HeatMapData) {
@@ -87,23 +110,23 @@ class CalHeatMapView : View, CalHeatMap {
         this.calHeatMapStyle.monthLabelStyle.textColor = labelColor
     }
 
-    fun setMonthLabelFont(labelFont: Typeface) {
-        this.calHeatMapStyle.monthLabelStyle.typeFace = labelFont
+    fun setMonthLabelTypeFace(typeFace: Typeface) {
+        this.calHeatMapStyle.monthLabelStyle.typeFace = typeFace
     }
 
-    fun setMonthLabelSize(labelSize: Float) {
+    fun setMonthLabelTextSize(labelSize: Float) {
         this.calHeatMapStyle.monthLabelStyle.textSize = labelSize
     }
 
-    fun setDayLabelColor(@ColorInt labelColor: Int) {
+    fun setWeekDayLabelColor(@ColorInt labelColor: Int) {
         this.calHeatMapStyle.dayLabelStyle.textColor = labelColor
     }
 
-    fun setDayLabelFont(labelFont: Typeface) {
-        this.calHeatMapStyle.dayLabelStyle.typeFace = labelFont
+    fun setWeekDayLabelTypeFace(typeFace: Typeface) {
+        this.calHeatMapStyle.dayLabelStyle.typeFace = typeFace
     }
 
-    fun setDayLabelSize(labelSize: Float) {
+    fun setWeekDayLabelTextSize(labelSize: Float) {
         this.calHeatMapStyle.dayLabelStyle.textSize = labelSize
     }
 
@@ -111,8 +134,8 @@ class CalHeatMapView : View, CalHeatMap {
         this.calHeatMapStyle.legendLabelStyle.textColor = labelColor
     }
 
-    fun setLegendLabelFont(labelFont: Typeface) {
-        this.calHeatMapStyle.legendLabelStyle.typeFace = labelFont
+    fun setLegendLabelTypeFace(typeFace: Typeface) {
+        this.calHeatMapStyle.legendLabelStyle.typeFace = typeFace
     }
 
     fun setLegendLabelSize(labelSize: Float) {
@@ -127,6 +150,22 @@ class CalHeatMapView : View, CalHeatMap {
         this.calHeatMapOptions.showMonthLabels = showMonthLabels
     }
 
+    fun setShowLegend(showLegend: Boolean) {
+        this.calHeatMapOptions.showLegend = showLegend
+    }
+
+    fun setLegendAlignment(alignment: Alignment) {
+        this.calHeatMapOptions.legendAlignment = alignment
+    }
+
+    fun setLegendLessLabelText(lessLabelText: String) {
+        this.calHeatMapOptions.legendLessLabel = lessLabelText
+    }
+
+    fun setLegendMoreLabelText(moreLabelText: String) {
+        this.calHeatMapOptions.legendMoreLabel = moreLabelText
+    }
+
     override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
         super.onSizeChanged(width, height, oldWidth, oldHeight)
         val paddingLeft = paddingLeft
@@ -137,10 +176,7 @@ class CalHeatMapView : View, CalHeatMap {
         val usableWidth = width - (paddingLeft + paddingRight).toFloat()
         val usableHeight = height - (paddingTop + paddingBottom).toFloat()
 
-       if (!fullyVisible) {
-           this.heatMapBuilder.buildWithBounds(Bounds(right = usableWidth, bottom = usableHeight))
-           fullyVisible = true
-       }
+        this.heatMapBuilder.buildWithBounds(Bounds(right = usableWidth, bottom = usableHeight))
 
         if (scrollingParent == null) {
             fullyVisible = true
@@ -166,9 +202,9 @@ class CalHeatMapView : View, CalHeatMap {
                 (specHeight / TimeSpan.MAX_DAYS) * HeatMapData.CELL_SIZE_RATIO
             }
 
-            val legendAreaHeight = if (calHeatMapOptions.showLegend) { HeatMapOptions.LEGEND_AREA_HEIGHT } else 0f
-            val monthAreaHeight = if (calHeatMapOptions.showMonthLabels) { HeatMapOptions.MONTH_LABEL_AREA_HEIGHT } else 0f
-            val dayAreaWidth = if (calHeatMapOptions.showDayLabels) { HeatMapOptions.DAY_LABEL_AREA_WIDTH } else 0f
+            val legendAreaHeight = if (calHeatMapOptions.showLegend) { HeatMapOptions.LEGEND_AREA_HEIGHT } else MIN_OFFSET
+            val monthAreaHeight = if (calHeatMapOptions.showMonthLabels) { HeatMapOptions.MONTH_LABEL_AREA_HEIGHT } else MIN_OFFSET
+            val dayAreaWidth = if (calHeatMapOptions.showDayLabels) { HeatMapOptions.DAY_LABEL_AREA_WIDTH } else MIN_OFFSET
 
             val gapRatio = (gapSize * TimeSpan.MAX_DAYS)
             var matrixHeight = specHeight.toFloat()
@@ -216,8 +252,8 @@ class CalHeatMapView : View, CalHeatMap {
                     parent.getDrawingRect(scrollBounds)
 
                     notifyVisibility(scrollBounds)
-                    parent.setOnScrollChangeListener { _: NestedScrollView?, _: Int, _: Int, _: Int, _: Int ->
 
+                    parent.setOnScrollChangeListener { _: NestedScrollView?, _: Int, _: Int, _: Int, _: Int ->
                         notifyVisibility(scrollBounds)
                     }
                 }
@@ -239,7 +275,7 @@ class CalHeatMapView : View, CalHeatMap {
         }
     }
 
-    private val myListener = object : GestureDetector.SimpleOnGestureListener() {
+    private val detector: GestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
         override fun onDown(event: MotionEvent): Boolean {
             return true
         }
@@ -251,11 +287,15 @@ class CalHeatMapView : View, CalHeatMap {
 
             invalidate()
         }
+    }).apply {
+        setIsLongpressEnabled(true)
     }
 
-    private val detector: GestureDetector = GestureDetector(context, myListener)
+    override fun performClick(): Boolean {
+        super.performClick()
+        return false
+    }
 
-    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         return detector.onTouchEvent(event).let { result ->
 
@@ -268,6 +308,7 @@ class CalHeatMapView : View, CalHeatMap {
 
             when (event.action) {
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {
+                    performClick()
                     parent.requestDisallowInterceptTouchEvent(false)
                 }
             }

@@ -16,7 +16,7 @@ import kotlin.math.*
  * @since March 2020
  */
 
-internal object Shadow {
+internal object ShadowUtility {
     internal const val DEFAULT_COLOR = 0x30000000
 
     private const val SHADOW_RADIUS_MULTIPLIER = -0.25f

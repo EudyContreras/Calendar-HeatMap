@@ -2,7 +2,7 @@ package com.eudycontreras.calendarheatmaplibrary.extensions
 
 import android.graphics.Path
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
-import com.eudycontreras.calendarheatmaplibrary.utilities.Shadow
+import com.eudycontreras.calendarheatmaplibrary.utilities.ShadowUtility
 
 /**
  * Copyright (C) 2020 Project X
@@ -13,25 +13,25 @@ import com.eudycontreras.calendarheatmaplibrary.utilities.Shadow
  */
 
 fun Path.addShadowBounds(bounds: Bounds, radii: FloatArray, elevation: Float) {
-    val left = bounds.left -  Shadow.getLeftOffset(elevation)
-    val top = bounds.top - Shadow.getTopOffset(elevation)
-    val right = bounds.right +  Shadow.getRightOffset(elevation)
-    val bottom = bounds.bottom + Shadow.getBottomOffset(elevation)
+    val left = bounds.left -  ShadowUtility.getLeftOffset(elevation)
+    val top = bounds.top - ShadowUtility.getTopOffset(elevation)
+    val right = bounds.right +  ShadowUtility.getRightOffset(elevation)
+    val bottom = bounds.bottom + ShadowUtility.getBottomOffset(elevation)
 
     addRoundRect(left, top, right, bottom, radii, Path.Direction.CCW)
 }
 
 fun Path.addShadowBounds(bounds: Bounds, radii: FloatArray, elevation: Float, left: Float? = null, top: Float? = null, right: Float? = null, bottom: Float? = null) {
-    val bLeft = (left ?: bounds.left) - Shadow.getLeftOffset(elevation)
-    val bTop = (top ?: bounds.top) - Shadow.getTopOffset(elevation)
-    val bRight = (right ?: bounds.right) + Shadow.getRightOffset(elevation)
-    val bBottom = (bottom ?: bounds.bottom) + Shadow.getBottomOffset(elevation)
+    val bLeft = (left ?: bounds.left) - ShadowUtility.getLeftOffset(elevation)
+    val bTop = (top ?: bounds.top) - ShadowUtility.getTopOffset(elevation)
+    val bRight = (right ?: bounds.right) + ShadowUtility.getRightOffset(elevation)
+    val bBottom = (bottom ?: bounds.bottom) + ShadowUtility.getBottomOffset(elevation)
     addRoundRect(bLeft, bTop, bRight, bBottom, radii, Path.Direction.CCW)
 }
 
 fun Path.addShadowOval(centerX: Float, centerY: Float, radius: Float, elevation: Float) {
-    val shadowRadius = radius + Shadow.getRadiusMultiplier(elevation)
-    addCircle(centerX + Shadow.getLeftOffset(elevation), centerY + Shadow.getRadiusTopOffset(elevation), shadowRadius, Path.Direction.CCW)
+    val shadowRadius = radius + ShadowUtility.getRadiusMultiplier(elevation)
+    addCircle(centerX + ShadowUtility.getLeftOffset(elevation), centerY + ShadowUtility.getRadiusTopOffset(elevation), shadowRadius, Path.Direction.CCW)
 }
 
 fun Path.addCircle(centerX: Float, centerY: Float, radius: Float) {

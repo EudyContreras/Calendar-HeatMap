@@ -1,7 +1,14 @@
 package com.eudycontreras.calendarheatmaplibrary.framework
 
+import android.content.Context
 import android.util.SparseArray
+import android.view.MotionEvent
 import androidx.core.util.set
+import com.eudycontreras.calendarheatmaplibrary.AndroidColor
+import com.eudycontreras.calendarheatmaplibrary.common.TouchConsumer
+import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
+import com.eudycontreras.calendarheatmaplibrary.extensions.dp
+import com.eudycontreras.calendarheatmaplibrary.framework.core.CellInterceptor
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableRectangle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
@@ -10,7 +17,6 @@ import com.eudycontreras.calendarheatmaplibrary.framework.elements.LegendArea
 import com.eudycontreras.calendarheatmaplibrary.framework.elements.MonthLabelArea
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
-import kotlin.random.Random
 
 /**
  * Copyright (C) 2020 Project X
@@ -23,7 +29,8 @@ import kotlin.random.Random
 internal class CalHeatMapBuilder(
     private val shapeRenderer: ShapeRenderer,
     private var styleContext: () -> HeatMapStyle,
-    private var optionsContext: () -> HeatMapOptions
+    private var optionsContext: () -> HeatMapOptions,
+    private var contextProvider: (() -> Context)?
 ) {
 
     private var calHeatMapData: HeatMapData = generatePlaceholderData()
@@ -33,6 +40,7 @@ internal class CalHeatMapBuilder(
     fun buildWithBounds(bounds: Bounds) {
         val style = styleContext.invoke()
         val options = optionsContext.invoke()
+        val context = contextProvider?.invoke()
 
         val data = calHeatMapData
 
@@ -65,12 +73,36 @@ internal class CalHeatMapBuilder(
         val cellShapes = mutableListOf<DrawableRectangle>()
         val monthIndexes = SparseArray< HeatMapLabel>()
 
+        val interceptor: CellInterceptor = buildInterceptor(options, bounds, legendArea, style, gapSize)
+
         for ((index, week) in data.timeSpan.weeks.withIndex()) {
             var verticalOffset = monthAreaHeight
             for(day in week.weekDays) {
                 val shape = DrawableRectangle()
-                shape.setData(Date.TAG, day.date)
-                shape.setData(Frequency.TAG, day.frequencyData)
+                shape.touchHandler = { consumer: TouchConsumer, event: MotionEvent, x: Float, y: Float ->
+                    when (event.action) {
+                        MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                            if (consumer is DrawableRectangle) {
+                                if (consumer.bounds.isInside(x, y)) {
+                                   if (!consumer.hovered) {
+                                       consumer.applyHighlight()
+                                       consumer.hovered = true
+                                   }
+                                } else {
+                                    if (consumer.hovered) {
+                                        consumer.removeHighlight()
+                                        consumer.hovered = false
+                                    }
+                                }
+                            }
+                        }
+                        MotionEvent.ACTION_UP, MotionEvent.ACTION_BUTTON_RELEASE, MotionEvent.ACTION_OUTSIDE, MotionEvent.ACTION_CANCEL -> {
+                            if (consumer is DrawableRectangle) {
+                                consumer.removeHighlight()
+                            }
+                        }
+                    }
+                }
                 shape.bounds = Bounds(horizontalOffset, verticalOffset, horizontalOffset + size, verticalOffset + size)
                 shape.color = MutableColor(day.getColorValue(style))
                 verticalOffset += (size + gapSize)
@@ -81,11 +113,11 @@ internal class CalHeatMapBuilder(
                 val lastWeek = data.timeSpan.weeks[index - 1]
                 if (!lastWeek.hasMonthLabel()) {
                     if (week.hasMonthLabel()) {
-                        monthIndexes[index + 1] = label
+                        monthIndexes[index] = label
                     }
                 } else {
                     if (week.weekDays[0].date.day == 1) {
-                        monthIndexes[index + 1] = label
+                        monthIndexes[index] = label
                     }
                 }
             } else {
@@ -97,9 +129,33 @@ internal class CalHeatMapBuilder(
         monthLabelArea?.buildWith(size, gapSize, dayAreaWidth, monthIndexes, data.timeSpan.weeks, style)
 
         shapeRenderer.addShape(cellShapes)
+        shapeRenderer.addShape(interceptor)
         shapeRenderer.addShape(monthLabelArea?.getShapes())
         shapeRenderer.addShape(dayLabelArea?.getShapes())
         shapeRenderer.addShape(legendArea?.getShapes())
+    }
+
+    private fun buildInterceptor(options: HeatMapOptions, bounds: Bounds, legendArea: LegendArea?, style: HeatMapStyle, gapSize: Float): CellInterceptor {
+
+        val interceptor = CellInterceptor()
+        interceptor.visible = true
+        interceptor.lineColor =  MutableColor(AndroidColor.WHITE)
+        interceptor.markerFillColor = MutableColor(style.minCellColor)
+        interceptor.markerStrokeColor = MutableColor(AndroidColor.WHITE)
+        interceptor.shiftOffsetX = 50.dp
+        interceptor.shiftOffsetY = 50.dp
+        interceptor.lineThickness = 2.dp
+        interceptor.markerRadius = 12.dp
+        interceptor.elevation = 4.dp
+        interceptor.showHorizontalLine = true
+        interceptor.showVerticalLine = true
+        interceptor.build(bounds = bounds.copy(
+            left = if (options.showDayLabels) { HeatMapOptions.DAY_LABEL_AREA_WIDTH + gapSize } else bounds.left + gapSize,
+            right = bounds.right - (gapSize * 2),
+            top = if (options.showMonthLabels) { HeatMapOptions.MONTH_LABEL_AREA_HEIGHT } else bounds.top,
+            bottom = if (options.showLegend) { (legendArea?.bounds?.top ?: bounds.bottom) - gapSize } else bounds.bottom - gapSize
+        ))
+        return interceptor
     }
 
     private fun buildLegendArea(options: HeatMapOptions, bounds: Bounds): LegendArea? {
