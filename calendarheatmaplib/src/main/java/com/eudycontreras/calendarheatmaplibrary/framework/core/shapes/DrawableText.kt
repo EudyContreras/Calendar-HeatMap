@@ -1,8 +1,9 @@
-package com.eudycontreras.calendarheatmaplibrary.framework.core
+package com.eudycontreras.calendarheatmaplibrary.framework.core.shapes
 
 import android.graphics.*
 import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.extensions.sp
+import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
 /**
@@ -50,12 +51,12 @@ internal class DrawableText(
             boundsDirty = true
         }
 
-    var alignment: Alignment = Alignment.LEFT
+    var alignment: Alignment =
+        Alignment.LEFT
         set(value) {
             field = value
             boundsDirty = true
         }
-
 
     fun build(): DrawableText {
         paint.recycle()
@@ -92,5 +93,9 @@ internal class DrawableText(
             Alignment.CENTER -> Paint.Align.CENTER
             Alignment.LEFT -> Paint.Align.LEFT
         }
+    }
+
+    companion object {
+
     }
 }

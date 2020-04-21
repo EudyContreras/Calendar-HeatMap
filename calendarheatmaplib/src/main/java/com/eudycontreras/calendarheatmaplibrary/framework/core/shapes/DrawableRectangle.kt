@@ -1,4 +1,4 @@
-package com.eudycontreras.calendarheatmaplibrary.framework.core
+package com.eudycontreras.calendarheatmaplibrary.framework.core.shapes
 
 import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
@@ -10,6 +10,8 @@ import com.eudycontreras.calendarheatmaplibrary.extensions.addRoundRect
 import com.eudycontreras.calendarheatmaplibrary.extensions.addShadowBounds
 import com.eudycontreras.calendarheatmaplibrary.extensions.dp
 import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
+import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
+import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.Color
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 import com.eudycontreras.calendarheatmaplibrary.utilities.ShadowUtility
@@ -29,6 +31,8 @@ internal class DrawableRectangle : DrawableShape(), TouchConsumer {
     private var shadowFilter: BlurMaskFilter? = null
 
     private var lastColor: MutableColor? = null
+
+    private var lastBounds: Bounds? = null
 
     private var allowInteraction: Boolean = true
 
@@ -109,17 +113,30 @@ internal class DrawableRectangle : DrawableShape(), TouchConsumer {
         if (lastColor == null) {
             lastColor = color.clone()
         }
-        color = lastColor?.adjust(1.15f) ?: return
+        if (lastBounds == null) {
+            lastBounds = bounds.copy()
+        }
         showStroke = true
+        elevation = 6.dp
         strokeWidth = 4.dp
+
+        lastBounds?.let {
+            val zoom = 4.dp
+            bounds.left = it.left - zoom
+            bounds.right = it.right + zoom
+            bounds.top = it.top - zoom
+            bounds.bottom = it.bottom + zoom
+        }
         if (strokeColor == null) {
-            strokeColor = lastColor
+            strokeColor = lastColor?.adjust(1.22f) ?: return
         }
     }
 
     fun removeHighlight() {
         showStroke = false
         strokeWidth = 0f
-        color = lastColor ?: return
+        elevation = 0f
+        color = lastColor?.clone() ?: return
+        bounds = lastBounds?.copy() ?: return
     }
 }

@@ -22,7 +22,7 @@ internal class ShapeRenderer {
 
     private val shapes = ArrayList<RenderTarget>()
 
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    internal val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         isAntiAlias = true
         xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
     }

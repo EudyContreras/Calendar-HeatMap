@@ -1,4 +1,4 @@
-package com.eudycontreras.calendarheatmaplibrary.framework.core
+package com.eudycontreras.calendarheatmaplibrary.framework.core.elements
 
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -8,6 +8,9 @@ import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
 import com.eudycontreras.calendarheatmaplibrary.extensions.dp
+import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
+import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableCircle
+import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableRectangle
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
@@ -19,16 +22,19 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  * @since April 2020
  */
 
-internal class CellInterceptor : RenderTarget, TouchableShape {
+internal class CellInterceptor(
+    markerRadius: Float = 30.dp,
+    lineThickness: Float = MIN_OFFSET
+) : RenderTarget, TouchableShape {
     var bounds: Bounds = Bounds()
 
-    var markerRadius: Float = 30.dp
+    var markerRadius: Float = markerRadius
         set(value) {
             field = value
             marker.radius = value
         }
 
-    var lineThickness: Float = MIN_OFFSET
+    var lineThickness: Float = lineThickness
         set(value) {
             field = value
             lineLeft.height = value
@@ -182,11 +188,11 @@ internal class CellInterceptor : RenderTarget, TouchableShape {
         this.bounds.update(bounds)
 
         lineTop.y = bounds.y
-
         lineLeft.x = bounds.x
 
         marker.showStroke = true
         marker.strokeWidth = 2.5f.dp
+        marker.radius = markerRadius
 
         lineRight.render = true
         lineLeft.render = true
@@ -236,5 +242,9 @@ internal class CellInterceptor : RenderTarget, TouchableShape {
             positionX = x
             positionY = y
         }
+    }
+
+    companion object {
+
     }
 }

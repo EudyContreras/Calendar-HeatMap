@@ -72,25 +72,25 @@ internal abstract class DrawableShape: RenderTarget {
     var x: Float
         get() = bounds.x
         set(value) {
-            bounds.left = value
+            bounds.x = value
         }
 
     var y: Float
         get() = bounds.y
         set(value) {
-            bounds.top = value
+            bounds.y = value
         }
 
     var width: Float
         get() = bounds.width
         set(value) {
-            bounds.right = bounds.left + value
+            bounds.width = value
         }
 
     var height: Float
         get() = bounds.height
         set(value) {
-            bounds.bottom = bounds.top + value
+            bounds.height = value
         }
 
     val radii: FloatArray

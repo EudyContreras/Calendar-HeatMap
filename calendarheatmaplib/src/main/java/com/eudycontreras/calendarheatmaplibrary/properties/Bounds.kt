@@ -1,5 +1,6 @@
 package com.eudycontreras.calendarheatmaplibrary.properties
 
+import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import kotlin.math.abs
 
 /**
@@ -16,23 +17,49 @@ data class Bounds(
     var right: Float = 0f,
     var bottom: Float = 0f
 ) {
-    val x: Float
+    var x: Float
         get() = left
+        set(value) {
+            val offset = left - value
+            left = value
+            right -= offset
+        }
 
-    val y: Float
+    var y: Float
         get() = top
+        set(value) {
+            val offset = top - value
+            top = value
+            bottom -= offset
+        }
 
-    val width: Float
+    var width: Float
         get() = right - left
+        set(value) {
+            right = left + value
+        }
 
-    val height: Float
+    var height: Float
         get() = bottom - top
+        set(value) {
+            bottom = top + value
+        }
 
-    val centerX: Float
+    var centerX: Float
         get() = (left + right) * 0.5f
+        set(value) {
+            val width = width
+            left = (value - (width / 2))
+            right = (value + (width / 2))
+        }
 
-    val centerY: Float
+    var centerY: Float
         get() = (top + bottom) * 0.5f
+        set(value) {
+            val height = height
+            top = (value - (height / 2))
+            bottom = (value + (height / 2))
+        }
 
     fun getVerticalOverlap(other: Bounds): Float {
         val top1 = this.top
@@ -49,10 +76,10 @@ data class Bounds(
     }
 
     fun reset() {
-        left = 0f
-        right = 0f
-        top = 0f
-        bottom = 0f
+        left = MIN_OFFSET
+        right = MIN_OFFSET
+        top = MIN_OFFSET
+        bottom = MIN_OFFSET
     }
 
     fun update(bounds: Bounds) {

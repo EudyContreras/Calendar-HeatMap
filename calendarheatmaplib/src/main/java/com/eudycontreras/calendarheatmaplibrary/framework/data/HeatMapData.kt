@@ -1,13 +1,8 @@
 package com.eudycontreras.calendarheatmaplibrary.framework.data
 
-import android.graphics.Typeface
-import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
-import com.eudycontreras.calendarheatmaplibrary.AndroidColor
 import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
-import com.eudycontreras.calendarheatmaplibrary.extensions.dp
-import com.eudycontreras.calendarheatmaplibrary.extensions.sp
 import com.eudycontreras.calendarheatmaplibrary.mapRange
 import com.eudycontreras.calendarheatmaplibrary.properties.Color
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
@@ -49,23 +44,29 @@ data class TimeSpan(
 @Serializable
 data class Date(
     val day: Int,
-    val month: Month,
-    val year: Int
+    val month: Int,
+    val year: Int? = null
 ) {
-    companion object {
-        const val TAG = 0x01
+    override fun toString(): String {
+        return "$year-${month + 1}-$day"
     }
 
-    override fun toString(): String {
-        return "$year-${month.value + 1}-$day"
+    override fun equals(other: Any?): Boolean {
+        if (other !is Date) return false
+        if (day != other.day) return false
+        if (month != other.month) return false
+        if (year != null && other.year != null) {
+            if (year != other.year) return false
+        }
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = day
+        result = 31 * result + month
+        return result
     }
 }
-
-@Serializable
-data class Month(
-    val value: Int,
-    val label: String
-)
 
 @Serializable
 data class Week(
@@ -88,7 +89,6 @@ data class Frequency(
     companion object {
         const val MIN_VALUE = 0
         const val MAX_VALUE = 50
-        const val TAG = 0x00
     }
 
     override fun toString(): String {
@@ -101,21 +101,19 @@ enum class Alignment {
     @SerialName("LEFT")
     LEFT,
     @SerialName("RIGHT")
-    RIGHT,
-    @SerialName("CENTER")
-    CENTER
+    RIGHT
 }
 
 fun HeatMapData.getColumnCount(): Int {
     return timeSpan.weeks.count()
 }
 
-fun Week.hasMonthLabel(): Boolean {
-    return weekDays.groupBy { it.date.month.label }.count() <= 1
+fun Week.hasMonthLabel(months: List<HeatMapLabel>): Boolean {
+    return weekDays.groupBy { months[it.date.month] }.count() <= 1
 }
 
 fun Week.getMonthLabel(): Int {
-    return weekDays.map { it.date.month.value }.first()
+    return weekDays.map { it.date.month }.first()
 }
 
 fun WeekDay.getColorValue(

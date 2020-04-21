@@ -30,6 +30,8 @@
         color spectrum. -->
         <attr name="cellColorMax" format="color|reference" />
 
+        <attr name="showCellDayText" format="boolean|reference" />
+
         <!-- Sets the color for the labels representing the months of the time
         span. -->
         <attr name="monthLabelColor" format="color|reference" />

@@ -2,8 +2,6 @@ package com.eudycontreras.calendarheatmap
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.framework.data.Date
@@ -15,7 +13,32 @@ import kotlin.random.Random
 
 internal class SomeViewModel : ViewModel() {
 
-    val demoData: LiveData<HeatMapData> = MutableLiveData(getSafeData())
+    private val holidays: HashSet<Date> = hashSetOf(
+        Date(24, 11),
+        Date(25, 11),
+        Date(31, 11),
+        Date(1, 0)
+    )
+
+    private val vacation: HashSet<Date> = (1..17).map { Date(it, 6) }.toHashSet()
+
+    val demoData1: HeatMapData
+        get() = getSafeData()
+
+    val demoData2: HeatMapData
+        get() = getSafeData()
+
+    val demoData3: HeatMapData
+        get() = getSafeData()
+
+    val demoData4: HeatMapData
+        get() = getSafeData()
+
+    val demoData5: HeatMapData
+        get() = getSafeData()
+
+    val demoData6: HeatMapData
+        get() = getSafeData()
 
     private fun getSafeData(): HeatMapData {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -24,8 +47,8 @@ internal class SomeViewModel : ViewModel() {
             return HeatMapData(
                 options = HeatMapOptions(),
                 timeSpan = TimeSpan(
-                    dateMin = Date(0, Month(0, ""), 0),
-                    dateMax = Date(0, Month(0, ""), 0),
+                    dateMin = Date(0, 0),
+                    dateMax = Date(0, 0),
                     weeks = emptyList()
                 )
             )
@@ -35,11 +58,10 @@ internal class SomeViewModel : ViewModel() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun generateData(): HeatMapData {
         val daysInWeek = 7
-        val daysInYear = 365L
 
         val dateTo = LocalDate.now()
-        val origin = dateTo.minusDays(daysInYear)
-        var dateFrom = dateTo.minusDays(daysInYear)
+        val origin = dateTo.minusYears(1)
+        var dateFrom = dateTo.minusYears(1)
 
         val weeks: MutableList<Week> = mutableListOf()
 
@@ -53,25 +75,29 @@ internal class SomeViewModel : ViewModel() {
 
             val days: MutableList<WeekDay> = mutableListOf()
 
-            days@for (day in 0 until daysInWeek) {
+            days@ for (day in 0 until daysInWeek) {
                 if (dateFrom > dateTo) {
                     break@days
                 }
+                val date = dateFrom.toDate(monthLabels)
+
+                val frequency = if (holidays.contains(date) || vacation.contains(date)) {
+                    0
+                } else if (day > 0 && day < daysInWeek - 1) {
+                    Random.nextInt(Frequency.MIN_VALUE, Frequency.MAX_VALUE)
+                } else if (Random.nextBoolean()) {
+                    Random.nextInt(Frequency.MIN_VALUE, Frequency.MAX_VALUE / 2)
+                } else 0
+
                 days.add(
                     WeekDay(
                         index = day,
-                        date = dateFrom.toDate(monthLabels),
-                        frequencyData = Frequency(
-                            count = if (day > 0 && day < daysInWeek - 1) {
-                                Random.nextInt(Frequency.MIN_VALUE, Frequency.MAX_VALUE)
-                            } else if (Random.nextBoolean()) { Random.nextInt(Frequency.MIN_VALUE, Frequency.MAX_VALUE / 2) } else 0,
-                            data = null
-                        )
+                        date = date,
+                        frequencyData = Frequency(count = frequency, data = null)
                     )
                 )
                 dateFrom = dateFrom.plusDays(1)
             }
-
             weeks.add(Week(weekNumber = weekNumber, weekDays = days))
         }
 
@@ -87,6 +113,6 @@ internal class SomeViewModel : ViewModel() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun LocalDate.toDate(monthLabels: List<String>): Date {
-        return Date(dayOfMonth,  Month(monthValue -1, monthLabels[monthValue - 1]), year)
+        return Date(dayOfMonth,monthValue - 1, year)
     }
 }

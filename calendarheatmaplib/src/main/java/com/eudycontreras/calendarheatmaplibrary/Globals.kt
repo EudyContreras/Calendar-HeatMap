@@ -1,8 +1,12 @@
 package com.eudycontreras.calendarheatmaplibrary
 
+import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.Typeface
 import android.view.ViewGroup
 import android.view.ViewParent
 import androidx.core.math.MathUtils
+import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.properties.Coordinate
 import com.eudycontreras.calendarheatmaplibrary.properties.Property
 import kotlin.math.hypot
@@ -178,4 +182,14 @@ fun findScrollParent(parent: ViewGroup, criteria: (ViewGroup) -> Boolean): ViewP
     } else {
         parent
     }
+}
+
+
+fun getTextMeasurement(paint: Paint, text: String?, textSize: Float, typeFace: Typeface): Rect {
+    val textBounds = Rect()
+    paint.recycle()
+    paint.typeface = typeFace
+    paint.textSize = textSize
+    paint.getTextBounds(text, 0, text?.length ?: 0, textBounds)
+    return textBounds
 }

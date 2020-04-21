@@ -2,9 +2,7 @@ package com.eudycontreras.calendarheatmaplibrary.framework
 
 import android.content.Context
 import android.content.res.TypedArray
-import android.graphics.Canvas
-import android.graphics.Rect
-import android.graphics.Typeface
+import android.graphics.*
 import android.util.AttributeSet
 import android.view.*
 import android.widget.ScrollView
@@ -12,11 +10,14 @@ import androidx.annotation.ColorInt
 import androidx.core.widget.NestedScrollView
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.R
+import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.findScrollParent
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
+import com.eudycontreras.calendarheatmaplibrary.getTextMeasurement
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
+import kotlin.math.max
 
 
 /**
@@ -40,6 +41,8 @@ class CalHeatMapView : View, CalHeatMap {
     private var fullyVisible: Boolean = false
 
     private var scrollingParent: ViewParent? = null
+
+    private var measurements: Measurements = Measurements()
 
     private var calHeatMapStyle: HeatMapStyle = HeatMapStyle()
     private var calHeatMapOptions: HeatMapOptions = HeatMapOptions()
@@ -94,6 +97,9 @@ class CalHeatMapView : View, CalHeatMap {
         this.calHeatMapOptions = calHeatMapOptions
     }
 
+    fun setShowCellDayText(showCellDayText: Boolean) {
+        this.calHeatMapOptions.showCellDayText = showCellDayText
+    }
     fun setCellColorMin(@ColorInt minCellColor: Int) {
         this.calHeatMapStyle.minCellColor = minCellColor
     }
@@ -138,11 +144,11 @@ class CalHeatMapView : View, CalHeatMap {
         this.calHeatMapStyle.legendLabelStyle.typeFace = typeFace
     }
 
-    fun setLegendLabelSize(labelSize: Float) {
+    fun setLegendLabelTextSize(labelSize: Float) {
         this.calHeatMapStyle.legendLabelStyle.textSize = labelSize
     }
 
-    fun setShowShowDayLabels(showDayLabels: Boolean) {
+    fun setShowDayLabels(showDayLabels: Boolean) {
         this.calHeatMapOptions.showDayLabels = showDayLabels
     }
 
@@ -166,21 +172,24 @@ class CalHeatMapView : View, CalHeatMap {
         this.calHeatMapOptions.legendMoreLabel = moreLabelText
     }
 
+    fun setRevealOnVisible(revealOnVisible: Boolean) {
+
+    }
+
     override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
         super.onSizeChanged(width, height, oldWidth, oldHeight)
-        val paddingLeft = paddingLeft
-        val paddingRight = paddingRight
-        val paddingTop = paddingTop
-        val paddingBottom = paddingBottom
 
-        val usableWidth = width - (paddingLeft + paddingRight).toFloat()
-        val usableHeight = height - (paddingTop + paddingBottom).toFloat()
+        val padding = Padding(
+            paddingStart = max(paddingLeft, paddingStart),
+            paddingEnd = max(paddingRight, paddingEnd),
+            paddingTop = paddingTop,
+            paddingBottom = paddingBottom
+        )
 
-        this.heatMapBuilder.buildWithBounds(Bounds(right = usableWidth, bottom = usableHeight))
+        this.heatMapBuilder.buildWithBounds(padding, measurements)
 
         if (scrollingParent == null) {
-            fullyVisible = true
-            onFullyVisible?.invoke(this)
+            observeVisibility()
         }
         invalidate()
     }
@@ -197,31 +206,74 @@ class CalHeatMapView : View, CalHeatMap {
 
         heatMapBuilder.getData()?.let { data ->
 
-            val cellSize  = data.cellSize
-            val gapSize = data.cellGap ?: if (cellSize != null) { cellSize * HeatMapData.CELL_SIZE_RATIO } else {
-                (specHeight / TimeSpan.MAX_DAYS) * HeatMapData.CELL_SIZE_RATIO
+            buildMeasurements(data = data, measuredHeight = specHeight) { width, height ->
+                setMeasuredDimension(
+                    resolveSize(width, widthMeasureSpec),
+                    resolveSize(height, heightMeasureSpec)
+                )
             }
-
-            val legendAreaHeight = if (calHeatMapOptions.showLegend) { HeatMapOptions.LEGEND_AREA_HEIGHT } else MIN_OFFSET
-            val monthAreaHeight = if (calHeatMapOptions.showMonthLabels) { HeatMapOptions.MONTH_LABEL_AREA_HEIGHT } else MIN_OFFSET
-            val dayAreaWidth = if (calHeatMapOptions.showDayLabels) { HeatMapOptions.DAY_LABEL_AREA_WIDTH } else MIN_OFFSET
-
-            val gapRatio = (gapSize * TimeSpan.MAX_DAYS)
-            var matrixHeight = specHeight.toFloat()
-
-            matrixHeight -= legendAreaHeight
-            matrixHeight -= monthAreaHeight
-
-            val size = data.cellSize ?: ((matrixHeight  - gapRatio) / TimeSpan.MAX_DAYS)
-
-            val count = data.getColumnCount()
-            val width = dayAreaWidth + (size * count + (gapSize * count)) + (gapSize * 2)
-
-            setMeasuredDimension(
-                resolveSize(width.toInt(), widthMeasureSpec),
-                resolveSize(specHeight, heightMeasureSpec)
-            )
         }
+    }
+
+    private fun buildMeasurements(data: HeatMapData, measuredHeight: Int, onMeasured: (Int, Int) -> Unit) {
+        val cellSize = data.cellSize
+
+        val gapSize = data.cellGap ?: if (cellSize != null) { cellSize * HeatMapData.CELL_SIZE_RATIO } else {
+            (measuredHeight / TimeSpan.MAX_DAYS) * HeatMapData.CELL_SIZE_RATIO
+        }
+
+        val legendAreaTextHeight = if (calHeatMapOptions.showLegend) {
+            val textMeasurement = getTextMeasurement(
+                paint = shapeRenderer.paint,
+                text = calHeatMapOptions.legendLessLabel,
+                textSize = calHeatMapStyle.legendLabelStyle.textSize,
+                typeFace = calHeatMapStyle.legendLabelStyle.typeFace
+            )
+            textMeasurement.height() + gapSize
+        } else MIN_OFFSET
+
+        val legendAreaHeight = if (calHeatMapOptions.showLegend) {
+            max(HeatMapOptions.LEGEND_AREA_HEIGHT, legendAreaTextHeight + (gapSize * 2))
+        } else MIN_OFFSET
+
+        val dayLabelAreaTextHeight = if (calHeatMapOptions.showDayLabels) {
+            val textMeasurement = getTextMeasurement(
+                paint = shapeRenderer.paint,
+                text = calHeatMapOptions.dayLabels.map { it.text }.maxBy { it.length },
+                textSize = calHeatMapStyle.dayLabelStyle.textSize,
+                typeFace = calHeatMapStyle.dayLabelStyle.typeFace
+            )
+            textMeasurement.height() + gapSize
+        } else MIN_OFFSET
+
+        val dayAreaWidth = if (calHeatMapOptions.showDayLabels) {
+            max(HeatMapOptions.DAY_LABEL_AREA_WIDTH, dayLabelAreaTextHeight + (gapSize * 2))
+        } else MIN_OFFSET
+
+        val monthAreaHeight = if (calHeatMapOptions.showMonthLabels) {
+            HeatMapOptions.MONTH_LABEL_AREA_HEIGHT }
+        else MIN_OFFSET
+
+        val gapRatio = (gapSize * TimeSpan.MAX_DAYS)
+        var matrixHeight = measuredHeight.toFloat()
+
+        matrixHeight -= legendAreaHeight
+        matrixHeight -= monthAreaHeight
+
+        val size = data.cellSize ?: ((matrixHeight  - gapRatio) / TimeSpan.MAX_DAYS)
+
+        val count = data.getColumnCount()
+        val width = dayAreaWidth + (size * count + (gapSize * count)) + gapSize
+
+        measurements = Measurements(
+            matrixWidth = width,
+            matrixHeight = matrixHeight,
+            legendAreaHeight = legendAreaHeight,
+            dayLabelAreaWidth = dayAreaWidth,
+            monthLabelAreaHeight = monthAreaHeight
+        )
+
+        onMeasured(width.toInt(), measuredHeight)
     }
 
     override var onFullyVisible: ((CalHeatMap) -> Unit)? = null
@@ -230,42 +282,52 @@ class CalHeatMapView : View, CalHeatMap {
 
     fun observeVisibility() {
         val scrollBounds = Rect()
+        val viewBounds = Rect()
 
         scrollingParent = findScrollParent(this.parent as ViewGroup) {
-            it is ScrollView || it is NestedScrollView
+            it !is NestedScrollView && it is ScrollView || it is NestedScrollView
         }
 
         scrollingParent?.let { parent ->
             when (parent) {
                 is ScrollView -> {
-                    parent.getDrawingRect(scrollBounds)
-
-                    notifyVisibility(scrollBounds)
+                    retrieveBounds(viewBounds, parent, scrollBounds)
+                    notifyVisibility(viewBounds, scrollBounds)
 
                     parent.viewTreeObserver.addOnScrollChangedListener {
-                        parent.getDrawingRect(scrollBounds)
-
-                        notifyVisibility(scrollBounds)
+                        retrieveBounds(viewBounds, parent, scrollBounds)
+                        notifyVisibility(viewBounds, scrollBounds)
                     }
                 }
                 is NestedScrollView -> {
-                    parent.getDrawingRect(scrollBounds)
-
-                    notifyVisibility(scrollBounds)
+                    retrieveBounds(viewBounds, parent, scrollBounds)
+                    notifyVisibility(viewBounds, scrollBounds)
 
                     parent.setOnScrollChangeListener { _: NestedScrollView?, _: Int, _: Int, _: Int, _: Int ->
-                        notifyVisibility(scrollBounds)
+                        retrieveBounds(viewBounds, parent, scrollBounds)
+                        notifyVisibility(viewBounds, scrollBounds)
                     }
                 }
             }
         }
     }
 
-    private fun notifyVisibility(
+    private fun retrieveBounds(
+        viewBounds: Rect,
+        parent: ViewGroup,
         scrollBounds: Rect
     ) {
-        val top = this.y
-        val bottom = top + this.height
+        getDrawingRect(viewBounds)
+        parent.offsetDescendantRectToMyCoords(this, viewBounds)
+        parent.getDrawingRect(scrollBounds)
+    }
+
+    private fun notifyVisibility(
+        hitBounds: Rect,
+        scrollBounds: Rect
+    ) {
+        val top = hitBounds.top
+        val bottom = hitBounds.bottom
 
         if (scrollBounds.top < (top + ((bottom - top) * sizeRatio)) && scrollBounds.bottom > (bottom - ((bottom - top) * sizeRatio))) {
             if (!fullyVisible) {
@@ -320,4 +382,19 @@ class CalHeatMapView : View, CalHeatMap {
     override fun update() {
         invalidate()
     }
+
+    data class Measurements(
+        val matrixWidth: Float = MIN_OFFSET,
+        val matrixHeight: Float = MIN_OFFSET,
+        val legendAreaHeight: Float = MIN_OFFSET,
+        val dayLabelAreaWidth: Float = MIN_OFFSET,
+        val monthLabelAreaHeight: Float = MIN_OFFSET
+    )
+
+    data class Padding(
+        val paddingStart: Int,
+        val paddingEnd: Int,
+        val paddingTop: Int,
+        val paddingBottom: Int
+    )
 }

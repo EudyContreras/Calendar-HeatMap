@@ -1,10 +1,11 @@
-package com.eudycontreras.calendarheatmaplibrary.framework.core
+package com.eudycontreras.calendarheatmaplibrary.framework.core.shapes
 
 import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
 import com.eudycontreras.calendarheatmaplibrary.extensions.*
+import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
 import com.eudycontreras.calendarheatmaplibrary.utilities.ShadowUtility
 import kotlin.math.min
 
