@@ -184,7 +184,6 @@ fun findScrollParent(parent: ViewGroup, criteria: (ViewGroup) -> Boolean): ViewP
     }
 }
 
-
 fun getTextMeasurement(paint: Paint, text: String?, textSize: Float, typeFace: Typeface): Rect {
     val textBounds = Rect()
     paint.recycle()

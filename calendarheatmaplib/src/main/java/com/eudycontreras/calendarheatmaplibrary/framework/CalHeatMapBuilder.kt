@@ -2,25 +2,13 @@ package com.eudycontreras.calendarheatmaplibrary.framework
 
 import android.content.Context
 import android.util.SparseArray
-import android.view.MotionEvent
-import androidx.core.util.set
 import com.eudycontreras.calendarheatmaplibrary.AndroidColor
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
-import com.eudycontreras.calendarheatmaplibrary.common.TouchConsumer
-import com.eudycontreras.calendarheatmaplibrary.extensions.dp
-import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableRectangle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
 import com.eudycontreras.calendarheatmaplibrary.framework.core.elements.*
-import com.eudycontreras.calendarheatmaplibrary.framework.core.elements.CellInterceptor
-import com.eudycontreras.calendarheatmaplibrary.framework.core.elements.DayLabelArea
-import com.eudycontreras.calendarheatmaplibrary.framework.core.elements.HeatMapArea
-import com.eudycontreras.calendarheatmaplibrary.framework.core.elements.LegendArea
-import com.eudycontreras.calendarheatmaplibrary.framework.core.elements.MonthLabelArea
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
-import com.eudycontreras.calendarheatmaplibrary.getTextMeasurement
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
-import kotlin.math.max
 
 /**
  * Copyright (C) 2020 Project X
@@ -32,8 +20,6 @@ import kotlin.math.max
 
 /**
  * TODO list:
- * - Remove hard code dimensions for the different areas. Base the dimensions
- * on text sizes
  * - Take overlay input in order to render the tooltip information. Or better yet
  * allow the user to specify a layout for the tooltip. The layout should take the frequency data
  * draw the the given layout inside of the tooltip somehow.
@@ -54,45 +40,32 @@ internal class CalHeatMapBuilder(
 
     fun getData(): HeatMapData? = calHeatMapData
 
-    fun buildWithBounds(bounds: Bounds) {
+    fun buildWithBounds(bounds: Bounds, measurements: Measurements) {
+        val data = calHeatMapData
         val style = styleContext.invoke()
         val options = optionsContext.invoke()
 
-        val data = calHeatMapData
-
-        val cellSize  = data.cellSize
-        val gapSize = data.cellGap ?: if (cellSize != null) { cellSize * HeatMapData.CELL_SIZE_RATIO } else {
-            (bounds.height / TimeSpan.MAX_DAYS) * HeatMapData.CELL_SIZE_RATIO
-        }
-
-        val legendArea = buildLegendArea(options, style, bounds, gapSize)?.buildWith(gapSize)
-        val dayLabelArea = buildDayLabelArea(options, style, bounds, gapSize)
-        val monthLabelArea = buildMonthLabelArea(options, style, bounds)
-
-        val legendAreaHeight = legendArea?.bounds?.height ?: 0f
-        val monthAreaHeight = monthLabelArea?.bounds?.height ?: 0f
-        val dayAreaWidth = dayLabelArea?.bounds?.width ?: 0f
-
-        val gapRatio = (gapSize * TimeSpan.MAX_DAYS)
-        val size = data.cellSize ?: ((bounds.height - (legendAreaHeight + monthAreaHeight) - gapRatio) / TimeSpan.MAX_DAYS)
-
-        dayLabelArea?.buildWith(size, gapSize, monthAreaHeight)
-
-        val interceptor: CellInterceptor = buildInterceptor(options, bounds, legendArea, style, gapSize, size)
+        val legendArea = buildLegendArea(options, style, bounds, measurements)
+        val dayLabelArea = buildDayLabelArea(options, style, bounds, measurements)
+        val monthLabelArea = buildMonthLabelArea(options, style, bounds, measurements)
 
         val monthIndexes = SparseArray<HeatMapLabel>()
 
-        val heatMapArea = buildHeatMapArea(options, style, bounds,
-            paddingLeft = dayAreaWidth,
-            paddingTop = monthAreaHeight,
-            paddingBottom = legendAreaHeight
+        val heatMapArea = buildHeatMapArea(style, bounds,
+            paddingLeft = dayLabelArea?.bounds?.width ?: MIN_OFFSET,
+            paddingTop = monthLabelArea?.bounds?.height ?: MIN_OFFSET,
+            paddingBottom = legendArea?.bounds?.height ?: MIN_OFFSET
         ).buildWith(
-            cellSize = size,
-            offset = gapSize,
-            monthIndexes = monthIndexes
+            measurements = measurements,
+            monthIndexes = monthIndexes,
+            monthLabels = options.monthLabels
         )
 
-        monthLabelArea?.buildWith(size, gapSize, dayAreaWidth, monthIndexes, data.timeSpan.weeks)
+        val interceptor: CellInterceptor = buildInterceptor(options, style, heatMapArea.bounds, measurements)
+
+        legendArea?.buildWith(measurements, options)
+        dayLabelArea?.buildWith(measurements, options.dayLabels)
+        monthLabelArea?.buildWith(measurements, monthIndexes, data.timeSpan.weeks)
 
         shapeRenderer.addShape(heatMapArea)
         shapeRenderer.addShape(monthLabelArea)
@@ -101,10 +74,13 @@ internal class CalHeatMapBuilder(
         shapeRenderer.addShape(interceptor)
     }
 
-    private fun buildInterceptor(options: HeatMapOptions, bounds: Bounds, legendArea: LegendArea?, style: HeatMapStyle, gapSize: Float, cellSize: Float): CellInterceptor {
+    private fun buildInterceptor(options: HeatMapOptions, style: HeatMapStyle, bounds: Bounds, measurements: Measurements): CellInterceptor {
+        val gapSize: Float = measurements.cellGap
+        val cellSize: Float = measurements.cellSize
+
         val interceptor = CellInterceptor(
             markerRadius = cellSize / 2,
-            lineThickness = 2.dp
+            lineThickness = style.interceptorLineThickness
         )
         interceptor.visible = true
         interceptor.lineColor =  MutableColor(AndroidColor.WHITE)
@@ -112,20 +88,19 @@ internal class CalHeatMapBuilder(
         interceptor.markerStrokeColor = MutableColor(AndroidColor.WHITE)
         interceptor.shiftOffsetX = options.interceptorOffsetX
         interceptor.shiftOffsetY = options.interceptorOffsetY
-        interceptor.elevation = 3.dp
+        interceptor.elevation = style.interceptorElevation
         interceptor.showHorizontalLine = true
         interceptor.showVerticalLine = true
         interceptor.build(bounds = bounds.copy(
-            left = if (options.showDayLabels) { HeatMapOptions.DAY_LABEL_AREA_WIDTH + gapSize } else bounds.left + gapSize,
-            right = bounds.right - (gapSize * 2),
-            top = if (options.showMonthLabels) { HeatMapOptions.MONTH_LABEL_AREA_HEIGHT } else bounds.top,
-            bottom = if (options.showLegend) { (legendArea?.bounds?.top ?: bounds.bottom) - gapSize } else bounds.bottom - gapSize
+            left = bounds.left + gapSize,
+            right = bounds.right - gapSize,
+            bottom = bounds.bottom - gapSize
         ))
         return interceptor
     }
 
-    private fun buildHeatMapArea(options: HeatMapOptions, style: HeatMapStyle, bounds: Bounds, paddingLeft: Float, paddingTop: Float, paddingBottom: Float): HeatMapArea {
-        return HeatMapArea(calHeatMapData, options, style, bounds.copy(
+    private fun buildHeatMapArea(style: HeatMapStyle, bounds: Bounds, paddingLeft: Float, paddingTop: Float, paddingBottom: Float): HeatMapArea {
+        return HeatMapArea(calHeatMapData, style, bounds.copy(
             left = bounds.left + paddingLeft,
             top = bounds.top + paddingTop,
             right = bounds.right,
@@ -133,59 +108,38 @@ internal class CalHeatMapBuilder(
         ))
     }
 
-    private fun buildLegendArea(options: HeatMapOptions, style: HeatMapStyle, bounds: Bounds, gapSize: Float): LegendArea? {
-        val legendAreaTextHeight = if (options.showLegend) {
-            val textMeasurement = getTextMeasurement(
-                paint = shapeRenderer.paint,
-                text = options.legendLessLabel,
-                textSize = style.legendLabelStyle.textSize,
-                typeFace = style.legendLabelStyle.typeFace
-            )
-            textMeasurement.height() + gapSize
-        } else MIN_OFFSET
-
-        val legendAreaHeight = if (options.showLegend) {
-            max(HeatMapOptions.LEGEND_AREA_HEIGHT, legendAreaTextHeight + (gapSize * 2))
-        } else MIN_OFFSET
-
+    private fun buildLegendArea(options: HeatMapOptions, style: HeatMapStyle, bounds: Bounds, measurements: Measurements): LegendArea? {
         if (options.showLegend) {
-            return LegendArea(options, style, bounds.copy(
-                left = if (options.showDayLabels) { HeatMapOptions.DAY_LABEL_AREA_WIDTH } else 0f,
-                top = bounds.height - legendAreaHeight
+            return LegendArea(style, bounds.copy(
+                left = if (options.showDayLabels) {
+                    measurements.dayLabelAreaWidth
+                } else MIN_OFFSET,
+                top = bounds.height - measurements.legendAreaHeight
             ))
         }
         return null
     }
 
-    private fun buildDayLabelArea(options: HeatMapOptions, style: HeatMapStyle, bounds: Bounds, gapSize: Float): DayLabelArea? {
-        val dayLabelAreaTextHeight = if (options.showLegend) {
-            val textMeasurement = getTextMeasurement(
-                paint = shapeRenderer.paint,
-                text = options.dayLabels.map { it.text }.maxBy { it.length },
-                textSize = style.dayLabelStyle.textSize,
-                typeFace = style.dayLabelStyle.typeFace
-            )
-            textMeasurement.height() + gapSize
-        } else MIN_OFFSET
-
-        val dayAreaWidth = if (options.showDayLabels) {
-            max(HeatMapOptions.DAY_LABEL_AREA_WIDTH, dayLabelAreaTextHeight + (gapSize * 2))
-        } else MIN_OFFSET
-
+    private fun buildDayLabelArea(options: HeatMapOptions, style: HeatMapStyle, bounds: Bounds, measurements: Measurements): DayLabelArea? {
         if (options.showDayLabels) {
-            return DayLabelArea(options, style, bounds.copy(
-                top = if (options.showMonthLabels) { HeatMapOptions.MONTH_LABEL_AREA_HEIGHT } else 0f,
-                right = dayAreaWidth
+            return DayLabelArea(style, bounds.copy(
+                left = bounds.left,
+                top = if (options.showMonthLabels) {
+                    measurements.monthLabelAreaHeight
+                } else MIN_OFFSET,
+                right = measurements.dayLabelAreaWidth
             ))
         }
         return null
     }
 
-    private fun buildMonthLabelArea(options: HeatMapOptions, style: HeatMapStyle, bounds: Bounds): MonthLabelArea? {
+    private fun buildMonthLabelArea(options: HeatMapOptions, style: HeatMapStyle, bounds: Bounds, measurements: Measurements): MonthLabelArea? {
         if (options.showMonthLabels) {
-            return MonthLabelArea(options, style, bounds.copy(
-                left = if (options.showDayLabels) { HeatMapOptions.DAY_LABEL_AREA_WIDTH } else 0f,
-                bottom = HeatMapOptions.MONTH_LABEL_AREA_HEIGHT
+            return MonthLabelArea(style, bounds.copy(
+                left = if (options.showDayLabels) {
+                    measurements.dayLabelAreaWidth
+                } else MIN_OFFSET,
+                bottom = measurements.monthLabelAreaHeight
             ))
         }
         return null
@@ -231,7 +185,6 @@ internal class CalHeatMapBuilder(
                     yearCounter ++
                 }
             }
-
             weeks.add(Week(weekNumber = index.toInt(), weekDays = days))
         }
 

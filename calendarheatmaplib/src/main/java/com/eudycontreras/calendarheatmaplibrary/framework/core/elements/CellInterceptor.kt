@@ -23,7 +23,7 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  */
 
 internal class CellInterceptor(
-    markerRadius: Float = 30.dp,
+    markerRadius: Float = MIN_OFFSET,
     lineThickness: Float = MIN_OFFSET
 ) : RenderTarget, TouchableShape {
     var bounds: Bounds = Bounds()
@@ -55,13 +55,13 @@ internal class CellInterceptor(
     var markerFillColor: MutableColor
         get() = marker.color
         set(value) {
-            marker.color = MutableColor(value).updateAlpha(0.4f)
+            marker.color = MutableColor(value).updateAlpha(MARKER_FILL_ALPHA)
         }
 
     var markerStrokeColor: MutableColor
         get() = marker.color
         set(value) {
-            marker.strokeColor = MutableColor(value).updateAlpha(0.8f)
+            marker.strokeColor = MutableColor(value).updateAlpha(MARKER_STROKE_FILL_ALPHA)
         }
 
     var elevation: Float = MIN_OFFSET
@@ -71,7 +71,7 @@ internal class CellInterceptor(
             lineRight.elevation = value
             lineTop.elevation = value
             lineBottom.elevation = value
-            marker.elevation =value
+            marker.elevation = value
         }
 
     var allowIntercept: Boolean = true
@@ -121,7 +121,7 @@ internal class CellInterceptor(
             lineRight.render = value
         }
 
-    var positionX: Float = 0f
+    var positionX: Float = MIN_OFFSET
         private set(value) {
             field = value
             marker.centerX = (value - shiftOffsetX)
@@ -154,7 +154,7 @@ internal class CellInterceptor(
                 marker.centerY = (bounds.bottom - marker.radius)
             }
 
-            lineTop.bounds.top = bounds.top
+            lineTop.bounds.y = bounds.top
             lineTop.bounds.bottom = (marker.centerY - marker.radius)
 
             lineBottom.bounds.top = (marker.centerY + marker.radius)
@@ -163,7 +163,7 @@ internal class CellInterceptor(
             lineLeft.bounds.top = (marker.centerY - (lineThickness / 2))
             lineLeft.bounds.bottom = lineLeft.bounds.top + lineThickness
 
-            lineRight.bounds.top = (marker.centerY- (lineThickness / 2))
+            lineRight.bounds.top = (marker.centerY - (lineThickness / 2))
             lineRight.bounds.bottom = lineRight.bounds.top + lineThickness
         }
 
@@ -191,7 +191,7 @@ internal class CellInterceptor(
         lineLeft.x = bounds.x
 
         marker.showStroke = true
-        marker.strokeWidth = 2.5f.dp
+        marker.strokeWidth = MARKER_STROKE_WIDTH.dp
         marker.radius = markerRadius
 
         lineRight.render = true
@@ -211,7 +211,7 @@ internal class CellInterceptor(
     }
 
     override fun onTouch(event: MotionEvent, x: Float, y: Float, shapeRenderer: ShapeRenderer) {
-        if(!allowIntercept || !shouldRender)
+        if (!allowIntercept || !shouldRender)
             return
 
         when (event.action) {
@@ -234,8 +234,13 @@ internal class CellInterceptor(
         }
     }
 
-    override fun onLongPressed(event: MotionEvent, x: Float, y: Float, shapeRenderer: ShapeRenderer) {
-        if(!allowIntercept)
+    override fun onLongPressed(
+        event: MotionEvent,
+        x: Float,
+        y: Float,
+        shapeRenderer: ShapeRenderer
+    ) {
+        if (!allowIntercept)
             return
         if (!shouldRender && visible) {
             shouldRender = true
@@ -245,6 +250,8 @@ internal class CellInterceptor(
     }
 
     companion object {
-
+        const val MARKER_FILL_ALPHA = 0.35f
+        const val MARKER_STROKE_FILL_ALPHA = 0.8f
+        const val MARKER_STROKE_WIDTH = 2.5f
     }
 }

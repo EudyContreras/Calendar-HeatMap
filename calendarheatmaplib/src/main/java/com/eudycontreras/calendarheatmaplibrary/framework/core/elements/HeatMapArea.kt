@@ -24,7 +24,6 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
 internal class HeatMapArea (
     val data: HeatMapData,
-    val options: HeatMapOptions,
     val style: HeatMapStyle,
     val bounds: Bounds
 ): RenderTarget, TouchConsumer {
@@ -33,7 +32,10 @@ internal class HeatMapArea (
 
     override var touchHandler: ((TouchConsumer, MotionEvent, Float, Float) -> Unit)? = null
 
-    fun buildWith(cellSize: Float, offset: Float, monthIndexes: SparseArray<HeatMapLabel>): HeatMapArea {
+    fun buildWith(measurements: Measurements, monthIndexes: SparseArray<HeatMapLabel>, monthLabels: List<HeatMapLabel>): HeatMapArea {
+        val offset = measurements.cellGap
+        val cellSize = measurements.cellSize
+
         var horizontalOffset = (offset + bounds.left)
 
         for ((index, week) in data.timeSpan.weeks.withIndex()) {
@@ -69,12 +71,12 @@ internal class HeatMapArea (
                 verticalOffset += (cellSize + offset)
                 shapes.add(shape)
             }
-            val label = options.monthLabels[week.getMonthLabel()]
+            val label = monthLabels[week.getMonthLabel()]
 
             if (index > 0) {
                 val lastWeek = data.timeSpan.weeks[index - 1]
-                if (!lastWeek.hasMonthLabel(options.monthLabels)) {
-                    if (week.hasMonthLabel(options.monthLabels)) {
+                if (!lastWeek.hasMonthLabel(monthLabels)) {
+                    if (week.hasMonthLabel(monthLabels)) {
                         monthIndexes[index] = label
                     }
                 } else {

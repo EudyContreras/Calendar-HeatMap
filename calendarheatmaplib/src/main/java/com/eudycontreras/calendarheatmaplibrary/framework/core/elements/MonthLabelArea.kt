@@ -1,8 +1,6 @@
 package com.eudycontreras.calendarheatmaplibrary.framework.core.elements
 
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Path
+import android.graphics.*
 import android.util.SparseArray
 import android.view.MotionEvent
 import androidx.core.util.containsKey
@@ -11,10 +9,7 @@ import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableText
-import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapLabel
-import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapOptions
-import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapStyle
-import com.eudycontreras.calendarheatmaplibrary.framework.data.Week
+import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
@@ -27,26 +22,41 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  */
 
 internal class MonthLabelArea(
-    val options: HeatMapOptions,
     val style: HeatMapStyle,
     val bounds: Bounds
-): RenderTarget, TouchableShape {
+) : RenderTarget, TouchableShape {
 
-    private val shapes: MutableList<DrawableShape> = mutableListOf()
-
-    override var touchHandler: ((TouchableShape, MotionEvent, Float, Float) -> Unit)? = null
 
     override var hovered: Boolean = false
 
-    fun buildWith(cellSize: Float, offset: Float, leftOffset: Float, monthLabels: SparseArray<HeatMapLabel>, weeks: List<Week>) {
+    override var touchHandler: ((TouchableShape, MotionEvent, Float, Float) -> Unit)? = null
+
+    private val shapes: MutableList<DrawableShape> = mutableListOf()
+
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        isAntiAlias = true
+        xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
+    }
+
+    fun buildWith(
+        measurements: Measurements,
+        monthLabels: SparseArray<HeatMapLabel>,
+        weeks: List<Week>
+    ) {
+        val offset: Float = measurements.cellGap
+        val cellSize: Float = measurements.cellSize
+        val leftOffset: Float = measurements.dayLabelAreaWidth
+
         var horizontalOffset = leftOffset + offset
 
         for ((index, _) in weeks.withIndex()) {
-            val label = if (monthLabels.containsKey(index)) { monthLabels[index] } else null
+            val label = if (monthLabels.containsKey(index)) {
+                monthLabels[index]
+            } else null
             if (label != null) {
                 val monthLabel = DrawableText(
-                    label.text
-                ).build()
+                    text = label.text
+                ).build(paint)
                 monthLabel.x = horizontalOffset
                 monthLabel.y = bounds.bottom - offset
                 monthLabel.alignment = DrawableText.Alignment.LEFT

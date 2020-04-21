@@ -109,6 +109,7 @@ internal class DrawableRectangle : DrawableShape(), TouchConsumer {
         canvas.drawPath(shapePath, paint)
     }
 
+    //TODO refactor highlight and redefine what highlight is
     fun applyHighlight() {
         if (lastColor == null) {
             lastColor = color.clone()

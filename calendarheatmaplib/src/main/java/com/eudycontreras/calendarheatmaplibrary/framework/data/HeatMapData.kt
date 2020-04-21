@@ -92,7 +92,7 @@ data class Frequency(
     }
 
     override fun toString(): String {
-       return "Frequency: $count"
+        return "Frequency: $count"
     }
 }
 
@@ -100,6 +100,7 @@ data class Frequency(
 enum class Alignment {
     @SerialName("LEFT")
     LEFT,
+
     @SerialName("RIGHT")
     RIGHT
 }

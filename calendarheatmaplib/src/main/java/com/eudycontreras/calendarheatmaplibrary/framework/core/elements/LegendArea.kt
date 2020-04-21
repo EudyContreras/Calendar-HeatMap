@@ -1,8 +1,6 @@
 package com.eudycontreras.calendarheatmaplibrary.framework.core.elements
 
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Path
+import android.graphics.*
 import android.view.MotionEvent
 import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
@@ -15,6 +13,7 @@ import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableTe
 import com.eudycontreras.calendarheatmaplibrary.framework.data.Alignment
 import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapOptions
 import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapStyle
+import com.eudycontreras.calendarheatmaplibrary.framework.data.Measurements
 import com.eudycontreras.calendarheatmaplibrary.mapRange
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
@@ -28,56 +27,65 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  */
 
 internal class LegendArea(
-    private val options: HeatMapOptions,
+
     val style: HeatMapStyle,
     val bounds: Bounds
 ): RenderTarget, TouchableShape {
 
-    private val levels: MutableList<DrawableShape> = mutableListOf()
-
-    private val lessText = DrawableText(options.legendLessLabel)
-    private val moreText = DrawableText(options.legendMoreLabel)
-
     private var sizeRatio: Float = DEFAULT_SIZE_RATIO
 
-    override var touchHandler: ((TouchableShape, MotionEvent, Float, Float) -> Unit)? = null
+    private val spectrumLevels: Int = DEFAULT_SPECTRUM_LEVELS
 
     override var hovered: Boolean = false
 
-    private val levelCount: Int = 4
+    override var touchHandler: ((TouchableShape, MotionEvent, Float, Float) -> Unit)? = null
 
-    fun buildWith(offset: Float): LegendArea {
+    private val shapes: MutableList<DrawableShape> = mutableListOf()
+
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        isAntiAlias = true
+        xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
+    }
+
+    fun buildWith(measurements: Measurements, options: HeatMapOptions): LegendArea {
+        val lessText = DrawableText(options.legendLessLabel)
+        val moreText = DrawableText(options.legendMoreLabel)
+
         when(options.legendAlignment) {
             Alignment.LEFT -> {
-                withLeftAlignment(offset)
+                withLeftAlignment(measurements.cellGap, lessText, moreText)
             }
             Alignment.RIGHT -> {
-                withRightAlignment(offset)
+                withRightAlignment(measurements.cellGap, lessText, moreText)
             }
         }
+
+        shapes.add(lessText)
+        shapes.add(moreText)
+
         return this
     }
 
-    private fun withLeftAlignment(offset: Float) {
+    private fun withLeftAlignment(offset: Float, lessText: DrawableText, moreText: DrawableText) {
         lessText.x = bounds.x + offset
         lessText.y = bounds.bottom - (offset * 2)
         lessText.alignment = DrawableText.Alignment.LEFT
         lessText.textSize = style.legendLabelStyle.textSize
         lessText.typeFace = style.legendLabelStyle.typeFace
         lessText.textColor = MutableColor(style.legendLabelStyle.textColor)
-        lessText.build()
+        lessText.build(paint)
 
         val cellSize = bounds.height * sizeRatio
         var leftOffset = lessText.x + (offset * 2) + lessText.textBounds.width()
 
-        for (level in 0..levelCount) {
+        for (level in 0..spectrumLevels) {
             val shape = DrawableRectangle()
             shape.x = leftOffset
             shape.y = lessText.y - cellSize
             shape.width = cellSize
             shape.height = cellSize
-            shape.color = getColor(level, 0f, levelCount.toFloat(), style)
-            levels.add(shape)
+            shape.color = getColor(level, MIN_OFFSET, spectrumLevels.toFloat(), style)
+            shapes.add(shape)
             leftOffset += (cellSize + offset)
         }
 
@@ -87,30 +95,30 @@ internal class LegendArea(
         moreText.textSize = style.legendLabelStyle.textSize
         moreText.typeFace = style.legendLabelStyle.typeFace
         moreText.textColor = MutableColor(style.legendLabelStyle.textColor)
-        moreText.build()
+        moreText.build(paint)
     }
 
-    private fun withRightAlignment(offset: Float) {
+    private fun withRightAlignment(offset: Float, lessText: DrawableText, moreText: DrawableText) {
         val cellSize = bounds.height * sizeRatio
 
         moreText.alignment = DrawableText.Alignment.RIGHT
         moreText.textSize = style.legendLabelStyle.textSize
         moreText.typeFace = style.legendLabelStyle.typeFace
         moreText.textColor = MutableColor(style.legendLabelStyle.textColor)
-        moreText.build()
+        moreText.build(paint)
         moreText.x = bounds.right - offset
         moreText.y = bounds.bottom - (offset * 2)
 
         var rightOffset = moreText.x - (moreText.width + cellSize + (offset * 2))
 
-        for (level in levelCount downTo 0) {
+        for (level in spectrumLevels downTo 0) {
             val shape = DrawableRectangle()
             shape.x = rightOffset
             shape.y = moreText.y - cellSize
             shape.width = cellSize
             shape.height = cellSize
-            shape.color = getColor(level, 0f, levelCount.toFloat(), style)
-            levels.add(shape)
+            shape.color = getColor(level, MIN_OFFSET, spectrumLevels.toFloat(), style)
+            shapes.add(shape)
             rightOffset -= (cellSize + offset)
         }
 
@@ -118,21 +126,19 @@ internal class LegendArea(
         lessText.textSize = style.legendLabelStyle.textSize
         lessText.typeFace = style.legendLabelStyle.typeFace
         lessText.textColor = MutableColor(style.legendLabelStyle.textColor)
-        lessText.build()
+        lessText.build(paint)
         lessText.bounds.x = rightOffset + (cellSize - (offset))
         lessText.bounds.y = moreText.y
     }
 
     override fun onRender(canvas: Canvas, paint: Paint, shapePath: Path, shadowPath: Path) {
-        lessText.onRender(canvas, paint, shapePath, shadowPath)
-        moreText.onRender(canvas, paint, shapePath, shadowPath)
-        for (shape in levels) {
+        for (shape in shapes) {
             shape.onRender(canvas, paint, shapePath, shadowPath)
         }
     }
 
     override fun onTouch(event: MotionEvent, x: Float, y: Float, shapeRenderer: ShapeRenderer) {
-        for (shape in levels) {
+        for (shape in shapes) {
             if (shape is TouchableShape) {
                 shape.onTouch(event, x, y, shapeRenderer)
             }
@@ -145,7 +151,7 @@ internal class LegendArea(
         y: Float,
         shapeRenderer: ShapeRenderer
     ) {
-        for (shape in levels) {
+        for (shape in shapes) {
             if (shape is TouchableShape) {
                 shape.onLongPressed(event, x, y, shapeRenderer)
             }
@@ -162,5 +168,6 @@ internal class LegendArea(
 
     companion object {
         const val DEFAULT_SIZE_RATIO: Float = 0.55f
+        const val DEFAULT_SPECTRUM_LEVELS: Int = 4
     }
 }

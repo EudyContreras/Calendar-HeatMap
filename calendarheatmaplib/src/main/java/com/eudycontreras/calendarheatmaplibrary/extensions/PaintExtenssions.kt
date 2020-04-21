@@ -14,6 +14,7 @@ fun Paint.recycle(){
     shader = null
     maskFilter = null
     pathEffect = null
-
+    typeface = null
+    textSize = 0f
     clearShadowLayer()
 }

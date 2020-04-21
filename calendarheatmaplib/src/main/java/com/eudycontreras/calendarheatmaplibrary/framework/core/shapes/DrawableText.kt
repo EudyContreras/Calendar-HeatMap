@@ -26,14 +26,9 @@ internal class DrawableText(
 
     private var boundsDirty: Boolean = true
 
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        isAntiAlias = true
-        xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
-    }
-
     var textBounds: Rect = Rect()
 
-    var textSize: Float = 12.sp
+    var textSize: Float = STANDARD_TEXT_SIZE.sp
         set(value) {
             field = value
             boundsDirty = true
@@ -58,7 +53,7 @@ internal class DrawableText(
             boundsDirty = true
         }
 
-    fun build(): DrawableText {
+    fun build(paint: Paint): DrawableText {
         paint.recycle()
         paint.typeface = typeFace
         paint.textSize = textSize
@@ -73,10 +68,10 @@ internal class DrawableText(
     override fun onRender(canvas: Canvas, paint: Paint, shapePath: Path, shadowPath: Path) {
         if (render) {
             if (boundsDirty) {
-                build()
+                build(paint)
                 boundsDirty = false
             }
-            canvas.drawText(text, x, y, this.paint)
+            canvas.drawText(text, x, y, paint)
         }
     }
 
@@ -96,6 +91,6 @@ internal class DrawableText(
     }
 
     companion object {
-
+        const val STANDARD_TEXT_SIZE: Float = 12f
     }
 }

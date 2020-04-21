@@ -26,11 +26,9 @@ data class HeatMapOptions(
 ) {
     companion object {
         const val LESS = "Less"
-        const  val MORE = "More"
+        const val MORE = "More"
 
-        val LEGEND_AREA_HEIGHT = 40.dp
-        val MONTH_LABEL_AREA_HEIGHT = 25.dp
-        val DAY_LABEL_AREA_WIDTH = 30.dp
+        val LEGEND_AREA_HEIGHT = 35.dp
 
         val STANDARD_DAY_LABELS = listOf(
             HeatMapLabel("Sun", 0, false),

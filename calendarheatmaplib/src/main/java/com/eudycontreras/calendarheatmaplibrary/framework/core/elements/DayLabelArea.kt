@@ -1,16 +1,15 @@
 package com.eudycontreras.calendarheatmaplibrary.framework.core.elements
 
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Path
+import android.graphics.*
 import android.view.MotionEvent
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableText
-import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapOptions
+import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapLabel
 import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapStyle
+import com.eudycontreras.calendarheatmaplibrary.framework.data.Measurements
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
@@ -23,27 +22,31 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  */
 
 internal class DayLabelArea(
-    val options: HeatMapOptions,
     val style: HeatMapStyle,
     val bounds: Bounds
-): RenderTarget, TouchableShape {
-
-    private val shapes: MutableList<DrawableShape> = mutableListOf()
-
-    override var touchHandler: ((TouchableShape, MotionEvent, Float, Float) -> Unit)? = null
+) : RenderTarget, TouchableShape {
 
     override var hovered: Boolean = false
 
-    fun buildWith(offset: Float, topOffset: Float) {
-        val labels = options.dayLabels
+    override var touchHandler: ((TouchableShape, MotionEvent, Float, Float) -> Unit)? = null
+
+    private val shapes: MutableList<DrawableShape> = mutableListOf()
+
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        isAntiAlias = true
+        xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
+    }
+
+    fun buildWith(measurements: Measurements, labels: List<HeatMapLabel>) {
+        val offset: Float = measurements.cellGap
+        val cellSize: Float = measurements.cellSize
+        val topOffset: Float = measurements.monthLabelAreaHeight
 
         var verticalOffset = topOffset
 
         for (label in labels) {
             if (label.active) {
-                val dayLabel = DrawableText(
-                    label.text
-                ).build()
+                val dayLabel = DrawableText(text = label.text).build(paint)
                 dayLabel.x = bounds.right
                 dayLabel.y = verticalOffset + ((cellSize / 2) + (dayLabel.height / 2))
                 dayLabel.alignment = DrawableText.Alignment.RIGHT
