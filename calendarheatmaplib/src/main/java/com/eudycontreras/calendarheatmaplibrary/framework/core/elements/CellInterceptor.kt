@@ -191,7 +191,7 @@ internal class CellInterceptor(
         lineLeft.x = bounds.x
 
         marker.showStroke = true
-        marker.strokeWidth = MARKER_STROKE_WIDTH.dp
+        marker.strokeWidth = lineThickness
         marker.radius = markerRadius
 
         lineRight.render = true

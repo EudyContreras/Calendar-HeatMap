@@ -33,7 +33,7 @@ internal class MonthLabelArea(
 
     private val shapes: MutableList<DrawableShape> = mutableListOf()
 
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         isAntiAlias = true
         xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
     }
@@ -55,11 +55,12 @@ internal class MonthLabelArea(
             } else null
             if (label != null) {
                 val monthLabel = DrawableText(
-                    text = label.text
-                ).build(paint)
+                    text = label.text,
+                    paint = paint
+                ).build()
                 monthLabel.x = horizontalOffset
                 monthLabel.y = bounds.bottom - offset
-                monthLabel.alignment = DrawableText.Alignment.LEFT
+                monthLabel.alignment = Alignment.LEFT
                 monthLabel.textSize = style.monthLabelStyle.textSize
                 monthLabel.typeFace = style.monthLabelStyle.typeFace
                 monthLabel.textColor = MutableColor(style.monthLabelStyle.textColor)

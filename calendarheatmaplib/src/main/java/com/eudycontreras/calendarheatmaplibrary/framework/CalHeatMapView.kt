@@ -10,6 +10,7 @@ import android.view.*
 import android.widget.ScrollView
 import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
+import androidx.core.view.doOnLayout
 import androidx.core.widget.NestedScrollView
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.R
@@ -210,6 +211,7 @@ class CalHeatMapView : View, CalHeatMap {
         )
 
         this.heatMapBuilder.buildWithBounds(
+            this,
             bounds = Bounds(
                 left = padding.paddingStart.toFloat(),
                 right = (width - padding.paddingEnd).toFloat(),
@@ -219,8 +221,12 @@ class CalHeatMapView : View, CalHeatMap {
             measurements = measurements
         )
 
-        if (scrollingParent == null) {
-            observeVisibility()
+        observeVisibility()
+
+        if(scrollingParent == null){
+            fullyVisible = true
+            onFullyVisible?.invoke(this)
+            return
         }
         invalidate()
     }
@@ -324,7 +330,7 @@ class CalHeatMapView : View, CalHeatMap {
 
     override fun fullyVisible(): Boolean = fullyVisible
 
-    fun observeVisibility() {
+    private fun observeVisibility() {
         val scrollBounds = Rect()
         val viewBounds = Rect()
 

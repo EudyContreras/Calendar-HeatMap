@@ -20,11 +20,11 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
 /**
  * TODO list:
+ * - Animate the showing of the cells using propagation animations provided by the framework
  * - Take overlay input in order to render the tooltip information. Or better yet
  * allow the user to specify a layout for the tooltip. The layout should take the frequency data
  * draw the the given layout inside of the tooltip somehow.
  * - Animate the hover trace somehow. Apply an animation on enter and exit from a cell.
- * - Animate the showing of the cells using propagation animations provided by the framework
  * - Allow panning from side to side. Calculate panning shift base on the motion event position
  * and the offset to each end of the spectrum.
  * - Interpolate interceptor center base on motion and
@@ -40,7 +40,7 @@ internal class CalHeatMapBuilder(
 
     fun getData(): HeatMapData? = calHeatMapData
 
-    fun buildWithBounds(bounds: Bounds, measurements: Measurements) {
+    fun buildWithBounds(heatMap: CalHeatMap, bounds: Bounds, measurements: Measurements) {
         val data = calHeatMapData
         val style = styleContext.invoke()
         val options = optionsContext.invoke()
@@ -51,7 +51,8 @@ internal class CalHeatMapBuilder(
 
         val monthIndexes = SparseArray<HeatMapLabel>()
 
-        val heatMapArea = buildHeatMapArea(style, bounds,
+        val heatMapArea = buildHeatMapArea(
+            options, heatMap, style, bounds,
             paddingLeft = dayLabelArea?.bounds?.width ?: MIN_OFFSET,
             paddingTop = monthLabelArea?.bounds?.height ?: MIN_OFFSET,
             paddingBottom = legendArea?.bounds?.height ?: MIN_OFFSET
@@ -61,7 +62,8 @@ internal class CalHeatMapBuilder(
             monthLabels = options.monthLabels
         )
 
-        val interceptor: CellInterceptor = buildInterceptor(options, style, heatMapArea.bounds, measurements)
+        val interceptor: CellInterceptor =
+            buildInterceptor(options, style, heatMapArea.bounds, measurements)
 
         legendArea?.buildWith(measurements, options)
         dayLabelArea?.buildWith(measurements, options.dayLabels)
@@ -74,16 +76,21 @@ internal class CalHeatMapBuilder(
         shapeRenderer.addShape(interceptor)
     }
 
-    private fun buildInterceptor(options: HeatMapOptions, style: HeatMapStyle, bounds: Bounds, measurements: Measurements): CellInterceptor {
+    private fun buildInterceptor(
+        options: HeatMapOptions,
+        style: HeatMapStyle,
+        bounds: Bounds,
+        measurements: Measurements
+    ): CellInterceptor {
         val gapSize: Float = measurements.cellGap
         val cellSize: Float = measurements.cellSize
 
         val interceptor = CellInterceptor(
-            markerRadius = cellSize / 2,
+            markerRadius = cellSize / 3,
             lineThickness = style.interceptorLineThickness
         )
         interceptor.visible = true
-        interceptor.lineColor =  MutableColor(AndroidColor.WHITE)
+        interceptor.lineColor = MutableColor(AndroidColor.WHITE)
         interceptor.markerFillColor = MutableColor(style.minCellColor)
         interceptor.markerStrokeColor = MutableColor(AndroidColor.WHITE)
         interceptor.shiftOffsetX = options.interceptorOffsetX
@@ -91,56 +98,89 @@ internal class CalHeatMapBuilder(
         interceptor.elevation = style.interceptorElevation
         interceptor.showHorizontalLine = true
         interceptor.showVerticalLine = true
-        interceptor.build(bounds = bounds.copy(
-            left = bounds.left + gapSize,
-            right = bounds.right - gapSize,
-            bottom = bounds.bottom - gapSize
-        ))
+        interceptor.build(
+            bounds = bounds.copy(
+                left = bounds.left + gapSize,
+                right = bounds.right - gapSize,
+                bottom = bounds.bottom - gapSize
+            )
+        )
         return interceptor
     }
 
-    private fun buildHeatMapArea(style: HeatMapStyle, bounds: Bounds, paddingLeft: Float, paddingTop: Float, paddingBottom: Float): HeatMapArea {
-        return HeatMapArea(calHeatMapData, style, bounds.copy(
-            left = bounds.left + paddingLeft,
-            top = bounds.top + paddingTop,
-            right = bounds.right,
-            bottom = bounds.bottom - paddingBottom
-        ))
+    private fun buildHeatMapArea(
+        options: HeatMapOptions,
+        heatMap: CalHeatMap,
+        style: HeatMapStyle,
+        bounds: Bounds,
+        paddingLeft: Float,
+        paddingTop: Float,
+        paddingBottom: Float
+    ): HeatMapArea {
+        return HeatMapArea(
+            options, heatMap, calHeatMapData, style, bounds.copy(
+                left = bounds.left + paddingLeft,
+                top = bounds.top + paddingTop,
+                right = bounds.right,
+                bottom = bounds.bottom - paddingBottom
+            )
+        )
     }
 
-    private fun buildLegendArea(options: HeatMapOptions, style: HeatMapStyle, bounds: Bounds, measurements: Measurements): LegendArea? {
+    private fun buildLegendArea(
+        options: HeatMapOptions,
+        style: HeatMapStyle,
+        bounds: Bounds,
+        measurements: Measurements
+    ): LegendArea? {
         if (options.showLegend) {
-            return LegendArea(style, bounds.copy(
-                left = if (options.showDayLabels) {
-                    measurements.dayLabelAreaWidth
-                } else MIN_OFFSET,
-                top = bounds.height - measurements.legendAreaHeight
-            ))
+            return LegendArea(
+                style, bounds.copy(
+                    left = if (options.showDayLabels) {
+                        measurements.dayLabelAreaWidth
+                    } else MIN_OFFSET,
+                    top = bounds.height - measurements.legendAreaHeight
+                )
+            )
         }
         return null
     }
 
-    private fun buildDayLabelArea(options: HeatMapOptions, style: HeatMapStyle, bounds: Bounds, measurements: Measurements): DayLabelArea? {
+    private fun buildDayLabelArea(
+        options: HeatMapOptions,
+        style: HeatMapStyle,
+        bounds: Bounds,
+        measurements: Measurements
+    ): DayLabelArea? {
         if (options.showDayLabels) {
-            return DayLabelArea(style, bounds.copy(
-                left = bounds.left,
-                top = if (options.showMonthLabels) {
-                    measurements.monthLabelAreaHeight
-                } else MIN_OFFSET,
-                right = measurements.dayLabelAreaWidth
-            ))
+            return DayLabelArea(
+                style, bounds.copy(
+                    left = bounds.left,
+                    top = if (options.showMonthLabels) {
+                        measurements.monthLabelAreaHeight
+                    } else MIN_OFFSET,
+                    right = measurements.dayLabelAreaWidth
+                )
+            )
         }
         return null
     }
 
-    private fun buildMonthLabelArea(options: HeatMapOptions, style: HeatMapStyle, bounds: Bounds, measurements: Measurements): MonthLabelArea? {
+    private fun buildMonthLabelArea(
+        options: HeatMapOptions,
+        style: HeatMapStyle,
+        bounds: Bounds,
+        measurements: Measurements
+    ): MonthLabelArea? {
         if (options.showMonthLabels) {
-            return MonthLabelArea(style, bounds.copy(
-                left = if (options.showDayLabels) {
-                    measurements.dayLabelAreaWidth
-                } else MIN_OFFSET,
-                bottom = measurements.monthLabelAreaHeight
-            ))
+            return MonthLabelArea(
+                style, bounds.copy(
+                    left = if (options.showDayLabels) {
+                        measurements.dayLabelAreaWidth
+                    } else MIN_OFFSET,
+                    bottom = measurements.monthLabelAreaHeight
+                )
+            )
         }
         return null
     }
@@ -164,7 +204,9 @@ internal class CalHeatMapBuilder(
 
             for (day in 0 until daysInWeek) {
                 dayCounter++
-                val monthIndex = if (weekCounter >= 3 && day > 5 && monthCounter < 10) { (monthCounter + 1) } else monthCounter
+                val monthIndex = if (weekCounter >= 3 && day > 5 && monthCounter < 10) {
+                    (monthCounter + 1)
+                } else monthCounter
                 days.add(
                     WeekDay(
                         index = day,
@@ -174,15 +216,15 @@ internal class CalHeatMapBuilder(
                 )
             }
             if (weekCounter < 3) {
-                weekCounter ++
+                weekCounter++
             } else {
                 weekCounter = 0
                 if (monthCounter < 11) {
-                    monthCounter ++
+                    monthCounter++
                     dayCounter = 0
                 } else {
                     monthCounter = 0
-                    yearCounter ++
+                    yearCounter++
                 }
             }
             weeks.add(Week(weekNumber = index.toInt(), weekDays = days))
@@ -191,8 +233,8 @@ internal class CalHeatMapBuilder(
         return HeatMapData(
             options = HeatMapOptions(),
             timeSpan = TimeSpan(
-                dateMin = Date(0,0, 0),
-                dateMax = Date(0,0, 0),
+                dateMin = Date(0, 0, 0),
+                dateMax = Date(0, 0, 0),
                 weeks = weeks
             )
         )

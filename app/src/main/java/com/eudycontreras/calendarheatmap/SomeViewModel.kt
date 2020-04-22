@@ -60,12 +60,11 @@ internal class SomeViewModel : ViewModel() {
         val daysInWeek = 7
 
         val dateTo = LocalDate.now()
-        val origin = dateTo.minusYears(1)
-        var dateFrom = dateTo.minusYears(1)
+
+        val origin = dateTo.minusYears(1).with(WeekFields.SUNDAY_START.dayOfWeek(), 1L)
+        var dateFrom = origin.minusYears(1).with(WeekFields.SUNDAY_START.dayOfWeek(), 1L)
 
         val weeks: MutableList<Week> = mutableListOf()
-
-        val monthLabels = HeatMapOptions.STANDARD_MONTH_LABELS.map { it.text }
 
         val weeksInYear = ChronoUnit.WEEKS.between(dateFrom, dateTo)
 
@@ -79,9 +78,9 @@ internal class SomeViewModel : ViewModel() {
                 if (dateFrom > dateTo) {
                     break@days
                 }
-                val date = dateFrom.toDate(monthLabels)
+                val date = dateFrom.toDate()
 
-                val frequency = if (holidays.contains(date) || vacation.contains(date)) {
+                val frequency = if (holidays.contains(date)) {
                     0
                 } else if (day > 0 && day < daysInWeek - 1) {
                     Random.nextInt(Frequency.MIN_VALUE, Frequency.MAX_VALUE)
@@ -104,15 +103,15 @@ internal class SomeViewModel : ViewModel() {
         return HeatMapData(
             options = HeatMapOptions(),
             timeSpan = TimeSpan(
-                dateMin = origin.toDate(monthLabels),
-                dateMax = dateTo.toDate(monthLabels),
+                dateMin = origin.toDate(),
+                dateMax = dateTo.toDate(),
                 weeks = weeks
             )
         )
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun LocalDate.toDate(monthLabels: List<String>): Date {
-        return Date(dayOfMonth,monthValue - 1, year)
+    private fun LocalDate.toDate() : Date {
+        return Date(dayOfMonth, monthValue - 1, year)
     }
 }

@@ -4,6 +4,7 @@ import android.graphics.*
 import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.extensions.sp
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
+import com.eudycontreras.calendarheatmaplibrary.framework.data.Alignment
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
 /**
@@ -15,14 +16,9 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  */
 
 internal class DrawableText(
-    val text: String
+    val text: String,
+    val paint: Paint
 ) : DrawableShape() {
-
-    enum class Alignment {
-        LEFT,
-        RIGHT,
-        CENTER
-    }
 
     private var boundsDirty: Boolean = true
 
@@ -46,14 +42,13 @@ internal class DrawableText(
             boundsDirty = true
         }
 
-    var alignment: Alignment =
-        Alignment.LEFT
+    var alignment: Alignment = Alignment.LEFT
         set(value) {
             field = value
             boundsDirty = true
         }
 
-    fun build(paint: Paint): DrawableText {
+    fun build(): DrawableText {
         paint.recycle()
         paint.typeface = typeFace
         paint.textSize = textSize
@@ -68,10 +63,10 @@ internal class DrawableText(
     override fun onRender(canvas: Canvas, paint: Paint, shapePath: Path, shadowPath: Path) {
         if (render) {
             if (boundsDirty) {
-                build(paint)
+                build()
                 boundsDirty = false
             }
-            canvas.drawText(text, x, y, paint)
+            canvas.drawText(text, x, y, this.paint)
         }
     }
 
@@ -82,11 +77,11 @@ internal class DrawableText(
         this.alignment = other.alignment
     }
 
-    private fun Alignment.getTextAlignment(): Paint.Align {
+    private fun Alignment?.getTextAlignment(): Paint.Align {
         return when(this) {
             Alignment.RIGHT -> Paint.Align.RIGHT
-            Alignment.CENTER -> Paint.Align.CENTER
             Alignment.LEFT -> Paint.Align.LEFT
+            else -> Paint.Align.CENTER
         }
     }
 

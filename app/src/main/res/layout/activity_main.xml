@@ -39,6 +39,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="250dp"
                     app:calHeatMapData="@{viewModel.demoData1}"
+                    app:cellElevation="@{Utils.getDp(2)}"
                     app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
                     app:cellColorMax="@{@color/colorMax}"
                     app:cellColorMin="@{@color/colorMin}"

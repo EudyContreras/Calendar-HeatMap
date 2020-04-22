@@ -42,20 +42,33 @@ internal class LegendArea(
 
     private val shapes: MutableList<DrawableShape> = mutableListOf()
 
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         isAntiAlias = true
         xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
     }
 
     fun buildWith(measurements: Measurements, options: HeatMapOptions): LegendArea {
-        val lessText = DrawableText(options.legendLessLabel)
-        val moreText = DrawableText(options.legendMoreLabel)
+        val lessText = DrawableText(options.legendLessLabel, paint).apply {
+            textSize = style.legendLabelStyle.textSize
+            typeFace = style.legendLabelStyle.typeFace
+            textColor = MutableColor(style.legendLabelStyle.textColor)
+        }.build()
+
+        val moreText = DrawableText(options.legendMoreLabel, paint).apply {
+            textSize = style.legendLabelStyle.textSize
+            typeFace = style.legendLabelStyle.typeFace
+            textColor = MutableColor(style.legendLabelStyle.textColor)
+        }.build()
 
         when(options.legendAlignment) {
             Alignment.LEFT -> {
+                moreText.alignment = Alignment.LEFT
+                lessText.alignment = Alignment.LEFT
                 withLeftAlignment(measurements.cellGap, lessText, moreText)
             }
             Alignment.RIGHT -> {
+                moreText.alignment = Alignment.RIGHT
+                lessText.alignment = Alignment.RIGHT
                 withRightAlignment(measurements.cellGap, lessText, moreText)
             }
         }
@@ -66,14 +79,13 @@ internal class LegendArea(
         return this
     }
 
-    private fun withLeftAlignment(offset: Float, lessText: DrawableText, moreText: DrawableText) {
+    private fun withLeftAlignment(
+        offset: Float,
+        lessText: DrawableText,
+        moreText: DrawableText
+    ) {
         lessText.x = bounds.x + offset
         lessText.y = bounds.bottom - (offset * 2)
-        lessText.alignment = DrawableText.Alignment.LEFT
-        lessText.textSize = style.legendLabelStyle.textSize
-        lessText.typeFace = style.legendLabelStyle.typeFace
-        lessText.textColor = MutableColor(style.legendLabelStyle.textColor)
-        lessText.build(paint)
 
         val cellSize = bounds.height * sizeRatio
         var leftOffset = lessText.x + (offset * 2) + lessText.textBounds.width()
@@ -84,6 +96,7 @@ internal class LegendArea(
             shape.y = lessText.y - cellSize
             shape.width = cellSize
             shape.height = cellSize
+            shape.elevation = style.cellElevation
             shape.color = getColor(level, MIN_OFFSET, spectrumLevels.toFloat(), style)
             shapes.add(shape)
             leftOffset += (cellSize + offset)
@@ -91,21 +104,15 @@ internal class LegendArea(
 
         moreText.x = leftOffset + offset
         moreText.y = lessText.y
-        moreText.alignment = DrawableText.Alignment.LEFT
-        moreText.textSize = style.legendLabelStyle.textSize
-        moreText.typeFace = style.legendLabelStyle.typeFace
-        moreText.textColor = MutableColor(style.legendLabelStyle.textColor)
-        moreText.build(paint)
     }
 
-    private fun withRightAlignment(offset: Float, lessText: DrawableText, moreText: DrawableText) {
+    private fun withRightAlignment(
+        offset: Float,
+        lessText: DrawableText,
+        moreText: DrawableText
+    ) {
         val cellSize = bounds.height * sizeRatio
 
-        moreText.alignment = DrawableText.Alignment.RIGHT
-        moreText.textSize = style.legendLabelStyle.textSize
-        moreText.typeFace = style.legendLabelStyle.typeFace
-        moreText.textColor = MutableColor(style.legendLabelStyle.textColor)
-        moreText.build(paint)
         moreText.x = bounds.right - offset
         moreText.y = bounds.bottom - (offset * 2)
 
@@ -117,16 +124,12 @@ internal class LegendArea(
             shape.y = moreText.y - cellSize
             shape.width = cellSize
             shape.height = cellSize
+            shape.elevation = style.cellElevation
             shape.color = getColor(level, MIN_OFFSET, spectrumLevels.toFloat(), style)
             shapes.add(shape)
             rightOffset -= (cellSize + offset)
         }
 
-        lessText.alignment = DrawableText.Alignment.RIGHT
-        lessText.textSize = style.legendLabelStyle.textSize
-        lessText.typeFace = style.legendLabelStyle.typeFace
-        lessText.textColor = MutableColor(style.legendLabelStyle.textColor)
-        lessText.build(paint)
         lessText.bounds.x = rightOffset + (cellSize - (offset))
         lessText.bounds.y = moreText.y
     }

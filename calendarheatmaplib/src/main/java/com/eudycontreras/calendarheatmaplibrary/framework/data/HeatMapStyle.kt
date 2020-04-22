@@ -15,7 +15,7 @@ data class HeatMapStyle(
     var interceptorLinesColor: Int = AndroidColor.WHITE,
     var interceptorCenterColor: Int = AndroidColor.WHITE,
     var interceptorElevation: Float = MIN_OFFSET,
-    var interceptorLineThickness: Float = 2.dp,
+    var interceptorLineThickness: Float = 1.5f.dp,
     var dayLabelStyle: TextStyle = TextStyle(Typeface.DEFAULT, 12.sp, AndroidColor.DKGRAY),
     var monthLabelStyle: TextStyle = TextStyle(Typeface.DEFAULT, 12.sp, AndroidColor.DKGRAY),
     var legendLabelStyle: TextStyle = TextStyle(Typeface.DEFAULT, 12.sp, AndroidColor.DKGRAY)

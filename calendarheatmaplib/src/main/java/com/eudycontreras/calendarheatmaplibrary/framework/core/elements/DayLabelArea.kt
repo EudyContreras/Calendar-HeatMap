@@ -7,6 +7,7 @@ import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableText
+import com.eudycontreras.calendarheatmaplibrary.framework.data.Alignment
 import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapLabel
 import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapStyle
 import com.eudycontreras.calendarheatmaplibrary.framework.data.Measurements
@@ -32,7 +33,7 @@ internal class DayLabelArea(
 
     private val shapes: MutableList<DrawableShape> = mutableListOf()
 
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         isAntiAlias = true
         xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
     }
@@ -46,10 +47,11 @@ internal class DayLabelArea(
 
         for (label in labels) {
             if (label.active) {
-                val dayLabel = DrawableText(text = label.text).build(paint)
+                val dayLabel = DrawableText(text = label.text, paint = paint
+                ).build()
                 dayLabel.x = bounds.right
                 dayLabel.y = verticalOffset + ((cellSize / 2) + (dayLabel.height / 2))
-                dayLabel.alignment = DrawableText.Alignment.RIGHT
+                dayLabel.alignment = Alignment.RIGHT
                 dayLabel.textSize = style.dayLabelStyle.textSize
                 dayLabel.typeFace = style.dayLabelStyle.typeFace
                 dayLabel.textColor = MutableColor(style.dayLabelStyle.textColor)

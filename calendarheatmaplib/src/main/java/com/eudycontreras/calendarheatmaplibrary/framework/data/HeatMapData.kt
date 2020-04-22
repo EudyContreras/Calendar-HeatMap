@@ -109,6 +109,10 @@ fun HeatMapData.getColumnCount(): Int {
     return timeSpan.weeks.count()
 }
 
+fun HeatMapData.getRowCount(): Int {
+    return timeSpan.weeks.first().weekDays.count()
+}
+
 fun Week.hasMonthLabel(months: List<HeatMapLabel>): Boolean {
     return weekDays.groupBy { months[it.date.month] }.count() <= 1
 }

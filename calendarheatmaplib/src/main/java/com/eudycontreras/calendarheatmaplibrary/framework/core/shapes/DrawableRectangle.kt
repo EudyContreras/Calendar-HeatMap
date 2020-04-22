@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
 import android.view.MotionEvent
+import com.eudycontreras.calendarheatmaplibrary.animations.HeatMapAnimation
 import com.eudycontreras.calendarheatmaplibrary.common.TouchConsumer
 import com.eudycontreras.calendarheatmaplibrary.extensions.addRoundRect
 import com.eudycontreras.calendarheatmaplibrary.extensions.addShadowBounds
@@ -24,7 +25,7 @@ import com.eudycontreras.calendarheatmaplibrary.utilities.ShadowUtility
  * @since April 2020
  */
 
-internal class DrawableRectangle : DrawableShape(), TouchConsumer {
+internal class DrawableRectangle : DrawableShape(), TouchConsumer, HeatMapAnimation.Animateable {
 
     var hovered: Boolean = false
 
@@ -109,6 +110,8 @@ internal class DrawableRectangle : DrawableShape(), TouchConsumer {
         canvas.drawPath(shapePath, paint)
     }
 
+    private var savedState: Pair<Int, Bounds> = Pair(0, Bounds())
+
     //TODO refactor highlight and redefine what highlight is
     fun applyHighlight() {
         if (lastColor == null) {
@@ -117,19 +120,14 @@ internal class DrawableRectangle : DrawableShape(), TouchConsumer {
         if (lastBounds == null) {
             lastBounds = bounds.copy()
         }
-        showStroke = true
-        elevation = 6.dp
-        strokeWidth = 4.dp
+        elevation = 8.dp
 
         lastBounds?.let {
-            val zoom = 4.dp
+            val zoom = 5.dp
             bounds.left = it.left - zoom
             bounds.right = it.right + zoom
             bounds.top = it.top - zoom
             bounds.bottom = it.bottom + zoom
-        }
-        if (strokeColor == null) {
-            strokeColor = lastColor?.adjust(1.22f) ?: return
         }
     }
 
@@ -139,5 +137,21 @@ internal class DrawableRectangle : DrawableShape(), TouchConsumer {
         elevation = 0f
         color = lastColor?.clone() ?: return
         bounds = lastBounds?.copy() ?: return
+    }
+
+    override fun onPreAnimation() {
+        savedState = Pair(opacity, bounds.copy())
+        bounds.width = 0f
+        bounds.height = 0f
+        render = true
+    }
+
+    override fun onPostAnimation() {}
+
+    override fun onAnimate(delta: Float) {
+        bounds.centerX = savedState.second.centerX
+        bounds.centerY = savedState.second.centerY
+        bounds.width = savedState.second.width * delta
+        bounds.height = savedState.second.height * delta
     }
 }

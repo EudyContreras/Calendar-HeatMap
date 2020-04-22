@@ -11,6 +11,13 @@ data class HeatMapLabel(
 )
 
 @Serializable
+data class AnimationData(
+    val delay: Long = 200,
+    val duration: Long = 300,
+    val stagger: Long = 5
+)
+
+@Serializable
 data class HeatMapOptions(
     var legendLessLabel: String = LESS,
     var legendMoreLabel: String = MORE,
@@ -21,9 +28,13 @@ data class HeatMapOptions(
     var legendAlignment: Alignment = Alignment.LEFT,
     var interceptorOffsetX: Float = 50.dp,
     var interceptorOffsetY: Float = 50.dp,
+    var minFrequencyValue: Int = Frequency.MIN_VALUE,
+    var maxFrequencyValue: Int = Frequency.MAX_VALUE,
+    var cellRevealAnimation: AnimationData? = AnimationData(),
     var dayLabels: List<HeatMapLabel> = STANDARD_DAY_LABELS,
     var monthLabels: List<HeatMapLabel> = STANDARD_MONTH_LABELS
 ) {
+
     companion object {
         const val LESS = "Less"
         const val MORE = "More"
