@@ -1,22 +1,24 @@
 package com.eudycontreras.calendarheatmaplibrary.animations
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
-import android.animation.ValueAnimator
 import android.view.animation.Interpolator
 import androidx.core.math.MathUtils
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
+import com.eudycontreras.calendarheatmaplibrary.common.Animateable
 import com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMap
-import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableRectangle
 import com.eudycontreras.calendarheatmaplibrary.mapRange
 import com.eudycontreras.calendarheatmaplibrary.properties.Index
 
 /**
- * Created by eudycontreras.
+ * Copyright (C) 2020 Project X
+ *
+ * @Project ProjectX
+ * @author Eudy Contreras.
+ * @since April 2020
  */
-internal class CellGridAnimation : HeatMapAnimation<Array<Array<DrawableRectangle>>> {
+
+internal class MatrixRevealAnimation<T: Animateable> : HeatMapAnimation<Array<Array<T>>> {
 
     override var interpolator: Interpolator = FastOutSlowInInterpolator()
 
@@ -29,26 +31,15 @@ internal class CellGridAnimation : HeatMapAnimation<Array<Array<DrawableRectangl
     var fromIndex: Index = Index(0, 0)
     var stagger: Long = 0
 
-    var type: AnimationType = AnimationType.LEFT_TO_RIGHT
-
-    enum class AnimationType {
-        LEFT_TO_RIGHT,
-        RIGHT_TO_LEFT,
-        EDGE_TO_CENTER,
-        CENTER_TO_EDGE
-    }
-
-    override fun animate(heatMap: CalHeatMap, animateable: Array<Array<DrawableRectangle>>) {
+    override fun animate(heatMap: CalHeatMap, animateable: Array<Array<T>>) {
         performSequentialAnimation(heatMap, animateable)
     }
 
     private fun performSequentialAnimation(
-        view: CalHeatMap,
-        animateable: Array<Array<DrawableRectangle>>
+        heatMap: CalHeatMap,
+        animateable: Array<Array<T>>
     ) {
         val indexes = createOrder(animateable.size,  animateable[0].size, fromIndex)
-
-        val valueAnimator = ValueAnimator.ofFloat(MIN_OFFSET, MAX_OFFSET)
 
         val startPoints = Array(animateable.size) {
             Array(animateable[it].size) { Pair(MIN_OFFSET, MIN_OFFSET) }
@@ -71,60 +62,45 @@ internal class CellGridAnimation : HeatMapAnimation<Array<Array<DrawableRectangl
             totalDuration += stagger
             startPoints[index.row][index.col] = (start.toFloat() to end.toFloat())
         }
-        valueAnimator.startDelay = delay
-        valueAnimator.duration = totalDuration
-        valueAnimator.interpolator = interpolator
-        valueAnimator.addListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationStart(animation: Animator?) {
-                super.onAnimationStart(animation)
+        val animation = AnimationEvent(
+            duration = totalDuration,
+            startDelay = delay,
+            onEnd = onEnd,
+            onStart = {
                 for (row in animateable) {
                     for (col in row) {
                         col.onPreAnimation()
                     }
                 }
                 onStart?.invoke()
-            }
+            },
+            updateListener = { _, currentPlayTime, _ ->
+                for (index in indexes) {
+                    val rowIndex = index.row
+                    val colIndex = index.col
 
-            override fun onAnimationEnd(animation: Animator?) {
-                super.onAnimationEnd(animation)
-                onEnd?.invoke()
-            }
-        })
-
-        valueAnimator.addUpdateListener {
-            for (index in indexes) {
-                val rowIndex = index.row
-                val colIndex = index.col
-
-                val currentTime = it.currentPlayTime.toFloat()
-                val animate = MathUtils.clamp(
-                    mapRange(
-                        currentTime,
-                        startPoints[rowIndex][colIndex].first,
-                        startPoints[rowIndex][colIndex].second,
+                    val currentTime = currentPlayTime.toFloat()
+                    val animate = MathUtils.clamp(
+                        mapRange(
+                            currentTime,
+                            startPoints[rowIndex][colIndex].first,
+                            startPoints[rowIndex][colIndex].second,
+                            values[rowIndex][colIndex].first,
+                            values[rowIndex][colIndex].second
+                        ),
                         values[rowIndex][colIndex].first,
                         values[rowIndex][colIndex].second
-                    ),
-                    values[rowIndex][colIndex].first,
-                    values[rowIndex][colIndex].second
-                )
-                animateable[rowIndex][colIndex].onAnimate(it.interpolator.getInterpolation(animate))
+                    )
+                    animateable[rowIndex][colIndex].onAnimate(interpolator.getInterpolation(animate))
+                }
             }
-
-            view.update()
-        }
-        valueAnimator.start()
+        )
+        heatMap.addAnimation(animation)
     }
 
     private fun createOrder(itemRowCount: Int, itemColCount: Int, fromIndex: Index): ArrayList<Index> {
         val indexes: ArrayList<Index> = ArrayList()
 
-        var rowIndex = fromIndex.row
-        var colIndex = fromIndex.col
-        var shiftDown = 0
-        var shiftUp = 0
-
-        var increase = 0
         for (row in 0 until itemRowCount) {
             for (col in 0 until itemColCount) {
                 indexes.add(Index(row, col))
@@ -135,9 +111,4 @@ internal class CellGridAnimation : HeatMapAnimation<Array<Array<DrawableRectangl
 
         return indexes
     }
-}
-
-private fun Int.clamp(max: Int): Int {
-    if (this >= max) return max
-    return this
 }

@@ -7,7 +7,7 @@ import androidx.core.util.containsKey
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
-import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
+import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableText
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
@@ -76,10 +76,10 @@ internal class MonthLabelArea(
         }
     }
 
-    override fun onTouch(event: MotionEvent, x: Float, y: Float, shapeRenderer: ShapeRenderer) {
+    override fun onTouch(event: MotionEvent, x: Float, y: Float, shapeManager: ShapeManager) {
         for (shape in shapes) {
             if (shape is TouchableShape) {
-                shape.onTouch(event, x, y, shapeRenderer)
+                shape.onTouch(event, x, y, shapeManager)
             }
         }
     }
@@ -88,11 +88,11 @@ internal class MonthLabelArea(
         event: MotionEvent,
         x: Float,
         y: Float,
-        shapeRenderer: ShapeRenderer
+        shapeManager: ShapeManager
     ) {
         for (shape in shapes) {
             if (shape is TouchableShape) {
-                shape.onLongPressed(event, x, y, shapeRenderer)
+                shape.onLongPressed(event, x, y, shapeManager)
             }
         }
     }

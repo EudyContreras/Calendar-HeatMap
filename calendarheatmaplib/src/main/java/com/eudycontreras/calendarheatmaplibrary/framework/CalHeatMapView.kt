@@ -1,26 +1,29 @@
 package com.eudycontreras.calendarheatmaplibrary.framework
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.Typeface
 import android.util.AttributeSet
+import android.util.Log
 import android.view.*
+import android.view.animation.LinearInterpolator
 import android.widget.ScrollView
 import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
-import androidx.core.view.doOnLayout
 import androidx.core.widget.NestedScrollView
+import com.eudycontreras.calendarheatmaplibrary.*
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
-import com.eudycontreras.calendarheatmaplibrary.R
-import com.eudycontreras.calendarheatmaplibrary.findScrollParent
-import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
+import com.eudycontreras.calendarheatmaplibrary.animations.AnimationEvent
+import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
-import com.eudycontreras.calendarheatmaplibrary.getTextMeasurement
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 import com.eudycontreras.calendarheatmaplibrary.properties.Padding
+import java.util.*
+import kotlin.collections.map
 import kotlin.math.max
 
 /**
@@ -31,16 +34,21 @@ import kotlin.math.max
  * @since April 2020
  */
 
-interface CalHeatMap {
-    fun update()
+interface CalHeatMap: ValueAnimator.AnimatorUpdateListener {
+    fun startAnimation()
+    fun stopAnimation()
     fun fullyVisible(): Boolean
-    var onFullyVisible: ((CalHeatMap) -> Unit)?
+    fun addAnimation(animation: AnimationEvent?)
+    fun removeAnimation(animation: AnimationEvent?)
+    var animationCollection: MutableList<AnimationEvent>
+    var onFullyVisible: ((CalHeatMap, Boolean) -> Unit)?
 }
 
 class CalHeatMapView : View, CalHeatMap {
 
     private var sizeRatio = 0.5f
 
+    private var animStarted: Boolean = false
     private var fullyVisible: Boolean = false
 
     private var scrollingParent: ViewParent? = null
@@ -50,9 +58,14 @@ class CalHeatMapView : View, CalHeatMap {
     private var calHeatMapStyle: HeatMapStyle = HeatMapStyle()
     private var calHeatMapOptions: HeatMapOptions = HeatMapOptions()
 
-    private var shapeRenderer: ShapeRenderer = ShapeRenderer()
+    private var animationProposals: MutableList<AnimationEvent> = mutableListOf()
+    private var animationRemovals: MutableList<AnimationEvent> = mutableListOf()
+    override var animationCollection: MutableList<AnimationEvent> = mutableListOf()
+    private var infiniteAnimator: ValueAnimator? = ValueAnimator.ofFloat(MAX_OFFSET, MIN_OFFSET)
+
+    private var shapeManager: ShapeManager = ShapeManager()
     private var heatMapBuilder: CalHeatMapBuilder = CalHeatMapBuilder(
-        shapeRenderer = shapeRenderer,
+        shapeManager = shapeManager,
         styleContext = { calHeatMapStyle },
         optionsContext = { calHeatMapOptions },
         contextProvider = { context }
@@ -200,6 +213,64 @@ class CalHeatMapView : View, CalHeatMap {
 
     }
 
+    override fun addAnimation(animation: AnimationEvent?) {
+        if (animation == null) return
+        animationProposals.add(animation)
+    }
+
+    override fun removeAnimation(animation: AnimationEvent?) {
+        if (animation == null) return
+        animationRemovals.add(animation)
+    }
+
+    override fun stopAnimation() {
+        animStarted = false
+        infiniteAnimator?.cancel()
+        infiniteAnimator = null
+    }
+
+    override fun startAnimation() {
+        animStarted = true
+        infiniteAnimator?.cancel()
+        infiniteAnimator = ValueAnimator.ofFloat(MAX_OFFSET, MIN_OFFSET)
+        infiniteAnimator?.duration = Long.MAX_VALUE
+        infiniteAnimator?.repeatCount = ValueAnimator.INFINITE
+        infiniteAnimator?.interpolator = LinearInterpolator()
+        infiniteAnimator?.addUpdateListener(this)
+        infiniteAnimator?.start()
+    }
+
+    override fun onAnimationUpdate(animator: ValueAnimator) {
+        if (fullyVisible) {
+            if (animationProposals.size > 0) {
+                animationCollection.addAll(animationProposals)
+                animationProposals.clear()
+            }
+            if (animationCollection.isNotEmpty()) {
+                for (animation in animationCollection) {
+                    if (animation.hasStarted && animation.isRunning) {
+                        if (!animation.startInvoked) {
+                            animation.onStart?.invoke()
+                            animation.startInvoked = true
+                        }
+                        val playTime = System.currentTimeMillis() - animation.startTime
+                        val value = animator.animatedValue as Float
+                        animation.onUpdate(playTime, value)
+                    }
+                    if (animation.hasEnded) {
+                        animation.onEnd?.invoke()
+                        animationRemovals.add(animation)
+                    }
+                }
+                invalidate()
+            }
+            if (animationRemovals.size > 0) {
+                animationCollection.removeAll(animationRemovals)
+                animationRemovals.clear()
+            }
+        }
+    }
+
     override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
         super.onSizeChanged(width, height, oldWidth, oldHeight)
 
@@ -223,10 +294,14 @@ class CalHeatMapView : View, CalHeatMap {
 
         observeVisibility()
 
-        if(scrollingParent == null){
+        if (scrollingParent == null){
             fullyVisible = true
-            onFullyVisible?.invoke(this)
+            onFullyVisible?.invoke(this, fullyVisible)
             return
+        }
+
+        if (!animStarted) {
+            startAnimation()
         }
         invalidate()
     }
@@ -234,7 +309,7 @@ class CalHeatMapView : View, CalHeatMap {
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        shapeRenderer.renderShapes(canvas)
+        shapeManager.renderShapes(canvas)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -242,7 +317,6 @@ class CalHeatMapView : View, CalHeatMap {
         val specHeight = MeasureSpec.getSize(heightMeasureSpec)
 
         heatMapBuilder.getData()?.let { data ->
-
             buildMeasurements(data = data, measuredHeight = specHeight) { width, height ->
                 setMeasuredDimension(
                     resolveSize(width, widthMeasureSpec),
@@ -255,7 +329,9 @@ class CalHeatMapView : View, CalHeatMap {
     private fun buildMeasurements(data: HeatMapData, measuredHeight: Int, onMeasured: (Int, Int) -> Unit) {
         val cellSize = data.cellSize
 
-        val gapSize = data.cellGap ?: if (cellSize != null) { cellSize * HeatMapData.CELL_SIZE_RATIO } else {
+        val gapSize = data.cellGap ?: if (cellSize != null) {
+            cellSize * HeatMapData.CELL_SIZE_RATIO
+        } else {
             (measuredHeight / TimeSpan.MAX_DAYS) * HeatMapData.CELL_SIZE_RATIO
         }
 
@@ -263,10 +339,9 @@ class CalHeatMapView : View, CalHeatMap {
         val dayAreaWidth = getDayLabelAreaMeasurement(gapSize)
         val monthAreaHeight = getMonthLabelAreaMeasurement(gapSize)
 
-        val gapRatio = (gapSize * TimeSpan.MAX_DAYS)
         val matrixHeight = measuredHeight.toFloat() - (legendAreaHeight + monthAreaHeight)
 
-        val size = data.cellSize ?: ((matrixHeight  - gapRatio) / TimeSpan.MAX_DAYS)
+        val size = data.cellSize ?: ((matrixHeight - (gapSize * TimeSpan.MAX_DAYS)) / TimeSpan.MAX_DAYS)
 
         val count = data.getColumnCount()
         val width = dayAreaWidth + (size * count + (gapSize * count)) + gapSize
@@ -287,7 +362,7 @@ class CalHeatMapView : View, CalHeatMap {
     private fun getLegendAreaMeasurement(gapSize: Float): Float {
         val legendAreaTextHeight = if (calHeatMapOptions.showLegend) {
             val textMeasurement = getTextMeasurement(
-                paint = shapeRenderer.paint,
+                paint = shapeManager.paint,
                 text = calHeatMapOptions.legendLessLabel,
                 textSize = calHeatMapStyle.legendLabelStyle.textSize,
                 typeFace = calHeatMapStyle.legendLabelStyle.typeFace
@@ -304,7 +379,7 @@ class CalHeatMapView : View, CalHeatMap {
         return if (calHeatMapOptions.showDayLabels) {
             val textMeasurement = calHeatMapOptions.dayLabels.map { label ->
                 getTextMeasurement(
-                    paint = shapeRenderer.paint,
+                    paint = shapeManager.paint,
                     text = label.text,
                     textSize = calHeatMapStyle.dayLabelStyle.textSize,
                     typeFace = calHeatMapStyle.dayLabelStyle.typeFace
@@ -317,7 +392,7 @@ class CalHeatMapView : View, CalHeatMap {
     private fun getMonthLabelAreaMeasurement(gapSize: Float): Float {
         return if (calHeatMapOptions.showMonthLabels) {
             val textMeasurement = getTextMeasurement(
-                paint = shapeRenderer.paint,
+                paint = shapeManager.paint,
                 text = calHeatMapOptions.monthLabels.map { it.text }.first { it.any { text -> Character.isUpperCase(text) } },
                 textSize = calHeatMapStyle.monthLabelStyle.textSize,
                 typeFace = calHeatMapStyle.monthLabelStyle.typeFace
@@ -326,7 +401,7 @@ class CalHeatMapView : View, CalHeatMap {
         } else MIN_OFFSET
     }
 
-    override var onFullyVisible: ((CalHeatMap) -> Unit)? = null
+    override var onFullyVisible: ((CalHeatMap, Boolean) -> Unit)? = null
 
     override fun fullyVisible(): Boolean = fullyVisible
 
@@ -382,8 +457,11 @@ class CalHeatMapView : View, CalHeatMap {
         if (scrollBounds.top < (top + ((bottom - top) * sizeRatio)) && scrollBounds.bottom > (bottom - ((bottom - top) * sizeRatio))) {
             if (!fullyVisible) {
                 fullyVisible = true
-                onFullyVisible?.invoke(this)
+                onFullyVisible?.invoke(this, fullyVisible)
             }
+        } else {
+            fullyVisible = false
+            onFullyVisible?.invoke(this, false)
         }
     }
 
@@ -395,7 +473,7 @@ class CalHeatMapView : View, CalHeatMap {
         override fun onLongPress(event: MotionEvent) {
             super.onLongPress(event)
             parent.requestDisallowInterceptTouchEvent(true)
-            shapeRenderer.delegateLongPressEvent(event, event.x, event.y)
+            shapeManager.delegateLongPressEvent(event, event.x, event.y)
 
             invalidate()
         }
@@ -410,13 +488,11 @@ class CalHeatMapView : View, CalHeatMap {
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         return detector.onTouchEvent(event).let { result ->
+            if (animationCollection.size <= 0) {
+                invalidate()
+            }
 
-            invalidate()
-
-            val x = event.x
-            val y = event.y
-
-            shapeRenderer.delegateTouchEvent(event, x, y)
+            shapeManager.delegateTouchEvent(event, event.x, event.y)
 
             when (event.action) {
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {
@@ -427,9 +503,5 @@ class CalHeatMapView : View, CalHeatMap {
 
             result
         }
-    }
-
-    override fun update() {
-        invalidate()
     }
 }

@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.SparseArray
 import com.eudycontreras.calendarheatmaplibrary.AndroidColor
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
-import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
+import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.core.elements.*
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
@@ -31,7 +31,7 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  * - Allow showing the days for the cells
  */
 internal class CalHeatMapBuilder(
-    private val shapeRenderer: ShapeRenderer,
+    private val shapeManager: ShapeManager,
     private var styleContext: () -> HeatMapStyle,
     private var optionsContext: () -> HeatMapOptions,
     private var contextProvider: (() -> Context)?
@@ -69,11 +69,11 @@ internal class CalHeatMapBuilder(
         dayLabelArea?.buildWith(measurements, options.dayLabels)
         monthLabelArea?.buildWith(measurements, monthIndexes, data.timeSpan.weeks)
 
-        shapeRenderer.addShape(heatMapArea)
-        shapeRenderer.addShape(monthLabelArea)
-        shapeRenderer.addShape(dayLabelArea)
-        shapeRenderer.addShape(legendArea)
-        shapeRenderer.addShape(interceptor)
+        shapeManager.addShape(heatMapArea)
+        shapeManager.addShape(monthLabelArea)
+        shapeManager.addShape(dayLabelArea)
+        shapeManager.addShape(legendArea)
+        shapeManager.addShape(interceptor)
     }
 
     private fun buildInterceptor(
@@ -88,16 +88,15 @@ internal class CalHeatMapBuilder(
         val interceptor = CellInterceptor(
             markerRadius = cellSize / 3,
             lineThickness = style.interceptorLineThickness
-        )
-        interceptor.visible = true
-        interceptor.lineColor = MutableColor(AndroidColor.WHITE)
-        interceptor.markerFillColor = MutableColor(style.minCellColor)
-        interceptor.markerStrokeColor = MutableColor(AndroidColor.WHITE)
-        interceptor.shiftOffsetX = options.interceptorOffsetX
-        interceptor.shiftOffsetY = options.interceptorOffsetY
-        interceptor.elevation = style.interceptorElevation
-        interceptor.showHorizontalLine = true
-        interceptor.showVerticalLine = true
+        ).apply {
+            visible = true
+            lineColor = MutableColor(AndroidColor.WHITE)
+            markerFillColor = MutableColor(style.minCellColor)
+            markerStrokeColor = MutableColor(AndroidColor.WHITE)
+            shiftOffsetX = options.interceptorOffsetX
+            shiftOffsetY = options.interceptorOffsetY
+            elevation = style.interceptorElevation
+        }
         interceptor.build(
             bounds = bounds.copy(
                 left = bounds.left + gapSize,

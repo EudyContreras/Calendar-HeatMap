@@ -1,6 +1,7 @@
 package com.eudycontreras.calendarheatmaplibrary.common
 
 import android.view.MotionEvent
+import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 
 /**
  * Copyright (C) 2020 Project X
@@ -11,6 +12,6 @@ import android.view.MotionEvent
  */
 
 internal interface TouchConsumer {
-    fun onTouch(event: MotionEvent, x: Float, y: Float)
-    var touchHandler: ((TouchConsumer, MotionEvent, Float, Float) -> Unit)?
+    fun onTouch(event: MotionEvent, bounds: Bounds, x: Float, y: Float)
+    var touchHandler: ((TouchConsumer, MotionEvent, Bounds, Float, Float) -> Unit)?
 }

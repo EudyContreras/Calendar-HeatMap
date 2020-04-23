@@ -5,7 +5,12 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
 import android.view.MotionEvent
+import android.view.animation.Interpolator
+import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
+import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
+import com.eudycontreras.calendarheatmaplibrary.animations.AnimationEvent
 import com.eudycontreras.calendarheatmaplibrary.animations.HeatMapAnimation
+import com.eudycontreras.calendarheatmaplibrary.common.Animateable
 import com.eudycontreras.calendarheatmaplibrary.common.TouchConsumer
 import com.eudycontreras.calendarheatmaplibrary.extensions.addRoundRect
 import com.eudycontreras.calendarheatmaplibrary.extensions.addShadowBounds
@@ -25,7 +30,7 @@ import com.eudycontreras.calendarheatmaplibrary.utilities.ShadowUtility
  * @since April 2020
  */
 
-internal class DrawableRectangle : DrawableShape(), TouchConsumer, HeatMapAnimation.Animateable {
+internal class DrawableRectangle : DrawableShape(), TouchConsumer, Animateable {
 
     var hovered: Boolean = false
 
@@ -37,11 +42,11 @@ internal class DrawableRectangle : DrawableShape(), TouchConsumer, HeatMapAnimat
 
     private var allowInteraction: Boolean = true
 
-    override var touchHandler: ((TouchConsumer, MotionEvent, Float, Float) -> Unit)? = null
+    override var touchHandler: ((TouchConsumer, MotionEvent, Bounds, Float, Float) -> Unit)? = null
 
-    override fun onTouch(event: MotionEvent, x: Float, y: Float) {
+    override fun onTouch(event: MotionEvent, bounds: Bounds, x: Float, y: Float) {
         if (allowInteraction) {
-            touchHandler?.invoke(this, event, x, y)
+            touchHandler?.invoke(this, event, bounds, x, y)
         }
     }
 
@@ -110,37 +115,53 @@ internal class DrawableRectangle : DrawableShape(), TouchConsumer, HeatMapAnimat
         canvas.drawPath(shapePath, paint)
     }
 
-    private var savedState: Pair<Int, Bounds> = Pair(0, Bounds())
+    var highlightSavedState: Pair<Float, Bounds>? = null
 
-    //TODO refactor highlight and redefine what highlight is
-    fun applyHighlight() {
-        if (lastColor == null) {
-            lastColor = color.clone()
+    fun applyHighlight(interpolator: Interpolator): AnimationEvent? {
+        if (highlightSavedState == null) {
+            highlightSavedState = Pair(elevation, bounds.copy())
         }
-        if (lastBounds == null) {
-            lastBounds = bounds.copy()
-        }
-        elevation = 8.dp
+        return highlightSavedState?.let { savedState ->
+            AnimationEvent(
+                duration = 250,
+                interpolator = interpolator,
+                updateListener = { _, _, delta ->
+                    val zoom = 6.dp
+                    val elevate = 6.dp
+                    bounds.left = savedState.second.left - (zoom * delta)
+                    bounds.right = savedState.second.right + (zoom * delta)
+                    bounds.top = savedState.second.top - (zoom * delta)
+                    bounds.bottom = savedState.second.bottom + (zoom * delta)
 
-        lastBounds?.let {
-            val zoom = 5.dp
-            bounds.left = it.left - zoom
-            bounds.right = it.right + zoom
-            bounds.top = it.top - zoom
-            bounds.bottom = it.bottom + zoom
+                    elevation = savedState.first + (elevate * delta)
+                }
+            )
         }
     }
 
-    fun removeHighlight() {
-        showStroke = false
-        strokeWidth = 0f
-        elevation = 0f
-        color = lastColor?.clone() ?: return
-        bounds = lastBounds?.copy() ?: return
+    fun removeHighlight(interpolator: Interpolator): AnimationEvent? {
+        return highlightSavedState?.let { savedState ->
+            AnimationEvent(
+                duration = 250,
+                interpolator = interpolator,
+                updateListener = { _, _, offset ->
+                    val zoom = 6.dp
+                    val elevate = 6.dp
+                    val delta = MAX_OFFSET - offset
+                    bounds.left = savedState.second.left - (zoom * delta)
+                    bounds.right = savedState.second.right + (zoom * delta)
+                    bounds.top = savedState.second.top - (zoom * delta)
+                    bounds.bottom = savedState.second.bottom + (zoom * delta)
+                    elevation = savedState.first + (elevate * delta)
+                }
+            )
+        }
     }
+
+    private var revealAnimationState: Pair<Int, Bounds> = Pair(0, Bounds())
 
     override fun onPreAnimation() {
-        savedState = Pair(opacity, bounds.copy())
+        revealAnimationState = Pair(opacity, bounds.copy())
         bounds.width = 0f
         bounds.height = 0f
         render = true
@@ -149,9 +170,9 @@ internal class DrawableRectangle : DrawableShape(), TouchConsumer, HeatMapAnimat
     override fun onPostAnimation() {}
 
     override fun onAnimate(delta: Float) {
-        bounds.centerX = savedState.second.centerX
-        bounds.centerY = savedState.second.centerY
-        bounds.width = savedState.second.width * delta
-        bounds.height = savedState.second.height * delta
+        bounds.centerX = revealAnimationState.second.centerX
+        bounds.centerY = revealAnimationState.second.centerY
+        bounds.width = revealAnimationState.second.width * delta
+        bounds.height = revealAnimationState.second.height * delta
     }
 }

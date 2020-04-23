@@ -7,8 +7,7 @@ import android.view.MotionEvent
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
-import com.eudycontreras.calendarheatmaplibrary.extensions.dp
-import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
+import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableCircle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableRectangle
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
@@ -210,7 +209,7 @@ internal class CellInterceptor(
         }
     }
 
-    override fun onTouch(event: MotionEvent, x: Float, y: Float, shapeRenderer: ShapeRenderer) {
+    override fun onTouch(event: MotionEvent, x: Float, y: Float, shapeManager: ShapeManager) {
         if (!allowIntercept || !shouldRender)
             return
 
@@ -220,15 +219,17 @@ internal class CellInterceptor(
                     shouldRender = false
                 }
                 hovered = false
-                shapeRenderer.delegateTouchEvent(event, x, y, this)
+                shapeManager.delegateTouchEvent(event, marker.bounds, marker.centerX, marker.centerY, this)
             }
             MotionEvent.ACTION_MOVE, MotionEvent.ACTION_DOWN -> {
                 if (visible) {
                     positionX = x
                     positionY = y
-                    shapeRenderer.delegateTouchEvent(event, marker.centerX, marker.centerY, this)
+                    shapeManager.delegateTouchEvent(event, marker.bounds, marker.centerX, marker.centerY, this)
                 } else {
-                    shapeRenderer.delegateTouchEvent(event, x, y, this)
+                    positionX = x
+                    positionY = y
+                    shapeManager.delegateTouchEvent(event, marker.bounds, marker.centerX, marker.centerY, this)
                 }
             }
         }
@@ -238,7 +239,7 @@ internal class CellInterceptor(
         event: MotionEvent,
         x: Float,
         y: Float,
-        shapeRenderer: ShapeRenderer
+        shapeManager: ShapeManager
     ) {
         if (!allowIntercept)
             return

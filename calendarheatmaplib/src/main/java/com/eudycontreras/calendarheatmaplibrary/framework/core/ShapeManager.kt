@@ -5,6 +5,7 @@ import android.view.MotionEvent
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchConsumer
 import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
+import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 
 /**
  * Copyright (C) 2020 Project X
@@ -14,7 +15,7 @@ import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
  * @since April 2020
  */
 
-internal class ShapeRenderer {
+internal class ShapeManager {
 
     private val shapePath: Path = Path()
 
@@ -65,10 +66,10 @@ internal class ShapeRenderer {
         }
     }
 
-    fun delegateTouchEvent(motionEvent: MotionEvent, x: Float, y: Float, caller: TouchableShape) {
+    fun delegateTouchEvent(motionEvent: MotionEvent, bounds: Bounds, x: Float, y: Float, caller: TouchableShape) {
         for (shape in shapes) {
             if (shape is TouchConsumer && shape != caller) {
-                shape.onTouch(motionEvent, x, y)
+                shape.onTouch(motionEvent, bounds, x, y)
             }
         }
     }

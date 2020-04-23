@@ -1,7 +1,7 @@
 package com.eudycontreras.calendarheatmaplibrary.common
 
 import android.view.MotionEvent
-import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
+import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 
 /**
  * Copyright (C) 2020 Project X
@@ -12,8 +12,8 @@ import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeRenderer
  */
 
 internal interface TouchableShape {
-    fun onTouch(event: MotionEvent, x: Float, y: Float, shapeRenderer: ShapeRenderer)
-    fun onLongPressed(event: MotionEvent, x: Float, y: Float, shapeRenderer: ShapeRenderer)
+    fun onTouch(event: MotionEvent, x: Float, y: Float, shapeManager: ShapeManager)
+    fun onLongPressed(event: MotionEvent, x: Float, y: Float, shapeManager: ShapeManager)
 
     var touchHandler: ((TouchableShape, MotionEvent, Float, Float) -> Unit)?
     var hovered: Boolean

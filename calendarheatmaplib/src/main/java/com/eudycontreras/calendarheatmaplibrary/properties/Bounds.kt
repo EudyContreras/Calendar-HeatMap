@@ -106,7 +106,7 @@ data class Bounds(
     }
 
     fun isInside(x: Float, y: Float): Boolean {
-        return (x > left && x < right && y > top && y < bottom)
+        return (x in left..right && y in top..bottom)
     }
 
     fun isInside(bounds: Bounds): Boolean {

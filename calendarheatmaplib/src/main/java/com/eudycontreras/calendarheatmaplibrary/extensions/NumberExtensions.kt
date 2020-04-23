@@ -39,6 +39,11 @@ fun getDps(value: Float): Float {
     return value.dp
 }
 
+private fun Int.clamp(max: Int): Int {
+    if (this >= max) return max
+    return this
+}
+
 fun Float.clamp(min: Float? = null, max: Float? = null): Float {
     if (min == null && max == null) return this
     return when {

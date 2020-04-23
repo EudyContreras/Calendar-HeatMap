@@ -4,8 +4,13 @@ import android.view.animation.Interpolator
 import com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMap
 
 /**
- * Created by eudycontreras.
+ * Copyright (C) 2020 Project X
+ *
+ * @Project ProjectX
+ * @author Eudy Contreras.
+ * @since April 2020
  */
+
 interface HeatMapAnimation<T> {
 
     var interpolator: Interpolator
@@ -14,12 +19,6 @@ interface HeatMapAnimation<T> {
 
     var onEnd: (() -> Unit)?
     var onStart: (() -> Unit)?
-
-    interface Animateable {
-        fun onPreAnimation()
-        fun onPostAnimation()
-        fun onAnimate(delta: Float)
-    }
 
     fun animate(heatMap: CalHeatMap, animateable: T)
 }

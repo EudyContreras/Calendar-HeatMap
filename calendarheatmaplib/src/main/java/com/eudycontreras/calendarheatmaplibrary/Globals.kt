@@ -47,6 +47,10 @@ internal fun mapRange(value: Float, fromMin: Float, fromMax: Float, toMin: Float
     return mapRange(value, fromMin, fromMax, toMin, toMax, toMin, toMax)
 }
 
+internal fun mapRange(value: Long, fromMin: Long, fromMax: Long, toMin: Float, toMax: Float): Float {
+    return mapRange(value, fromMin, fromMax, toMin, toMax, toMin, toMax)
+}
+
 /**
  * Maps the given value from the specified minimum to the specified
  * minimum and from the specified maximum to the specified maximum using
@@ -78,6 +82,15 @@ internal fun mapRange(value: Float, fromMin: Float, fromMax: Float, toMin: Float
         clampMax
     )
 }
+
+internal fun mapRange(value: Long, fromMin: Long, fromMax: Long, toMin: Float, toMax: Float, clampMin: Float, clampMax: Float): Float {
+    return MathUtils.clamp(
+        (value - fromMin) * (toMax - toMin) / (fromMax - fromMin) + toMin,
+        clampMin,
+        clampMax
+    )
+}
+
 
 /**
  * Returns the distance between two coordinates.

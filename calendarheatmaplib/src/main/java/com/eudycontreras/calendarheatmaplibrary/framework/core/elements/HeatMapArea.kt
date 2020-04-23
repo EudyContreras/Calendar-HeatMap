@@ -3,11 +3,14 @@ package com.eudycontreras.calendarheatmaplibrary.framework.core.elements
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
+import android.util.Log
 import android.util.SparseArray
 import android.view.MotionEvent
+import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import androidx.core.util.set
-import com.eudycontreras.calendarheatmaplibrary.animations.CellGridAnimation
+import com.eudycontreras.calendarheatmaplibrary.animations.AnimationEvent
+import com.eudycontreras.calendarheatmaplibrary.animations.MatrixRevealAnimation
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchConsumer
 import com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMap
@@ -35,12 +38,14 @@ internal class HeatMapArea (
 
     private var revealed: Boolean = false
 
+    private val highlightInterpolator = DecelerateInterpolator()
+
     private var shapes: Array<Array<DrawableRectangle>> = emptyArray()
 
-    override var touchHandler: ((TouchConsumer, MotionEvent, Float, Float) -> Unit)? = null
+    override var touchHandler: ((TouchConsumer, MotionEvent, Bounds, Float, Float) -> Unit)? = null
 
-    private var revealAnimation: CellGridAnimation? = options.cellRevealAnimation?.let {
-        CellGridAnimation().apply {
+    private var revealAnimation: MatrixRevealAnimation<DrawableRectangle>? = options.matrixRevealAnimation?.let {
+        MatrixRevealAnimation<DrawableRectangle>().apply {
             delay = it.delay
             duration = it.duration
             stagger = it.stagger
@@ -52,16 +57,15 @@ internal class HeatMapArea (
     private fun animateReveal() {
         if (!revealed) {
             revealed = true
-            revealAnimation?.onEnd = {
-
-            }
             revealAnimation?.animate(heatMap, shapes)
         }
     }
 
     private fun setUpAnimation() {
-        heatMap.onFullyVisible = {
-            animateReveal()
+        heatMap.onFullyVisible = { _, visible ->
+            if (visible) {
+                animateReveal()
+            }
         }
     }
 
@@ -83,26 +87,29 @@ internal class HeatMapArea (
             }
             for((rowIndex, day) in week.weekDays.withIndex()) {
                 val shape = DrawableRectangle()
-                shape.touchHandler = { consumer: TouchConsumer, event: MotionEvent, x: Float, y: Float ->
+                shape.touchHandler = { consumer: TouchConsumer, event: MotionEvent, bounds: Bounds, x: Float, y: Float ->
                     when (event.action) {
                         MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
                             if (consumer is DrawableRectangle) {
                                 if (consumer.bounds.isInside(x, y)) {
                                     if (!consumer.hovered) {
-                                        consumer.applyHighlight()
                                         consumer.hovered = true
+                                        heatMap.addAnimation(consumer.applyHighlight(highlightInterpolator))
                                     }
                                 } else {
                                     if (consumer.hovered) {
-                                        consumer.removeHighlight()
                                         consumer.hovered = false
+                                        heatMap.addAnimation(consumer.removeHighlight(highlightInterpolator))
                                     }
                                 }
                             }
                         }
                         MotionEvent.ACTION_UP, MotionEvent.ACTION_BUTTON_RELEASE, MotionEvent.ACTION_OUTSIDE, MotionEvent.ACTION_CANCEL -> {
                             if (consumer is DrawableRectangle) {
-                                consumer.removeHighlight()
+                                if (consumer.hovered) {
+                                    heatMap.addAnimation(consumer.removeHighlight(highlightInterpolator))
+                                    consumer.hovered = false
+                                }
                             }
                         }
                     }
@@ -146,10 +153,10 @@ internal class HeatMapArea (
         }
     }
 
-    override fun onTouch(event: MotionEvent, x: Float, y: Float) {
+    override fun onTouch(event: MotionEvent, bounds: Bounds, x: Float, y: Float) {
         for (cols in shapes) {
             for (shape in cols) {
-                shape.onTouch(event, x, y)
+                shape.onTouch(event, bounds, x, y)
             }
         }
     }

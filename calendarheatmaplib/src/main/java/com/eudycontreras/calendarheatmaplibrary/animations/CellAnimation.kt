@@ -8,15 +8,19 @@ import androidx.core.math.MathUtils
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
+import com.eudycontreras.calendarheatmaplibrary.common.Animateable
 import com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMap
-import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableRectangle
 import com.eudycontreras.calendarheatmaplibrary.mapRange
 
 /**
- * Created by eudycontreras.
+ * Copyright (C) 2020 Project X
+ *
+ * @Project ProjectX
+ * @author Eudy Contreras.
+ * @since April 2020
  */
-internal class CellAnimation : HeatMapAnimation<List<DrawableRectangle>> {
 
+internal class CellAnimation : HeatMapAnimation<List<Animateable>> {
     override var interpolator: Interpolator = FastOutSlowInInterpolator()
 
     override var duration: Long = 0
@@ -37,7 +41,7 @@ internal class CellAnimation : HeatMapAnimation<List<DrawableRectangle>> {
         CENTER_TO_EDGE
     }
 
-    override fun animate(heatMap: CalHeatMap, animateable: List<DrawableRectangle>) {
+    override fun animate(heatMap: CalHeatMap, animateable: List<Animateable>) {
         if (sequential) {
             performSequentialAnimation(heatMap, animateable)
         } else {
@@ -47,7 +51,7 @@ internal class CellAnimation : HeatMapAnimation<List<DrawableRectangle>> {
 
     private fun performAnimation(
         view: CalHeatMap,
-        animateable: List<HeatMapAnimation.Animateable>
+        animateable: List<Animateable>
     ) {
         val valueAnimator = ValueAnimator.ofFloat(MIN_OFFSET, MAX_OFFSET)
 
@@ -71,14 +75,13 @@ internal class CellAnimation : HeatMapAnimation<List<DrawableRectangle>> {
             for (item in animateable) {
                 item.onAnimate(animate)
             }
-            view.update()
         }
         valueAnimator.start()
     }
 
     private fun performSequentialAnimation(
         view: CalHeatMap,
-        animateable: List<HeatMapAnimation.Animateable>
+        animateable: List<Animateable>
     ) {
         val indexes = createOrder(animateable.size, type)
 
@@ -134,7 +137,6 @@ internal class CellAnimation : HeatMapAnimation<List<DrawableRectangle>> {
                 )
                 animateable[indexes[index]].onAnimate(it.interpolator.getInterpolation(animate))
             }
-            view.update()
         }
         valueAnimator.start()
     }

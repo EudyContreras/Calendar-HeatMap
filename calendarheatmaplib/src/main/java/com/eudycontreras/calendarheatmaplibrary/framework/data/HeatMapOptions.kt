@@ -30,7 +30,7 @@ data class HeatMapOptions(
     var interceptorOffsetY: Float = 50.dp,
     var minFrequencyValue: Int = Frequency.MIN_VALUE,
     var maxFrequencyValue: Int = Frequency.MAX_VALUE,
-    var cellRevealAnimation: AnimationData? = AnimationData(),
+    var matrixRevealAnimation: AnimationData? = AnimationData(),
     var dayLabels: List<HeatMapLabel> = STANDARD_DAY_LABELS,
     var monthLabels: List<HeatMapLabel> = STANDARD_MONTH_LABELS
 ) {
