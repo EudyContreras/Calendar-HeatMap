@@ -3,18 +3,16 @@ package com.eudycontreras.calendarheatmaplibrary.framework.core.elements
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
-import android.util.Log
+import android.graphics.Typeface
 import android.util.SparseArray
 import android.view.MotionEvent
-import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import androidx.core.util.set
-import com.eudycontreras.calendarheatmaplibrary.animations.AnimationEvent
 import com.eudycontreras.calendarheatmaplibrary.animations.MatrixRevealAnimation
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchConsumer
 import com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMap
-import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableRectangle
+import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Text
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.Index
@@ -29,7 +27,7 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  */
 
 internal class HeatMapArea (
-    options: HeatMapOptions,
+    val options: HeatMapOptions,
     val heatMap: CalHeatMap,
     val data: HeatMapData,
     val style: HeatMapStyle,
@@ -38,14 +36,41 @@ internal class HeatMapArea (
 
     private var revealed: Boolean = false
 
-    private val highlightInterpolator = DecelerateInterpolator()
+    private var shapes: Array<Array<HeatMapCell>> = emptyArray()
 
-    private var shapes: Array<Array<DrawableRectangle>> = emptyArray()
+    override var touchHandler: ((TouchConsumer, MotionEvent, Bounds, Float, Float) -> Unit)? = { consumer: TouchConsumer, event: MotionEvent, _: Bounds, x: Float, y: Float ->
+        when (event.action) {
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                if (consumer is HeatMapCell) {
+                    if (consumer.bounds.isInside(x, y)) {
+                        if (!consumer.hovered && !consumer.isHighlighting) {
+                            consumer.hovered = true
+                            val lastRow = shapes.lastIndex
+                            val lastCol = shapes[lastRow].lastIndex
+                            consumer.moveTo(lastRow, lastCol, shapes)
+                            heatMap.addAnimation(consumer.applyHighlight(options.cellHighlightDuration))
+                        }
+                    } else {
+                        if (consumer.hovered) {
+                            consumer.hovered = false
+                            heatMap.addAnimation(consumer.removeHighlight(options.cellHighlightDuration))
+                        }
+                    }
+                }
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_BUTTON_RELEASE, MotionEvent.ACTION_OUTSIDE, MotionEvent.ACTION_CANCEL -> {
+                if (consumer is HeatMapCell) {
+                    if (consumer.hovered) {
+                        heatMap.addAnimation(consumer.removeHighlight(options.cellHighlightDuration))
+                        consumer.hovered = false
+                    }
+                }
+            }
+        }
+    }
 
-    override var touchHandler: ((TouchConsumer, MotionEvent, Bounds, Float, Float) -> Unit)? = null
-
-    private var revealAnimation: MatrixRevealAnimation<DrawableRectangle>? = options.matrixRevealAnimation?.let {
-        MatrixRevealAnimation<DrawableRectangle>().apply {
+    private var revealAnimation: MatrixRevealAnimation<HeatMapCell>? = options.matrixRevealAnimation?.let {
+        MatrixRevealAnimation<HeatMapCell>().apply {
             delay = it.delay
             duration = it.duration
             stagger = it.stagger
@@ -73,70 +98,64 @@ internal class HeatMapArea (
         val offset = measurements.cellGap
         val cellSize = measurements.cellSize
 
+        var renderIndex = 0
         var horizontalOffset = (offset + bounds.left)
 
-        shapes = Array(data.getColumnCount()) {
-            Array(data.getRowCount()) {
-                DrawableRectangle()
+        shapes = Array(data.getColumnCount()) { row ->
+            Array(data.getRowCount()) { col ->
+                HeatMapCell(
+                    row,
+                    col
+                )
             }
         }
-        for ((index, week) in data.timeSpan.weeks.withIndex()) {
+        for ((rowIndex, week) in data.timeSpan.weeks.withIndex()) {
             var verticalOffset = bounds.top
-            val rows: Array<DrawableRectangle> = Array(data.getRowCount()) {
-                DrawableRectangle()
-            }
-            for((rowIndex, day) in week.weekDays.withIndex()) {
-                val shape = DrawableRectangle()
-                shape.touchHandler = { consumer: TouchConsumer, event: MotionEvent, bounds: Bounds, x: Float, y: Float ->
-                    when (event.action) {
-                        MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
-                            if (consumer is DrawableRectangle) {
-                                if (consumer.bounds.isInside(x, y)) {
-                                    if (!consumer.hovered) {
-                                        consumer.hovered = true
-                                        heatMap.addAnimation(consumer.applyHighlight(highlightInterpolator))
-                                    }
-                                } else {
-                                    if (consumer.hovered) {
-                                        consumer.hovered = false
-                                        heatMap.addAnimation(consumer.removeHighlight(highlightInterpolator))
-                                    }
-                                }
-                            }
-                        }
-                        MotionEvent.ACTION_UP, MotionEvent.ACTION_BUTTON_RELEASE, MotionEvent.ACTION_OUTSIDE, MotionEvent.ACTION_CANCEL -> {
-                            if (consumer is DrawableRectangle) {
-                                if (consumer.hovered) {
-                                    heatMap.addAnimation(consumer.removeHighlight(highlightInterpolator))
-                                    consumer.hovered = false
-                                }
-                            }
-                        }
-                    }
-                }
+            val rows: Array<HeatMapCell> = shapes[rowIndex]
+
+            for((colIndex, day) in week.weekDays.withIndex()) {
+                val shape = HeatMapCell(rowIndex, colIndex)
+                shape.touchHandler = touchHandler
+                shape.renderIndex = renderIndex
                 shape.bounds = Bounds(horizontalOffset, verticalOffset, horizontalOffset + cellSize, verticalOffset + cellSize)
                 shape.color = MutableColor(day.getColorValue(style))
                 shape.render = false
                 shape.elevation = style.cellElevation
+                if (options.showCellDayText) {
+                    shape.cellText = Text(day.date.day.toString(), Paint()).apply {
+                        textSize = (cellSize / 2f)
+                        typeFace = Typeface.DEFAULT_BOLD
+                    }.build().apply {
+                        x = shape.bounds.centerX
+                        y = shape.bounds.centerY + (height / 2)
+                        alignment = Alignment.CENTER
+                        textColor = if (shape.color.isBright(220)) {
+                            shape.color.adjust(0.8f)
+                        } else {
+                            shape.color.adjust(1.6f)
+                        }
+                    }
+                }
                 verticalOffset += (cellSize + offset)
-                rows[rowIndex] = shape
+                renderIndex++
+                rows[colIndex] = shape
             }
-            shapes[index] = rows
+            shapes[rowIndex] = rows
             val label = monthLabels[week.getMonthLabel()]
 
-            if (index > 0) {
-                val lastWeek = data.timeSpan.weeks[index - 1]
+            if (rowIndex > 0) {
+                val lastWeek = data.timeSpan.weeks[rowIndex - 1]
                 if (!lastWeek.hasMonthLabel(monthLabels)) {
                     if (week.hasMonthLabel(monthLabels)) {
-                        monthIndexes[index] = label
+                        monthIndexes[rowIndex] = label
                     }
                 } else {
                     if (week.weekDays[0].date.day == 1) {
-                        monthIndexes[index] = label
+                        monthIndexes[rowIndex] = label
                     }
                 }
             } else {
-                monthIndexes[index] = label
+                monthIndexes[rowIndex] = label
             }
             horizontalOffset += (cellSize + offset)
         }

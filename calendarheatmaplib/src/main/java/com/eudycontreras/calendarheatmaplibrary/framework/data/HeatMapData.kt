@@ -100,9 +100,10 @@ data class Frequency(
 enum class Alignment {
     @SerialName("LEFT")
     LEFT,
-
     @SerialName("RIGHT")
-    RIGHT
+    RIGHT,
+    @SerialName("CENTER")
+    CENTER
 }
 
 fun HeatMapData.getColumnCount(): Int {

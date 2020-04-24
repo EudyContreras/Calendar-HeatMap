@@ -6,7 +6,7 @@ import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
-import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableText
+import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Text
 import com.eudycontreras.calendarheatmaplibrary.framework.data.Alignment
 import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapLabel
 import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapStyle
@@ -47,7 +47,7 @@ internal class DayLabelArea(
 
         for (label in labels) {
             if (label.active) {
-                val dayLabel = DrawableText(text = label.text, paint = paint
+                val dayLabel = Text(text = label.text, paint = paint
                 ).build()
                 dayLabel.x = bounds.right
                 dayLabel.y = verticalOffset + ((cellSize / 2) + (dayLabel.height / 2))

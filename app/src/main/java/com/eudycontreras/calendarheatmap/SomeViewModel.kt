@@ -62,7 +62,7 @@ internal class SomeViewModel : ViewModel() {
         val dateTo = LocalDate.now()
 
         val origin = dateTo.minusYears(1).with(WeekFields.SUNDAY_START.dayOfWeek(), 1L)
-        var dateFrom = origin.minusYears(1).with(WeekFields.SUNDAY_START.dayOfWeek(), 1L)
+        var dateFrom = dateTo.minusYears(1).with(WeekFields.SUNDAY_START.dayOfWeek(), 1L)
 
         val weeks: MutableList<Week> = mutableListOf()
 

@@ -7,9 +7,10 @@ import android.view.MotionEvent
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
+import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
-import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableCircle
-import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableRectangle
+import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Circle
+import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Rectangle
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
@@ -176,12 +177,12 @@ internal class CellInterceptor(
 
     override var touchHandler: ((TouchableShape, MotionEvent, Float, Float) -> Unit)? = null
 
-    private var lineLeft: DrawableRectangle = DrawableRectangle()
-    private var lineRight: DrawableRectangle = DrawableRectangle()
-    private var lineTop: DrawableRectangle = DrawableRectangle()
-    private var lineBottom: DrawableRectangle = DrawableRectangle()
+    private var lineLeft: DrawableShape = Rectangle()
+    private var lineRight: DrawableShape = Rectangle()
+    private var lineTop: DrawableShape = Rectangle()
+    private var lineBottom: DrawableShape = Rectangle()
 
-    private var marker: DrawableCircle = DrawableCircle()
+    private var marker: Circle = Circle()
 
     fun build(bounds: Bounds = Bounds()) {
         this.bounds.update(bounds)

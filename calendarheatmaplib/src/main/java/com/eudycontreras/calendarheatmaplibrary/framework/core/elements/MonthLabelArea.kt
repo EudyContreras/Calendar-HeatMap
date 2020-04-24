@@ -8,7 +8,7 @@ import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
-import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableText
+import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Text
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
@@ -25,7 +25,6 @@ internal class MonthLabelArea(
     val style: HeatMapStyle,
     val bounds: Bounds
 ) : RenderTarget, TouchableShape {
-
 
     override var hovered: Boolean = false
 
@@ -54,7 +53,7 @@ internal class MonthLabelArea(
                 monthLabels[index]
             } else null
             if (label != null) {
-                val monthLabel = DrawableText(
+                val monthLabel = Text(
                     text = label.text,
                     paint = paint
                 ).build()

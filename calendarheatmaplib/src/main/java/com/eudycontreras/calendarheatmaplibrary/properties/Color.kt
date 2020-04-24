@@ -41,6 +41,14 @@ abstract class Color(
 
     abstract fun reset()
 
+    fun isBright(threshold: Int = 150): Boolean {
+        return red >= threshold || green >= threshold || blue >= threshold
+    }
+
+    fun isDark(threshold: Int = 150): Boolean {
+        return red < threshold && green < threshold && blue < threshold
+    }
+
     protected fun clamp(color: Int): Int {
         return when {
             color > MAX_COLOR -> MAX_COLOR

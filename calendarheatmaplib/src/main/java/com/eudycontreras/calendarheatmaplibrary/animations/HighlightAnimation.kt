@@ -4,14 +4,11 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.view.animation.Interpolator
-import androidx.core.math.MathUtils
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.Animateable
 import com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMap
-import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableRectangle
-import com.eudycontreras.calendarheatmaplibrary.mapRange
 
 /**
  * Copyright (C) 2020 Project X

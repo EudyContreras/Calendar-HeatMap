@@ -8,6 +8,7 @@ import com.eudycontreras.calendarheatmaplibrary.extensions.dp
 import com.eudycontreras.calendarheatmaplibrary.extensions.sp
 
 data class HeatMapStyle(
+    var cellTextColor: Int? = null,
     var cellElevation: Float = MIN_OFFSET,
     var minCellColor: Int = AndroidColor.TRANSPARENT,
     var maxCellColor: Int = AndroidColor.TRANSPARENT,

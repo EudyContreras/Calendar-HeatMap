@@ -40,6 +40,7 @@ class AnimationEvent(
     internal val hasStarted: Boolean
         get() = System.currentTimeMillis() >= startTime
 
+    internal var endedInvoked: Boolean = false
     internal var startInvoked: Boolean = false
 
     override fun onUpdate(currentPlayTime: Long, delta: Float) {

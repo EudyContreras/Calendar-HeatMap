@@ -21,6 +21,8 @@ internal abstract class DrawableShape: RenderTarget {
 
     var id: Int = View.NO_ID
 
+    var renderIndex: Int = 0
+
     var color: MutableColor = MutableColor()
 
     var bounds: Bounds = Bounds()

@@ -8,8 +8,8 @@ import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
-import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableRectangle
-import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DrawableText
+import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Text
+import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Rectangle
 import com.eudycontreras.calendarheatmaplibrary.framework.data.Alignment
 import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapOptions
 import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapStyle
@@ -48,13 +48,13 @@ internal class LegendArea(
     }
 
     fun buildWith(measurements: Measurements, options: HeatMapOptions): LegendArea {
-        val lessText = DrawableText(options.legendLessLabel, paint).apply {
+        val lessText = Text(options.legendLessLabel, paint).apply {
             textSize = style.legendLabelStyle.textSize
             typeFace = style.legendLabelStyle.typeFace
             textColor = MutableColor(style.legendLabelStyle.textColor)
         }.build()
 
-        val moreText = DrawableText(options.legendMoreLabel, paint).apply {
+        val moreText = Text(options.legendMoreLabel, paint).apply {
             textSize = style.legendLabelStyle.textSize
             typeFace = style.legendLabelStyle.typeFace
             textColor = MutableColor(style.legendLabelStyle.textColor)
@@ -81,8 +81,8 @@ internal class LegendArea(
 
     private fun withLeftAlignment(
         offset: Float,
-        lessText: DrawableText,
-        moreText: DrawableText
+        lessText: Text,
+        moreText: Text
     ) {
         lessText.x = bounds.x + offset
         lessText.y = bounds.bottom - (offset * 2)
@@ -91,7 +91,7 @@ internal class LegendArea(
         var leftOffset = lessText.x + (offset * 2) + lessText.textBounds.width()
 
         for (level in 0..spectrumLevels) {
-            val shape = DrawableRectangle()
+            val shape = Rectangle()
             shape.x = leftOffset
             shape.y = lessText.y - cellSize
             shape.width = cellSize
@@ -108,8 +108,8 @@ internal class LegendArea(
 
     private fun withRightAlignment(
         offset: Float,
-        lessText: DrawableText,
-        moreText: DrawableText
+        lessText: Text,
+        moreText: Text
     ) {
         val cellSize = bounds.height * sizeRatio
 
@@ -119,7 +119,7 @@ internal class LegendArea(
         var rightOffset = moreText.x - (moreText.width + cellSize + (offset * 2))
 
         for (level in spectrumLevels downTo 0) {
-            val shape = DrawableRectangle()
+            val shape = Rectangle()
             shape.x = rightOffset
             shape.y = moreText.y - cellSize
             shape.width = cellSize

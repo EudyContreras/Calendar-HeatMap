@@ -7,12 +7,12 @@ import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.Typeface
 import android.util.AttributeSet
-import android.util.Log
 import android.view.*
 import android.view.animation.LinearInterpolator
 import android.widget.ScrollView
 import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
+import androidx.annotation.MainThread
 import androidx.core.widget.NestedScrollView
 import com.eudycontreras.calendarheatmaplibrary.*
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
@@ -22,7 +22,6 @@ import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 import com.eudycontreras.calendarheatmaplibrary.properties.Padding
-import java.util.*
 import kotlin.collections.map
 import kotlin.math.max
 
@@ -44,6 +43,7 @@ interface CalHeatMap: ValueAnimator.AnimatorUpdateListener {
     var onFullyVisible: ((CalHeatMap, Boolean) -> Unit)?
 }
 
+@MainThread
 class CalHeatMapView : View, CalHeatMap {
 
     private var sizeRatio = 0.5f
@@ -216,20 +216,32 @@ class CalHeatMapView : View, CalHeatMap {
     override fun addAnimation(animation: AnimationEvent?) {
         if (animation == null) return
         animationProposals.add(animation)
+        if (!animStarted) {
+            startAnimation()
+        }
     }
 
     override fun removeAnimation(animation: AnimationEvent?) {
         if (animation == null) return
         animationRemovals.add(animation)
+        if (!animStarted) {
+            startAnimation()
+        }
     }
 
     override fun stopAnimation() {
+        if (!animStarted)
+            return
+
         animStarted = false
         infiniteAnimator?.cancel()
         infiniteAnimator = null
     }
 
     override fun startAnimation() {
+        if (animStarted)
+            return
+
         animStarted = true
         infiniteAnimator?.cancel()
         infiniteAnimator = ValueAnimator.ofFloat(MAX_OFFSET, MIN_OFFSET)
@@ -241,12 +253,14 @@ class CalHeatMapView : View, CalHeatMap {
     }
 
     override fun onAnimationUpdate(animator: ValueAnimator) {
+        if (!animStarted) return
+
         if (fullyVisible) {
             if (animationProposals.size > 0) {
                 animationCollection.addAll(animationProposals)
                 animationProposals.clear()
             }
-            if (animationCollection.isNotEmpty()) {
+            if (animationCollection.size > 0) {
                 for (animation in animationCollection) {
                     if (animation.hasStarted && animation.isRunning) {
                         if (!animation.startInvoked) {
@@ -257,12 +271,15 @@ class CalHeatMapView : View, CalHeatMap {
                         val value = animator.animatedValue as Float
                         animation.onUpdate(playTime, value)
                     }
-                    if (animation.hasEnded) {
+                    if (animation.hasEnded && !animation.endedInvoked) {
                         animation.onEnd?.invoke()
                         animationRemovals.add(animation)
+                        animation.endedInvoked = true
                     }
                 }
                 invalidate()
+            } else {
+                stopAnimation()
             }
             if (animationRemovals.size > 0) {
                 animationCollection.removeAll(animationRemovals)

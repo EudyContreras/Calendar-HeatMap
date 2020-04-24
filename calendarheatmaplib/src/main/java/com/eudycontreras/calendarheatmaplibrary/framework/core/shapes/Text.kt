@@ -15,8 +15,8 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  * @since April 2020
  */
 
-internal class DrawableText(
-    val text: String,
+internal open class Text(
+    var text: String,
     val paint: Paint
 ) : DrawableShape() {
 
@@ -48,7 +48,7 @@ internal class DrawableText(
             boundsDirty = true
         }
 
-    fun build(): DrawableText {
+    open fun build(): Text {
         paint.recycle()
         paint.typeface = typeFace
         paint.textSize = textSize
@@ -70,7 +70,7 @@ internal class DrawableText(
         }
     }
 
-    fun copyStyle(other: DrawableText) {
+    fun copyStyle(other: Text) {
         this.textSize = other.textSize
         this.typeFace = other.typeFace
         this.textColor = other.textColor

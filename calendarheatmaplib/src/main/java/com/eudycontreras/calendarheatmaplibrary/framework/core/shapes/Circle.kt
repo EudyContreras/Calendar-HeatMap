@@ -18,7 +18,7 @@ import kotlin.math.min
  * @since April 2020
  */
 
-internal class DrawableCircle : DrawableShape() {
+internal open class Circle : DrawableShape() {
 
     var centerX: Float = MIN_OFFSET
         set(value) {
@@ -80,7 +80,7 @@ internal class DrawableCircle : DrawableShape() {
         }
     }
 
-    private fun renderShadow(canvas: Canvas, paint: Paint, shadowPath: Path) {
+    protected open fun renderShadow(canvas: Canvas, paint: Paint, shadowPath: Path) {
         if (shadowColor == null) {
             val color = ShadowUtility.COLOR
             this.shadowAlpha = color.alpha
