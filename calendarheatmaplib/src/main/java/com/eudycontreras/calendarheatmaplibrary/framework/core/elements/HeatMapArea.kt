@@ -76,7 +76,7 @@ internal class HeatMapArea (
             delay = it.delay
             duration = it.duration
             stagger = it.stagger
-            fromIndex = Index(it.epiCenterRow ?: 0, it.epiCenterCol ?: 0)
+            fromIndex = it.epiCenter
             interpolator = OvershootInterpolator()
         }
     }
@@ -85,7 +85,7 @@ internal class HeatMapArea (
         val viewport = viewportProvider().let {
             Bounds(
                 left = abs(it.left).toFloat() + bounds.left,
-                right =  abs(it.left).toFloat() + bounds.left + viewportArea.width,
+                right = abs(it.left).toFloat() + bounds.left + viewportArea.width,
                 top = bounds.top,
                 bottom = bounds.bottom
             )
@@ -142,7 +142,7 @@ internal class HeatMapArea (
                 shape.touchHandler = touchHandler
                 shape.renderIndex = renderIndex
                 shape.bounds = Bounds(horizontalOffset, verticalOffset, horizontalOffset + cellSize, verticalOffset + cellSize)
-                shape.color = MutableColor(day.getColorValue(style))
+                shape.color = MutableColor(day.getColorValue(style, options.maxFrequencyValue))
                 shape.cellText = createCellText(shape, day, cellSize)
                 shape.render = !shape.bounds.intercepts(viewport)
                 shape.elevation = style.cellElevation

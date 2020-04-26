@@ -82,12 +82,12 @@ internal class HeatMapCell(
             isHighlighting = true
             AnimationEvent(
                 duration = duration,
-                interpolator = interpolatorIn,
                 onEnd = { isHighlighting = true },
-                updateListener = { _, _, delta ->
+                updateListener = { _, _, offset ->
                     val zoom = 6.dp
                     val elevate = 6.dp
                     val adjust = 0.2f
+                    val delta = interpolatorIn.getInterpolation(offset)
                     bounds.left = savedState.second.left - (zoom * delta)
                     bounds.right = savedState.second.right + (zoom * delta)
                     bounds.top = savedState.second.top - (zoom * delta)
@@ -109,19 +109,17 @@ internal class HeatMapCell(
         return highlightSavedState?.let { savedState ->
             AnimationEvent(
                 duration = duration,
-                interpolator = interpolatorOut,
                 onEnd = { isHighlighting = false },
                 updateListener = { _, _, offset ->
                     val zoom = 6.dp
                     val adjust = 0.2f
-                    val delta = MAX_OFFSET - offset
+                    val delta = interpolatorOut.getInterpolation(MAX_OFFSET - offset)
                     bounds.left = savedState.second.left - abs(bounds.left - savedState.second.left) * delta
                     bounds.right = savedState.second.right + abs(bounds.right - savedState.second.right) * delta
                     bounds.top =  savedState.second.top - abs(bounds.top - savedState.second.top) * delta
                     bounds.bottom =  savedState.second.bottom + abs(bounds.bottom - savedState.second.bottom) * delta
                     color = savedState.third.adjust(MAX_OFFSET + (adjust * delta))
                     elevation =  savedState.first - abs(elevation - savedState.first) * delta
-
                     cellText?.let {
                         highlightSavedStateText?.let { textState ->
                             it.textSize = textState.first + (zoom * delta)

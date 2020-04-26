@@ -25,9 +25,6 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  * - Take overlay input in order to render the tooltip information. Or better yet
  * allow the user to specify a layout for the tooltip. The layout should take the frequency data
  * draw the the given layout inside of the tooltip somehow.
- * - Allow panning from side to side. Calculate panning shift base on the motion event position
- * and the offset to each end of the spectrum.
- * - Interpolate interceptor center base on motion and
  */
 internal class CalHeatMapBuilder(
     private val shapeManager: ShapeManager,

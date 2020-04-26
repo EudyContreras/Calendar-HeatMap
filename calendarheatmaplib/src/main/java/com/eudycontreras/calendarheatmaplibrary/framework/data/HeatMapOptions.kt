@@ -1,6 +1,7 @@
 package com.eudycontreras.calendarheatmaplibrary.framework.data
 
 import com.eudycontreras.calendarheatmaplibrary.extensions.dp
+import com.eudycontreras.calendarheatmaplibrary.properties.Index
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -15,8 +16,7 @@ data class AnimationData(
     val delay: Long = 0,
     val duration: Long = 400,
     val stagger: Long = 50,
-    val epiCenterRow: Int? = 5,
-    val epiCenterCol: Int? = 3
+    val epiCenter: Index? = null
 )
 
 @Serializable
@@ -31,13 +31,11 @@ data class HeatMapOptions(
     var cellHighlightDuration: Long = 250,
     var interceptorOffsetX: Float = 60.dp,
     var interceptorOffsetY: Float = 60.dp,
-    var minFrequencyValue: Int = Frequency.MIN_VALUE,
     var maxFrequencyValue: Int = Frequency.MAX_VALUE,
     var matrixRevealAnimation: AnimationData? = AnimationData(),
     var dayLabels: List<HeatMapLabel> = STANDARD_DAY_LABELS,
     var monthLabels: List<HeatMapLabel> = STANDARD_MONTH_LABELS
 ) {
-
     companion object {
         const val LESS = "Less"
         const val MORE = "More"

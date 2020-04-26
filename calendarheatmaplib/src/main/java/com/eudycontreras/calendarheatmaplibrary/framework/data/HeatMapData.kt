@@ -124,15 +124,14 @@ fun Week.getMonthLabel(): Int {
 
 fun WeekDay.getColorValue(
     style: HeatMapStyle,
-    min: Float = Frequency.MIN_VALUE.toFloat(),
-    max: Float = Frequency.MAX_VALUE.toFloat()
+    max: Int = Frequency.MAX_VALUE
 ): Color {
     val value = this.frequencyData.count
 
     return if (value <= 0) {
         MutableColor.fromColor(style.emptyCellColor)
     } else {
-        val range = mapRange(value.toFloat(), min, max, MIN_OFFSET, MAX_OFFSET)
+        val range = mapRange(value.toFloat(), Frequency.MIN_VALUE.toFloat(), max.toFloat(), MIN_OFFSET, MAX_OFFSET)
         val colorMin = MutableColor.fromColor(style.minCellColor)
         val colorMax = MutableColor.fromColor(style.maxCellColor)
         MutableColor.interpolateColor(colorMin, colorMax, range)

@@ -29,18 +29,26 @@ internal class MatrixRevealAnimation<T: Animateable> : HeatMapAnimation<Array<Ar
     override var onEnd: (() -> Unit)? = null
     override var onStart: (() -> Unit)? = null
 
-    var fromIndex: Index = Index(0, 0)
+    var fromIndex: Index? = null
     var stagger: Long = 0
 
     override fun animate(heatMap: CalHeatMap, animateable: Array<Array<T>>) {
-        performSequentialAnimation(heatMap, animateable)
+        val midRowIndex = animateable.size / 2
+        val midColIndex = animateable[midRowIndex].size / 2
+        val epiCenter = fromIndex ?: Index(
+            row = midRowIndex,
+            col = midColIndex
+        )
+        performSequentialAnimation(epiCenter, heatMap, animateable)
     }
 
     private fun performSequentialAnimation(
+        epiCenter: Index,
         heatMap: CalHeatMap,
         animateable: Array<Array<T>>
     ) {
-        val indexMaps = createOrder(animateable.size,  animateable[0].size, fromIndex)
+
+        val indexMaps = createOrder(animateable.size,  animateable[0].size, epiCenter)
 
         val startPoints = Array(animateable.size) {
             Array(animateable[it].size) { Pair(MIN_OFFSET, MIN_OFFSET) }

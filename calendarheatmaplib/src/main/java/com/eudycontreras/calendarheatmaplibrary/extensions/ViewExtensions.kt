@@ -111,6 +111,12 @@ internal inline fun <reified T> View.saveProps(propId: Int, props: T, weak: Bool
     }
 }
 
+internal tailrec fun View.findMaster(): ViewGroup? {
+    val parent: ViewGroup = this.parent as? ViewGroup? ?: return this as ViewGroup
+
+    return parent.findMaster()
+}
+
 internal tailrec fun View.findParent(criteria: ((parent: View) -> Boolean)? = null): ViewGroup? {
     val parent: ViewGroup? = this.parent as? ViewGroup?
 

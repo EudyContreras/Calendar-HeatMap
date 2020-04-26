@@ -18,6 +18,8 @@ import androidx.core.widget.NestedScrollView
 import com.eudycontreras.calendarheatmaplibrary.*
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.animations.AnimationEvent
+import com.eudycontreras.calendarheatmaplibrary.extensions.findMaster
+import com.eudycontreras.calendarheatmaplibrary.extensions.findParent
 import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
@@ -457,21 +459,22 @@ class CalHeatMapView : View, CalHeatMap {
             it !is NestedScrollView && it is ScrollView || it is NestedScrollView
         }
 
+        if (scrollingParent == null) {
+            retrieveBounds(viewBounds, this.findMaster(), scrollBounds)
+            notifyVisibility(viewBounds, scrollBounds)
+        }
         scrollingParent?.let { parent ->
+            retrieveBounds(viewBounds, parent as ViewGroup, scrollBounds)
+            notifyVisibility(viewBounds, scrollBounds)
+
             when (parent) {
                 is ScrollView -> {
-                    retrieveBounds(viewBounds, parent, scrollBounds)
-                    notifyVisibility(viewBounds, scrollBounds)
-
                     parent.viewTreeObserver.addOnScrollChangedListener {
                         retrieveBounds(viewBounds, parent, scrollBounds)
                         notifyVisibility(viewBounds, scrollBounds)
                     }
                 }
                 is NestedScrollView -> {
-                    retrieveBounds(viewBounds, parent, scrollBounds)
-                    notifyVisibility(viewBounds, scrollBounds)
-
                     parent.setOnScrollChangeListener { _: NestedScrollView?, _: Int, _: Int, _: Int, _: Int ->
                         retrieveBounds(viewBounds, parent, scrollBounds)
                         notifyVisibility(viewBounds, scrollBounds)

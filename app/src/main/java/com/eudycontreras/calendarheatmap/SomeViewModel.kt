@@ -69,6 +69,8 @@ internal class SomeViewModel : ViewModel() {
         if (weeksInYear > WEEKS_IN_YEAR) {
             return generateData(WEEKS_IN_YEAR - weeksInYear)
         }
+        var maxFrequencyValue = 0
+
         weeks@ for (index in 0L..weeksInYear) {
             val weekFields: WeekFields = WeekFields.of(Locale.getDefault())
             val weekNumber = dateFrom.get(weekFields.weekOfWeekBasedYear())
@@ -84,11 +86,14 @@ internal class SomeViewModel : ViewModel() {
                 val frequency = if (holidays.contains(date)) {
                     0
                 } else if (day > 0 && day < DAYS_IN_WEEK - 1) {
-                    Random.nextInt(Frequency.MIN_VALUE, Frequency.MAX_VALUE)
+                    Random.nextInt(Frequency.MAX_VALUE + 1)
                 } else if (Random.nextBoolean()) {
-                    Random.nextInt(Frequency.MIN_VALUE, Frequency.MAX_VALUE / 2)
+                    Random.nextInt(Frequency.MAX_VALUE / 2)
                 } else 0
 
+                if (frequency > maxFrequencyValue) {
+                    maxFrequencyValue = frequency
+                }
                 days.add(
                     WeekDay(
                         index = day,
@@ -102,7 +107,9 @@ internal class SomeViewModel : ViewModel() {
         }
 
         return HeatMapData(
-            options = HeatMapOptions(),
+            options = HeatMapOptions(
+                maxFrequencyValue = maxFrequencyValue
+            ),
             timeSpan = TimeSpan(
                 dateMin = origin.toDate(),
                 dateMax = dateTo.toDate(),
