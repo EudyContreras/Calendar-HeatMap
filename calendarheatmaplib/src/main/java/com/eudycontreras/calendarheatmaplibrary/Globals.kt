@@ -1,16 +1,14 @@
 package com.eudycontreras.calendarheatmaplibrary
 
-import android.graphics.Paint
-import android.graphics.Rect
-import android.graphics.Typeface
 import android.view.ViewGroup
 import android.view.ViewParent
 import androidx.core.math.MathUtils
-import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.properties.Coordinate
 import com.eudycontreras.calendarheatmaplibrary.properties.Property
 import kotlin.math.abs
 import kotlin.math.hypot
+
+internal const val VIEWMODEL = 1
 
 internal const val MIN_OFFSET = 0.0f
 internal const val MAX_OFFSET = 1.0f

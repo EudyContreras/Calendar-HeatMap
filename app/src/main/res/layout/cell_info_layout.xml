@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="viewModel"
+            type="com.eudycontreras.calendarheatmaplibrary.framework.data.WeekDay" />
+
+        <import
+            alias="Utils"
+            type="com.eudycontreras.calendarheatmaplibrary.extensions.NumberExtensionsKt" />
+
+        <import type="android.graphics.Typeface" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/contributionCountLabel"
+            android:layout_width="wrap_content"
+            android:textStyle="bold"
+            android:gravity="center_vertical|end"
+            android:textAlignment="gravity"
+            android:layout_height="25dp"
+            android:text="@{viewModel.frequencyData.count + ` contributions`}"
+            tools:text="No contributions"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <TextView
+            android:id="@+id/contributionDateLabel"
+            android:gravity="center_vertical|start"
+            android:textAlignment="gravity"
+            android:layout_width="wrap_content"
+            android:layout_height="25dp"
+            android:layout_marginStart="4dp"
+            android:text="@{`on ` + viewModel.dateString }"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/contributionCountLabel"
+            tools:text="on Apr, 6, 2020"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

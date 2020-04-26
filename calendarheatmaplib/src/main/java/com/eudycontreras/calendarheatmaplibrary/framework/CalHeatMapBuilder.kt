@@ -33,9 +33,15 @@ internal class CalHeatMapBuilder(
     private var contextProvider: (() -> Context)?,
     private var viewportProvider: () -> Rect
 ) {
+    private var interceptListener: ((WeekDay) -> Unit)? = null
+
     private var calHeatMapData: HeatMapData = generatePlaceholderData()
 
     fun getData(): HeatMapData? = calHeatMapData
+
+    fun setInterceptionListener(interceptionListener: (WeekDay) -> Unit) {
+        this.interceptListener = interceptionListener
+    }
 
     fun buildWithBounds(heatMap: CalHeatMap, bounds: Bounds, measurements: Measurements) {
         val data = calHeatMapData
@@ -120,6 +126,7 @@ internal class CalHeatMapBuilder(
         viewportArea: Dimension
     ): HeatMapArea {
         return HeatMapArea(
+            interceptListener,
             viewportProvider, viewportArea, options, heatMap, calHeatMapData, style, bounds.copy(
                 left = bounds.left + paddingLeft,
                 top = bounds.top + paddingTop,
@@ -213,6 +220,7 @@ internal class CalHeatMapBuilder(
                     WeekDay(
                         index = day,
                         date = Date(dayCounter, monthIndex, yearCounter),
+                        dateString = "$dayCounter-$monthIndex-$yearCounter",
                         frequencyData = Frequency(count = 0, data = null)
                     )
                 )

@@ -27,6 +27,7 @@ import kotlin.math.abs
 
 @Suppress("MemberVisibilityCanBePrivate")
 internal class HeatMapArea (
+    val interceptListener: ((WeekDay) -> Unit)?,
     val viewportProvider: () -> Rect,
     val viewportArea: Dimension,
     val options: HeatMapOptions,
@@ -40,36 +41,7 @@ internal class HeatMapArea (
 
     private var shapes: Array<Array<HeatMapCell>> = emptyArray()
 
-    override var touchHandler: ((TouchConsumer, MotionEvent, Bounds, Float, Float) -> Unit)? = { consumer: TouchConsumer, event: MotionEvent, _: Bounds, x: Float, y: Float ->
-        when (event.action) {
-            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
-                if (consumer is HeatMapCell) {
-                    if (consumer.bounds.isInside(x, y)) {
-                        if (!consumer.hovered && !consumer.isHighlighting) {
-                            consumer.hovered = true
-                            val lastRow = shapes.lastIndex
-                            val lastCol = shapes[lastRow].lastIndex
-                            consumer.moveTo(lastRow, lastCol, shapes)
-                            heatMap.addAnimation(consumer.applyHighlight(options.cellHighlightDuration))
-                        }
-                    } else {
-                        if (consumer.hovered) {
-                            consumer.hovered = false
-                            heatMap.addAnimation(consumer.removeHighlight(options.cellHighlightDuration))
-                        }
-                    }
-                }
-            }
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_BUTTON_RELEASE, MotionEvent.ACTION_OUTSIDE, MotionEvent.ACTION_CANCEL -> {
-                if (consumer is HeatMapCell) {
-                    if (consumer.hovered) {
-                        heatMap.addAnimation(consumer.removeHighlight(options.cellHighlightDuration))
-                        consumer.hovered = false
-                    }
-                }
-            }
-        }
-    }
+    override var touchHandler: ((TouchConsumer, MotionEvent, Bounds, Float, Float) -> Unit)? = null
 
     private var revealAnimation: MatrixRevealAnimation<HeatMapCell>? = options.matrixRevealAnimation?.let {
         MatrixRevealAnimation<HeatMapCell>().apply {
@@ -139,7 +111,37 @@ internal class HeatMapArea (
 
             for((colIndex, day) in week.weekDays.withIndex()) {
                 val shape = HeatMapCell(rowIndex, colIndex)
-                shape.touchHandler = touchHandler
+                shape.touchHandler = { consumer: TouchConsumer, event: MotionEvent, _: Bounds, x: Float, y: Float ->
+                    when (event.action) {
+                        MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                            if (consumer is HeatMapCell) {
+                                if (consumer.bounds.isInside(x, y)) {
+                                    if (!consumer.hovered && !consumer.isHighlighting) {
+                                        interceptListener?.invoke(day)
+                                        consumer.hovered = true
+                                        val lastRow = shapes.lastIndex
+                                        val lastCol = shapes[lastRow].lastIndex
+                                        consumer.moveTo(lastRow, lastCol, shapes)
+                                        heatMap.addAnimation(consumer.applyHighlight(options.cellHighlightDuration))
+                                    }
+                                } else {
+                                    if (consumer.hovered) {
+                                        consumer.hovered = false
+                                        heatMap.addAnimation(consumer.removeHighlight(options.cellHighlightDuration))
+                                    }
+                                }
+                            }
+                        }
+                        MotionEvent.ACTION_UP, MotionEvent.ACTION_BUTTON_RELEASE, MotionEvent.ACTION_OUTSIDE, MotionEvent.ACTION_CANCEL -> {
+                            if (consumer is HeatMapCell) {
+                                if (consumer.hovered) {
+                                    heatMap.addAnimation(consumer.removeHighlight(options.cellHighlightDuration))
+                                    consumer.hovered = false
+                                }
+                            }
+                        }
+                    }
+                }
                 shape.renderIndex = renderIndex
                 shape.bounds = Bounds(horizontalOffset, verticalOffset, horizontalOffset + cellSize, verticalOffset + cellSize)
                 shape.color = MutableColor(day.getColorValue(style, options.maxFrequencyValue))

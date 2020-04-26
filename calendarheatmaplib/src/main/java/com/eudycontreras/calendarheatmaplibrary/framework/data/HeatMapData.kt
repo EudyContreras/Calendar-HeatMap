@@ -78,6 +78,7 @@ data class Week(
 data class WeekDay(
     val index: Int,
     val date: Date,
+    val dateString: String,
     val frequencyData: Frequency
 )
 

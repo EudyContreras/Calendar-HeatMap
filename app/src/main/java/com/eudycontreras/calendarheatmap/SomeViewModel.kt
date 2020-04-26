@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.framework.data.Date
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.time.temporal.WeekFields
 import java.util.*
@@ -71,6 +72,8 @@ internal class SomeViewModel : ViewModel() {
         }
         var maxFrequencyValue = 0
 
+        val dateFormatter = DateTimeFormatter.ofPattern("MMM d, YYYY")
+
         weeks@ for (index in 0L..weeksInYear) {
             val weekFields: WeekFields = WeekFields.of(Locale.getDefault())
             val weekNumber = dateFrom.get(weekFields.weekOfWeekBasedYear())
@@ -98,6 +101,7 @@ internal class SomeViewModel : ViewModel() {
                     WeekDay(
                         index = day,
                         date = date,
+                        dateString = dateFrom.format(dateFormatter),
                         frequencyData = Frequency(count = frequency, data = null)
                     )
                 )

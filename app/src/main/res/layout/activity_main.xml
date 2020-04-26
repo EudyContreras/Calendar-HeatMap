@@ -9,7 +9,6 @@
         <variable
             name="viewModel"
             type="com.eudycontreras.calendarheatmap.SomeViewModel" />
-
         <import
             alias="Utils"
             type="com.eudycontreras.calendarheatmaplibrary.extensions.NumberExtensionsKt" />
@@ -17,119 +16,130 @@
         <import type="android.graphics.Typeface" />
     </data>
 
-    <ScrollView
-        android:id="@+id/scroller"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/colorPrimaryDark">
+        android:layout_height="match_parent">
 
-        <LinearLayout
+        <ScrollView
+            android:id="@+id/scroller"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:layout_height="match_parent"
+            android:background="@color/colorPrimaryDark">
 
-            <HorizontalScrollView
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
-                <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
-                    android:layout_width="wrap_content"
-                    android:layout_height="250dp"
-                    app:calHeatMapData="@{viewModel.demoData1}"
-                    app:cellElevation="@{Utils.getDp(2)}"
-                    app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
-                    app:cellColorMax="@{@color/colorMax}"
-                    app:cellColorMin="@{@color/colorMin}"
-                    app:legendLabelColor="@{@color/white}"
-                    app:monthLabelColor="@{@color/white}"
-                    app:weekDayLabelColor="@{@color/white}" />
-            </HorizontalScrollView>
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
 
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                    <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
+                        android:layout_width="wrap_content"
+                        android:layout_height="250dp"
+                        app:cellInfoOverlay="@{overlay}"
+                        app:cellInfoLayout="@{@layout/cell_info_layout}"
+                        app:calHeatMapData="@{viewModel.demoData1}"
+                        app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
+                        app:cellColorMax="@{@color/colorMax}"
+                        app:cellColorMin="@{@color/colorMin}"
+                        app:cellElevation="@{Utils.getDp(2)}"
+                        app:legendLabelColor="@{@color/white}"
+                        app:monthLabelColor="@{@color/white}"
+                        app:weekDayLabelColor="@{@color/white}" />
+                </HorizontalScrollView>
 
-                <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
-                    android:layout_width="wrap_content"
-                    android:layout_height="250dp"
-                    app:calHeatMapData="@{viewModel.demoData2}"
-                    app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
-                    app:cellColorMax="@{@color/colorMaxAlt1}"
-                    app:cellColorMin="@{@color/colorMinAlt1}"
-                    app:legendLabelColor="@{@color/white}"
-                    app:legendLabelTypeFace="@{Typeface.DEFAULT_BOLD}"
-                    app:monthLabelColor="@{@color/white}"
-                    app:weekDayLabelColor="@{@color/white}" />
-            </HorizontalScrollView>
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
 
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                    <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
+                        android:layout_width="wrap_content"
+                        android:layout_height="250dp"
+                        app:calHeatMapData="@{viewModel.demoData2}"
+                        app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
+                        app:cellColorMax="@{@color/colorMaxAlt1}"
+                        app:cellColorMin="@{@color/colorMinAlt1}"
+                        app:legendLabelColor="@{@color/white}"
+                        app:legendLabelTypeFace="@{Typeface.DEFAULT_BOLD}"
+                        app:monthLabelColor="@{@color/white}"
+                        app:weekDayLabelColor="@{@color/white}" />
+                </HorizontalScrollView>
 
-                <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
-                    android:layout_width="wrap_content"
-                    android:layout_height="200dp"
-                    app:calHeatMapData="@{viewModel.demoData3}"
-                    app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
-                    app:cellColorMax="@{@color/colorMaxAlt2}"
-                    app:cellColorMin="@{@color/colorMinAlt2}"
-                    app:legendLabelColor="@{@color/white}"
-                    app:monthLabelColor="@{@color/white}"
-                    app:weekDayLabelColor="@{@color/white}" />
-            </HorizontalScrollView>
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
 
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                    <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
+                        android:layout_width="wrap_content"
+                        android:layout_height="200dp"
+                        app:calHeatMapData="@{viewModel.demoData3}"
+                        app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
+                        app:cellColorMax="@{@color/colorMaxAlt2}"
+                        app:cellColorMin="@{@color/colorMinAlt2}"
+                        app:legendLabelColor="@{@color/white}"
+                        app:monthLabelColor="@{@color/white}"
+                        app:weekDayLabelColor="@{@color/white}" />
+                </HorizontalScrollView>
 
-                <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
-                    android:layout_width="wrap_content"
-                    android:layout_height="250dp"
-                    app:calHeatMapData="@{viewModel.demoData4}"
-                    app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
-                    app:cellColorMax="@{@color/colorMaxAlt2}"
-                    app:cellColorMin="@{@color/colorMinAlt2}"
-                    app:legendLabelColor="@{@color/white}"
-                    app:monthLabelColor="@{@color/white}"
-                    app:weekDayLabelColor="@{@color/white}" />
-            </HorizontalScrollView>
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
 
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                    <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
+                        android:layout_width="wrap_content"
+                        android:layout_height="250dp"
+                        app:calHeatMapData="@{viewModel.demoData4}"
+                        app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
+                        app:cellColorMax="@{@color/colorMaxAlt2}"
+                        app:cellColorMin="@{@color/colorMinAlt2}"
+                        app:legendLabelColor="@{@color/white}"
+                        app:monthLabelColor="@{@color/white}"
+                        app:weekDayLabelColor="@{@color/white}" />
+                </HorizontalScrollView>
 
-                <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
-                    android:layout_width="wrap_content"
-                    android:layout_height="250dp"
-                    app:calHeatMapData="@{viewModel.demoData5}"
-                    app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
-                    app:cellColorMax="@{@color/colorMaxAlt2}"
-                    app:cellColorMin="@{@color/colorMinAlt2}"
-                    app:legendLabelColor="@{@color/white}"
-                    app:monthLabelColor="@{@color/white}"
-                    app:weekDayLabelColor="@{@color/white}" />
-            </HorizontalScrollView>
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
 
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                    <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
+                        android:layout_width="wrap_content"
+                        android:layout_height="250dp"
+                        app:calHeatMapData="@{viewModel.demoData5}"
+                        app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
+                        app:cellColorMax="@{@color/colorMaxAlt2}"
+                        app:cellColorMin="@{@color/colorMinAlt2}"
+                        app:legendLabelColor="@{@color/white}"
+                        app:monthLabelColor="@{@color/white}"
+                        app:weekDayLabelColor="@{@color/white}" />
+                </HorizontalScrollView>
 
-                <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
-                    android:layout_width="wrap_content"
-                    android:layout_height="250dp"
-                    app:calHeatMapData="@{viewModel.demoData6}"
-                    app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
-                    app:cellColorMax="@{@color/colorMaxAlt2}"
-                    app:cellColorMin="@{@color/colorMinAlt2}"
-                    app:legendLabelColor="@{@color/white}"
-                    app:monthLabelColor="@{@color/white}"
-                    app:weekDayLabelColor="@{@color/white}" />
-            </HorizontalScrollView>
-        </LinearLayout>
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
 
-    </ScrollView>
+                    <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
+                        android:layout_width="wrap_content"
+                        android:layout_height="250dp"
+                        app:calHeatMapData="@{viewModel.demoData6}"
+                        app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
+                        app:cellColorMax="@{@color/colorMaxAlt2}"
+                        app:cellColorMin="@{@color/colorMinAlt2}"
+                        app:legendLabelColor="@{@color/white}"
+                        app:monthLabelColor="@{@color/white}"
+                        app:weekDayLabelColor="@{@color/white}" />
+                </HorizontalScrollView>
+            </LinearLayout>
 
+        </ScrollView>
+
+        <FrameLayout
+            android:id="@+id/overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
 </layout>

@@ -13,13 +13,17 @@ import android.view.animation.LinearInterpolator
 import android.widget.ScrollView
 import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
+import androidx.annotation.LayoutRes
 import androidx.annotation.MainThread
 import androidx.core.widget.NestedScrollView
+import androidx.databinding.DataBindingUtil
+import androidx.databinding.ViewDataBinding
 import com.eudycontreras.calendarheatmaplibrary.*
+import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.animations.AnimationEvent
+import com.eudycontreras.calendarheatmaplibrary.extensions.dp
 import com.eudycontreras.calendarheatmaplibrary.extensions.findMaster
-import com.eudycontreras.calendarheatmaplibrary.extensions.findParent
 import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
@@ -54,6 +58,9 @@ class CalHeatMapView : View, CalHeatMap {
 
     private var animStarted: Boolean = false
     private var fullyVisible: Boolean = false
+
+    private var cellInfoOverlay: ViewGroup? = null
+    private var cellInfoLayout: Int? = null
 
     private val viewBounds: Rect = Rect()
 
@@ -221,6 +228,14 @@ class CalHeatMapView : View, CalHeatMap {
 
     }
 
+    fun setCellInfoLayout(@LayoutRes cellInfoLayout: Int) {
+        this.cellInfoLayout = cellInfoLayout
+    }
+
+    fun setCellInfoOverlay(cellInfoOverlay: ViewGroup?) {
+        this.cellInfoOverlay = cellInfoOverlay
+    }
+
     override fun addAnimation(animation: AnimationEvent?) {
         if (animation == null) return
         animationProposals.add(animation)
@@ -295,6 +310,7 @@ class CalHeatMapView : View, CalHeatMap {
             }
         }
     }
+    var infoView: ViewDataBinding? = null
 
     override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
         super.onSizeChanged(width, height, oldWidth, oldHeight)
@@ -306,6 +322,16 @@ class CalHeatMapView : View, CalHeatMap {
             paddingBottom = paddingBottom
         )
 
+        val infoLayout = cellInfoLayout
+        val infoOverlay = cellInfoOverlay
+
+        if (infoOverlay != null && infoLayout != null) {
+            val inflater = LayoutInflater.from(context)
+            infoView = DataBindingUtil.inflate(inflater, infoLayout, infoOverlay, true)
+            this.heatMapBuilder.setInterceptionListener {
+                infoView?.setVariable(VIEWMODEL, it)
+            }
+        }
         this.heatMapBuilder.buildWithBounds(
             this,
             bounds = Bounds(
@@ -335,6 +361,13 @@ class CalHeatMapView : View, CalHeatMap {
         super.onDraw(canvas)
 
         shapeManager.renderShapes(canvas)
+
+        infoView?.root?.let {
+            canvas.save();
+            canvas.translate(it.x, it.y);
+            it.draw(canvas)
+            canvas.restore()
+        }
     }
 
     private fun getTextMeasurement(paint: Paint, text: String?, textSize: Float, typeFace: Typeface): Rect {
@@ -541,6 +574,13 @@ class CalHeatMapView : View, CalHeatMap {
         return detector.onTouchEvent(event).let { result ->
             if (animationCollection.size <= 0) {
                 invalidate()
+            }
+
+            infoView?.root?.let {
+                it.animate()
+                    .setDuration(0L)
+                    .x(event.x)
+                    .y(event.y - 100.dp)
             }
 
             shapeManager.delegateTouchEvent(event, event.x, event.y, viewBounds)
