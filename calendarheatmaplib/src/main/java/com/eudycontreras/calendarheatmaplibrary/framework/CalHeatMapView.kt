@@ -4,6 +4,7 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Typeface
 import android.util.AttributeSet
@@ -17,6 +18,7 @@ import androidx.core.widget.NestedScrollView
 import com.eudycontreras.calendarheatmaplibrary.*
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.animations.AnimationEvent
+import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
@@ -46,10 +48,12 @@ interface CalHeatMap: ValueAnimator.AnimatorUpdateListener {
 @MainThread
 class CalHeatMapView : View, CalHeatMap {
 
-    private var sizeRatio = 0.5f
+    private var sizeRatio = 0.75f
 
     private var animStarted: Boolean = false
     private var fullyVisible: Boolean = false
+
+    private val viewBounds: Rect = Rect()
 
     private var scrollingParent: ViewParent? = null
 
@@ -64,11 +68,13 @@ class CalHeatMapView : View, CalHeatMap {
     private var infiniteAnimator: ValueAnimator? = ValueAnimator.ofFloat(MAX_OFFSET, MIN_OFFSET)
 
     private var shapeManager: ShapeManager = ShapeManager()
+
     private var heatMapBuilder: CalHeatMapBuilder = CalHeatMapBuilder(
         shapeManager = shapeManager,
         styleContext = { calHeatMapStyle },
         optionsContext = { calHeatMapOptions },
-        contextProvider = { context }
+        contextProvider = { context },
+        viewportProvider = { viewBounds }
     )
 
     constructor(context: Context) : this(context, null)
@@ -329,12 +335,26 @@ class CalHeatMapView : View, CalHeatMap {
         shapeManager.renderShapes(canvas)
     }
 
+    private fun getTextMeasurement(paint: Paint, text: String?, textSize: Float, typeFace: Typeface): Rect {
+        val textBounds = Rect()
+        paint.recycle()
+        paint.typeface = typeFace
+        paint.textSize = textSize
+        paint.getTextBounds(text, 0, text?.length ?: 0, textBounds)
+        return textBounds
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val specHeight = MeasureSpec.getSize(heightMeasureSpec)
+        val specWidth = MeasureSpec.getSize(widthMeasureSpec)
 
         heatMapBuilder.getData()?.let { data ->
-            buildMeasurements(data = data, measuredHeight = specHeight) { width, height ->
+            buildMeasurements(
+                data = data,
+                measuredWidth = specWidth,
+                measuredHeight = specHeight
+            ) { width, height ->
                 setMeasuredDimension(
                     resolveSize(width, widthMeasureSpec),
                     resolveSize(height, heightMeasureSpec)
@@ -343,7 +363,12 @@ class CalHeatMapView : View, CalHeatMap {
         }
     }
 
-    private fun buildMeasurements(data: HeatMapData, measuredHeight: Int, onMeasured: (Int, Int) -> Unit) {
+    private fun buildMeasurements(
+        data: HeatMapData,
+        measuredWidth: Int,
+        measuredHeight: Int,
+        onMeasured: (Int, Int) -> Unit
+    ) {
         val cellSize = data.cellSize
 
         val gapSize = data.cellGap ?: if (cellSize != null) {
@@ -357,6 +382,7 @@ class CalHeatMapView : View, CalHeatMap {
         val monthAreaHeight = getMonthLabelAreaMeasurement(gapSize)
 
         val matrixHeight = measuredHeight.toFloat() - (legendAreaHeight + monthAreaHeight)
+        val viewportWidth = measuredWidth.toFloat() - (dayAreaWidth + gapSize)
 
         val size = data.cellSize ?: ((matrixHeight - (gapSize * TimeSpan.MAX_DAYS)) / TimeSpan.MAX_DAYS)
 
@@ -370,7 +396,9 @@ class CalHeatMapView : View, CalHeatMap {
             matrixHeight = matrixHeight,
             legendAreaHeight = legendAreaHeight,
             dayLabelAreaWidth = dayAreaWidth,
-            monthLabelAreaHeight = monthAreaHeight
+            monthLabelAreaHeight = monthAreaHeight,
+            viewportWidth = viewportWidth,
+            viewportHeight = matrixHeight
         )
 
         onMeasured(width.toInt(), measuredHeight)
@@ -424,7 +452,6 @@ class CalHeatMapView : View, CalHeatMap {
 
     private fun observeVisibility() {
         val scrollBounds = Rect()
-        val viewBounds = Rect()
 
         scrollingParent = findScrollParent(this.parent as ViewGroup) {
             it !is NestedScrollView && it is ScrollView || it is NestedScrollView
@@ -456,12 +483,12 @@ class CalHeatMapView : View, CalHeatMap {
 
     private fun retrieveBounds(
         viewBounds: Rect,
-        parent: ViewGroup,
+        parent: ViewGroup?,
         scrollBounds: Rect
     ) {
         getDrawingRect(viewBounds)
-        parent.offsetDescendantRectToMyCoords(this, viewBounds)
-        parent.getDrawingRect(scrollBounds)
+        parent?.offsetDescendantRectToMyCoords(this, viewBounds)
+        parent?.getDrawingRect(scrollBounds)
     }
 
     private fun notifyVisibility(
@@ -490,7 +517,11 @@ class CalHeatMapView : View, CalHeatMap {
         override fun onLongPress(event: MotionEvent) {
             super.onLongPress(event)
             parent.requestDisallowInterceptTouchEvent(true)
-            shapeManager.delegateLongPressEvent(event, event.x, event.y)
+
+            getDrawingRect(viewBounds)
+            (scrollingParent as? ViewGroup?)?.offsetDescendantRectToMyCoords(this@CalHeatMapView, viewBounds)
+
+            shapeManager.delegateLongPressEvent(event, event.x, event.y, viewBounds)
 
             invalidate()
         }
@@ -509,7 +540,7 @@ class CalHeatMapView : View, CalHeatMap {
                 invalidate()
             }
 
-            shapeManager.delegateTouchEvent(event, event.x, event.y)
+            shapeManager.delegateTouchEvent(event, event.x, event.y, viewBounds)
 
             when (event.action) {
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {

@@ -1,6 +1,7 @@
 package com.eudycontreras.calendarheatmaplibrary.framework
 
 import android.content.Context
+import android.graphics.Rect
 import android.util.SparseArray
 import com.eudycontreras.calendarheatmaplibrary.AndroidColor
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
@@ -8,6 +9,7 @@ import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.core.elements.*
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
+import com.eudycontreras.calendarheatmaplibrary.properties.Dimension
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
 /**
@@ -20,21 +22,19 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
 /**
  * TODO list:
- * - Animate the showing of the cells using propagation animations provided by the framework
  * - Take overlay input in order to render the tooltip information. Or better yet
  * allow the user to specify a layout for the tooltip. The layout should take the frequency data
  * draw the the given layout inside of the tooltip somehow.
- * - Animate the hover trace somehow. Apply an animation on enter and exit from a cell.
  * - Allow panning from side to side. Calculate panning shift base on the motion event position
  * and the offset to each end of the spectrum.
  * - Interpolate interceptor center base on motion and
- * - Allow showing the days for the cells
  */
 internal class CalHeatMapBuilder(
     private val shapeManager: ShapeManager,
     private var styleContext: () -> HeatMapStyle,
     private var optionsContext: () -> HeatMapOptions,
-    private var contextProvider: (() -> Context)?
+    private var contextProvider: (() -> Context)?,
+    private var viewportProvider: () -> Rect
 ) {
     private var calHeatMapData: HeatMapData = generatePlaceholderData()
 
@@ -55,7 +55,11 @@ internal class CalHeatMapBuilder(
             options, heatMap, style, bounds,
             paddingLeft = dayLabelArea?.bounds?.width ?: MIN_OFFSET,
             paddingTop = monthLabelArea?.bounds?.height ?: MIN_OFFSET,
-            paddingBottom = legendArea?.bounds?.height ?: MIN_OFFSET
+            paddingBottom = legendArea?.bounds?.height ?: MIN_OFFSET,
+            viewportArea = Dimension(
+                width = measurements.viewportWidth,
+                height = measurements.viewportHeight
+            )
         ).buildWith(
             measurements = measurements,
             monthIndexes = monthIndexes,
@@ -90,6 +94,7 @@ internal class CalHeatMapBuilder(
             lineThickness = style.interceptorLineThickness
         ).apply {
             visible = true
+            viewPort = Dimension(measurements.viewportWidth, measurements.viewportHeight)
             lineColor = MutableColor(AndroidColor.WHITE)
             markerFillColor = MutableColor(style.minCellColor)
             markerStrokeColor = MutableColor(AndroidColor.WHITE)
@@ -114,10 +119,11 @@ internal class CalHeatMapBuilder(
         bounds: Bounds,
         paddingLeft: Float,
         paddingTop: Float,
-        paddingBottom: Float
+        paddingBottom: Float,
+        viewportArea: Dimension
     ): HeatMapArea {
         return HeatMapArea(
-            options, heatMap, calHeatMapData, style, bounds.copy(
+            viewportProvider, viewportArea, options, heatMap, calHeatMapData, style, bounds.copy(
                 left = bounds.left + paddingLeft,
                 top = bounds.top + paddingTop,
                 right = bounds.right,

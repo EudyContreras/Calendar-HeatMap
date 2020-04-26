@@ -56,25 +56,26 @@ internal class SomeViewModel : ViewModel() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun generateData(): HeatMapData {
-        val daysInWeek = 7
-
+    private fun generateData(weekOffset: Long = 0): HeatMapData {
         val dateTo = LocalDate.now()
 
-        val origin = dateTo.minusYears(1).with(WeekFields.SUNDAY_START.dayOfWeek(), 1L)
-        var dateFrom = dateTo.minusYears(1).with(WeekFields.SUNDAY_START.dayOfWeek(), 1L)
+        val origin = dateTo.minusYears(1).with(WeekFields.SUNDAY_START.dayOfWeek(), 1L).minusWeeks(weekOffset)
+        var dateFrom = dateTo.minusYears(1).with(WeekFields.SUNDAY_START.dayOfWeek(), 1L).minusWeeks(weekOffset)
 
         val weeks: MutableList<Week> = mutableListOf()
 
         val weeksInYear = ChronoUnit.WEEKS.between(dateFrom, dateTo)
 
+        if (weeksInYear > WEEKS_IN_YEAR) {
+            return generateData(WEEKS_IN_YEAR - weeksInYear)
+        }
         weeks@ for (index in 0L..weeksInYear) {
             val weekFields: WeekFields = WeekFields.of(Locale.getDefault())
             val weekNumber = dateFrom.get(weekFields.weekOfWeekBasedYear())
 
             val days: MutableList<WeekDay> = mutableListOf()
 
-            days@ for (day in 0 until daysInWeek) {
+            days@ for (day in 0 until DAYS_IN_WEEK) {
                 if (dateFrom > dateTo) {
                     break@days
                 }
@@ -82,7 +83,7 @@ internal class SomeViewModel : ViewModel() {
 
                 val frequency = if (holidays.contains(date)) {
                     0
-                } else if (day > 0 && day < daysInWeek - 1) {
+                } else if (day > 0 && day < DAYS_IN_WEEK - 1) {
                     Random.nextInt(Frequency.MIN_VALUE, Frequency.MAX_VALUE)
                 } else if (Random.nextBoolean()) {
                     Random.nextInt(Frequency.MIN_VALUE, Frequency.MAX_VALUE / 2)
@@ -113,5 +114,10 @@ internal class SomeViewModel : ViewModel() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun LocalDate.toDate() : Date {
         return Date(dayOfMonth, monthValue - 1, year)
+    }
+
+    private companion object {
+        const val DAYS_IN_WEEK = 7
+        const val WEEKS_IN_YEAR = 52
     }
 }

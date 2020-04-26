@@ -1,15 +1,12 @@
 package com.eudycontreras.calendarheatmaplibrary.framework.core.elements
 
 import android.graphics.*
-import android.view.MotionEvent
 import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
-import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
-import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
-import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Text
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Rectangle
+import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Text
 import com.eudycontreras.calendarheatmaplibrary.framework.data.Alignment
 import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapOptions
 import com.eudycontreras.calendarheatmaplibrary.framework.data.HeatMapStyle
@@ -27,18 +24,13 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  */
 
 internal class LegendArea(
-
     val style: HeatMapStyle,
     val bounds: Bounds
-): RenderTarget, TouchableShape {
+): RenderTarget {
 
     private var sizeRatio: Float = DEFAULT_SIZE_RATIO
 
     private val spectrumLevels: Int = DEFAULT_SPECTRUM_LEVELS
-
-    override var hovered: Boolean = false
-
-    override var touchHandler: ((TouchableShape, MotionEvent, Float, Float) -> Unit)? = null
 
     private val shapes: MutableList<DrawableShape> = mutableListOf()
 
@@ -61,7 +53,7 @@ internal class LegendArea(
         }.build()
 
         when(options.legendAlignment) {
-            Alignment.LEFT -> {
+            Alignment.LEFT, Alignment.CENTER -> {
                 moreText.alignment = Alignment.LEFT
                 lessText.alignment = Alignment.LEFT
                 withLeftAlignment(measurements.cellGap, lessText, moreText)
@@ -137,27 +129,6 @@ internal class LegendArea(
     override fun onRender(canvas: Canvas, paint: Paint, shapePath: Path, shadowPath: Path) {
         for (shape in shapes) {
             shape.onRender(canvas, paint, shapePath, shadowPath)
-        }
-    }
-
-    override fun onTouch(event: MotionEvent, x: Float, y: Float, shapeManager: ShapeManager) {
-        for (shape in shapes) {
-            if (shape is TouchableShape) {
-                shape.onTouch(event, x, y, shapeManager)
-            }
-        }
-    }
-
-    override fun onLongPressed(
-        event: MotionEvent,
-        x: Float,
-        y: Float,
-        shapeManager: ShapeManager
-    ) {
-        for (shape in shapes) {
-            if (shape is TouchableShape) {
-                shape.onLongPressed(event, x, y, shapeManager)
-            }
         }
     }
 

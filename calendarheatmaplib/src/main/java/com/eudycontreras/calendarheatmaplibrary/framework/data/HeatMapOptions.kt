@@ -12,9 +12,11 @@ data class HeatMapLabel(
 
 @Serializable
 data class AnimationData(
-    val delay: Long = 200,
-    val duration: Long = 300,
-    val stagger: Long = 5
+    val delay: Long = 0,
+    val duration: Long = 400,
+    val stagger: Long = 50,
+    val epiCenterRow: Int? = 5,
+    val epiCenterCol: Int? = 3
 )
 
 @Serializable
@@ -22,13 +24,13 @@ data class HeatMapOptions(
     var legendLessLabel: String = LESS,
     var legendMoreLabel: String = MORE,
     var showCellDayText: Boolean = true,
-    var showMonthLabels: Boolean = false,
-    var showDayLabels: Boolean = false,
-    var showLegend: Boolean = false,
+    var showMonthLabels: Boolean = true,
+    var showDayLabels: Boolean = true,
+    var showLegend: Boolean = true,
     var legendAlignment: Alignment = Alignment.LEFT,
     var cellHighlightDuration: Long = 250,
-    var interceptorOffsetX: Float = 50.dp,
-    var interceptorOffsetY: Float = 50.dp,
+    var interceptorOffsetX: Float = 60.dp,
+    var interceptorOffsetY: Float = 60.dp,
     var minFrequencyValue: Int = Frequency.MIN_VALUE,
     var maxFrequencyValue: Int = Frequency.MAX_VALUE,
     var matrixRevealAnimation: AnimationData? = AnimationData(),

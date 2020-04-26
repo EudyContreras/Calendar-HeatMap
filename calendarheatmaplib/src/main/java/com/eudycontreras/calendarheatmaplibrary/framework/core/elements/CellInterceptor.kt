@@ -3,6 +3,7 @@ package com.eudycontreras.calendarheatmaplibrary.framework.core.elements
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Rect
 import android.view.MotionEvent
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
@@ -11,7 +12,9 @@ import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Circle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Rectangle
+import com.eudycontreras.calendarheatmaplibrary.mapRange
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
+import com.eudycontreras.calendarheatmaplibrary.properties.Dimension
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
 /**
@@ -27,6 +30,10 @@ internal class CellInterceptor(
     lineThickness: Float = MIN_OFFSET
 ) : RenderTarget, TouchableShape {
     var bounds: Bounds = Bounds()
+
+    var viewPort: Dimension = Dimension(MIN_OFFSET, MIN_OFFSET)
+
+    var maxX: Float = MIN_OFFSET
 
     var markerRadius: Float = markerRadius
         set(value) {
@@ -121,28 +128,33 @@ internal class CellInterceptor(
             lineRight.render = value
         }
 
-    var positionX: Float = MIN_OFFSET
-        private set(value) {
-            field = value
-            marker.centerX = (value - shiftOffsetX)
-            if (marker.centerX < (bounds.left + marker.radius)) {
-                marker.centerX = (bounds.left + marker.radius)
-            } else if (marker.centerX > (bounds.right - marker.radius)) {
-                marker.centerX = (bounds.right - marker.radius)
-            }
+    fun setPositionX(value: Float, viewBounds: Rect) {
+        val section = (viewPort.width / 2)
+        val offset = mapRange(viewBounds.left.toFloat(), MIN_OFFSET, -bounds.left, 0f, bounds.left)
+        val minX = (bounds.left - viewBounds.left) - offset
+        val maxX = (bounds.left + viewPort.width) - viewBounds.left
+        val shift = mapRange(value - (minX + section), -section, section, -(shiftOffsetX * 1.5f), shiftOffsetX)
 
-            lineTop.bounds.left = (marker.centerX - (lineTop.width / 2))
-            lineTop.bounds.right = lineTop.bounds.left + lineThickness
+        marker.centerX = (value + shift)
 
-            lineBottom.bounds.left = lineTop.bounds.left
-            lineBottom.bounds.right = lineBottom.bounds.left + lineThickness
-
-            lineLeft.bounds.right = (marker.centerX - marker.radius)
-            lineLeft.bounds.left = bounds.left
-
-            lineRight.bounds.left = (marker.centerX + marker.radius)
-            lineRight.bounds.right = bounds.right
+        if (marker.centerX < (minX + marker.radius)) {
+            marker.centerX = (minX + marker.radius)
+        } else if (marker.centerX > (maxX - marker.radius)) {
+            marker.centerX = (maxX - marker.radius)
         }
+
+        lineTop.bounds.left = (marker.centerX - (lineTop.width / 2))
+        lineTop.bounds.right = lineTop.bounds.left + lineThickness
+
+        lineBottom.bounds.left = lineTop.bounds.left
+        lineBottom.bounds.right = lineBottom.bounds.left + lineThickness
+
+        lineLeft.bounds.right = (marker.centerX - marker.radius)
+        lineLeft.bounds.left = bounds.left
+
+        lineRight.bounds.left = (marker.centerX + marker.radius)
+        lineRight.bounds.right = bounds.right
+    }
 
     var positionY: Float = 0f
         private set(value) {
@@ -210,7 +222,7 @@ internal class CellInterceptor(
         }
     }
 
-    override fun onTouch(event: MotionEvent, x: Float, y: Float, shapeManager: ShapeManager) {
+    override fun onTouch(event: MotionEvent, x: Float, y: Float, viewBounds: Rect, shapeManager: ShapeManager) {
         if (!allowIntercept || !shouldRender)
             return
 
@@ -224,11 +236,11 @@ internal class CellInterceptor(
             }
             MotionEvent.ACTION_MOVE, MotionEvent.ACTION_DOWN -> {
                 if (visible) {
-                    positionX = x
+                    setPositionX(x, viewBounds)
                     positionY = y
                     shapeManager.delegateTouchEvent(event, marker.bounds, marker.centerX, marker.centerY, this)
                 } else {
-                    positionX = x
+                    setPositionX(x, viewBounds)
                     positionY = y
                     shapeManager.delegateTouchEvent(event, marker.bounds, marker.centerX, marker.centerY, this)
                 }
@@ -240,13 +252,14 @@ internal class CellInterceptor(
         event: MotionEvent,
         x: Float,
         y: Float,
+        viewBounds: Rect,
         shapeManager: ShapeManager
     ) {
         if (!allowIntercept)
             return
         if (!shouldRender && visible) {
             shouldRender = true
-            positionX = x
+            setPositionX(x, viewBounds)
             positionY = y
         }
     }

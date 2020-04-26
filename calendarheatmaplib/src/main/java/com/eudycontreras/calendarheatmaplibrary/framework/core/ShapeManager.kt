@@ -58,14 +58,6 @@ internal class ShapeManager {
         }
     }
 
-    fun delegateTouchEvent(motionEvent: MotionEvent, x: Float, y: Float) {
-        for (shape in shapes) {
-            if (shape is TouchableShape) {
-                shape.onTouch(motionEvent, x, y, this)
-            }
-        }
-    }
-
     fun delegateTouchEvent(motionEvent: MotionEvent, bounds: Bounds, x: Float, y: Float, caller: TouchableShape) {
         for (shape in shapes) {
             if (shape is TouchConsumer && shape != caller) {
@@ -74,10 +66,18 @@ internal class ShapeManager {
         }
     }
 
-    fun delegateLongPressEvent(motionEvent: MotionEvent, x: Float, y: Float) {
+    fun delegateTouchEvent(motionEvent: MotionEvent, x: Float, y: Float, viewBounds: Rect) {
         for (shape in shapes) {
             if (shape is TouchableShape) {
-                shape.onLongPressed(motionEvent, x, y, this)
+                shape.onTouch(motionEvent, x, y, viewBounds, this)
+            }
+        }
+    }
+
+    fun delegateLongPressEvent(motionEvent: MotionEvent, x: Float, y: Float, viewBounds: Rect) {
+        for (shape in shapes) {
+            if (shape is TouchableShape) {
+                shape.onLongPressed(motionEvent, x, y, viewBounds, this)
             }
         }
     }

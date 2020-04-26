@@ -9,6 +9,7 @@ import androidx.core.math.MathUtils
 import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.properties.Coordinate
 import com.eudycontreras.calendarheatmaplibrary.properties.Property
+import kotlin.math.abs
 import kotlin.math.hypot
 
 internal const val MIN_OFFSET = 0.0f
@@ -91,6 +92,15 @@ internal fun mapRange(value: Long, fromMin: Long, fromMax: Long, toMin: Float, t
     )
 }
 
+/**
+ * Returns the distance between two locations.
+ * @param x0 The x axis coordinates of the first point
+ * @param y0 The y axis coordinates of the first point
+ * @param x1 The x axis coordinates of the second point
+ * @param y1 The y axis coordinates of the second point
+ */
+internal fun manDistance(x0: Float, y0: Float, x1: Float, y1: Float) = abs(x1 - x0) + abs(y1 - y0)
+internal fun manDistance(x0: Int, y0: Int, x1: Int, y1: Int) = abs(x1 - x0) + abs(y1 - y0)
 
 /**
  * Returns the distance between two coordinates.
@@ -195,13 +205,4 @@ fun findScrollParent(parent: ViewGroup, criteria: (ViewGroup) -> Boolean): ViewP
     } else {
         parent
     }
-}
-
-fun getTextMeasurement(paint: Paint, text: String?, textSize: Float, typeFace: Typeface): Rect {
-    val textBounds = Rect()
-    paint.recycle()
-    paint.typeface = typeFace
-    paint.textSize = textSize
-    paint.getTextBounds(text, 0, text?.length ?: 0, textBounds)
-    return textBounds
 }

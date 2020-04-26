@@ -1,9 +1,6 @@
 package com.eudycontreras.calendarheatmaplibrary.framework.core.elements
 
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Path
-import android.graphics.Typeface
+import android.graphics.*
 import android.util.SparseArray
 import android.view.MotionEvent
 import android.view.animation.OvershootInterpolator
@@ -15,8 +12,10 @@ import com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMap
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Text
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
+import com.eudycontreras.calendarheatmaplibrary.properties.Dimension
 import com.eudycontreras.calendarheatmaplibrary.properties.Index
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
+import kotlin.math.abs
 
 /**
  * Copyright (C) 2020 Project X
@@ -26,7 +25,10 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  * @since April 2020
  */
 
+@Suppress("MemberVisibilityCanBePrivate")
 internal class HeatMapArea (
+    val viewportProvider: () -> Rect,
+    val viewportArea: Dimension,
     val options: HeatMapOptions,
     val heatMap: CalHeatMap,
     val data: HeatMapData,
@@ -74,12 +76,26 @@ internal class HeatMapArea (
             delay = it.delay
             duration = it.duration
             stagger = it.stagger
-            fromIndex = Index(0, 0)
+            fromIndex = Index(it.epiCenterRow ?: 0, it.epiCenterCol ?: 0)
             interpolator = OvershootInterpolator()
         }
     }
 
     private fun animateReveal() {
+        val viewport = viewportProvider().let {
+            Bounds(
+                left = abs(it.left).toFloat() + bounds.left,
+                right =  abs(it.left).toFloat() + bounds.left + viewportArea.width,
+                top = bounds.top,
+                bottom = bounds.bottom
+            )
+        }
+        val shapes = shapes.filter {
+            it.any { col -> col.isInViewport(viewport) }
+        }.toTypedArray()
+        if (shapes.isEmpty())
+            return
+
         if (!revealed) {
             revealed = true
             revealAnimation?.animate(heatMap, shapes)
@@ -104,10 +120,18 @@ internal class HeatMapArea (
         shapes = Array(data.getColumnCount()) { row ->
             Array(data.getRowCount()) { col ->
                 HeatMapCell(
-                    row,
-                    col
+                    rowIndex = row,
+                    colIndex = col
                 )
             }
+        }
+        val viewport = viewportProvider().let {
+            Bounds(
+                left = abs(it.left).toFloat() + bounds.left,
+                right =  abs(it.left).toFloat() + bounds.left + viewportArea.width,
+                top = bounds.top,
+                bottom = bounds.bottom
+            )
         }
         for ((rowIndex, week) in data.timeSpan.weeks.withIndex()) {
             var verticalOffset = bounds.top
@@ -119,49 +143,72 @@ internal class HeatMapArea (
                 shape.renderIndex = renderIndex
                 shape.bounds = Bounds(horizontalOffset, verticalOffset, horizontalOffset + cellSize, verticalOffset + cellSize)
                 shape.color = MutableColor(day.getColorValue(style))
-                shape.render = false
+                shape.cellText = createCellText(shape, day, cellSize)
+                shape.render = !shape.bounds.intercepts(viewport)
                 shape.elevation = style.cellElevation
-                if (options.showCellDayText) {
-                    shape.cellText = Text(day.date.day.toString(), Paint()).apply {
-                        textSize = (cellSize / 2f)
-                        typeFace = Typeface.DEFAULT_BOLD
-                    }.build().apply {
-                        x = shape.bounds.centerX
-                        y = shape.bounds.centerY + (height / 2)
-                        alignment = Alignment.CENTER
-                        textColor = if (shape.color.isBright(220)) {
-                            shape.color.adjust(0.8f)
-                        } else {
-                            shape.color.adjust(1.6f)
-                        }
-                    }
-                }
                 verticalOffset += (cellSize + offset)
                 renderIndex++
                 rows[colIndex] = shape
             }
             shapes[rowIndex] = rows
-            val label = monthLabels[week.getMonthLabel()]
 
-            if (rowIndex > 0) {
-                val lastWeek = data.timeSpan.weeks[rowIndex - 1]
-                if (!lastWeek.hasMonthLabel(monthLabels)) {
-                    if (week.hasMonthLabel(monthLabels)) {
-                        monthIndexes[rowIndex] = label
-                    }
-                } else {
-                    if (week.weekDays[0].date.day == 1) {
-                        monthIndexes[rowIndex] = label
-                    }
-                }
-            } else {
-                monthIndexes[rowIndex] = label
+            if (options.showMonthLabels) {
+                getMonthLabels(week, rowIndex, monthLabels, monthIndexes)
             }
             horizontalOffset += (cellSize + offset)
         }
 
         setUpAnimation()
         return this
+    }
+
+    private fun getMonthLabels(
+        week: Week,
+        rowIndex: Int,
+        monthLabels: List<HeatMapLabel>,
+        monthIndexes: SparseArray<HeatMapLabel>
+    ) {
+        val label = monthLabels[week.getMonthLabel()]
+
+        if (rowIndex > 0) {
+            val lastWeek = data.timeSpan.weeks[rowIndex - 1]
+            if (!lastWeek.hasMonthLabel(monthLabels)) {
+                if (week.hasMonthLabel(monthLabels)) {
+                    monthIndexes[rowIndex] = label
+                }
+            } else {
+                if (week.weekDays[0].date.day == 1) {
+                    monthIndexes[rowIndex] = label
+                }
+            }
+        } else {
+            if (week.hasMonthLabel(monthLabels)) {
+                monthIndexes[rowIndex] = label
+            }
+        }
+    }
+
+    private fun createCellText(
+        shape: HeatMapCell,
+        day: WeekDay,
+        cellSize: Float
+    ): Text? {
+        if (options.showCellDayText) {
+            return Text(day.date.day.toString(), Paint()).apply {
+                textSize = (cellSize / 2f)
+                typeFace = Typeface.DEFAULT_BOLD
+            }.build().apply {
+                x = shape.bounds.centerX
+                y = shape.bounds.centerY + (height / 2)
+                alignment = Alignment.CENTER
+                textColor = if (shape.color.isBright(220)) {
+                    shape.color.adjust(0.8f)
+                } else {
+                    shape.color.adjust(1.5f)
+                }
+            }
+        }
+        return null
     }
 
     override fun onRender(canvas: Canvas, paint: Paint, shapePath: Path, shadowPath: Path) {

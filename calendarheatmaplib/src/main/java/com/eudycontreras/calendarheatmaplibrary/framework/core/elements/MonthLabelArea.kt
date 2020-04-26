@@ -2,12 +2,9 @@ package com.eudycontreras.calendarheatmaplibrary.framework.core.elements
 
 import android.graphics.*
 import android.util.SparseArray
-import android.view.MotionEvent
 import androidx.core.util.containsKey
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
-import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
-import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Text
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
@@ -24,11 +21,7 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 internal class MonthLabelArea(
     val style: HeatMapStyle,
     val bounds: Bounds
-) : RenderTarget, TouchableShape {
-
-    override var hovered: Boolean = false
-
-    override var touchHandler: ((TouchableShape, MotionEvent, Float, Float) -> Unit)? = null
+) : RenderTarget {
 
     private val shapes: MutableList<DrawableShape> = mutableListOf()
 
@@ -72,27 +65,6 @@ internal class MonthLabelArea(
     override fun onRender(canvas: Canvas, paint: Paint, shapePath: Path, shadowPath: Path) {
         for (shape in shapes) {
             shape.onRender(canvas, paint, shapePath, shadowPath)
-        }
-    }
-
-    override fun onTouch(event: MotionEvent, x: Float, y: Float, shapeManager: ShapeManager) {
-        for (shape in shapes) {
-            if (shape is TouchableShape) {
-                shape.onTouch(event, x, y, shapeManager)
-            }
-        }
-    }
-
-    override fun onLongPressed(
-        event: MotionEvent,
-        x: Float,
-        y: Float,
-        shapeManager: ShapeManager
-    ) {
-        for (shape in shapes) {
-            if (shape is TouchableShape) {
-                shape.onLongPressed(event, x, y, shapeManager)
-            }
         }
     }
 }

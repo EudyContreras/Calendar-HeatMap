@@ -1,5 +1,6 @@
 package com.eudycontreras.calendarheatmaplibrary.properties
 
+import android.graphics.Rect
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import kotlin.math.abs
 
@@ -107,6 +108,10 @@ data class Bounds(
 
     fun isInside(x: Float, y: Float): Boolean {
         return (x in left..right && y in top..bottom)
+    }
+
+    fun isInside(bounds: Rect): Boolean {
+        return isInside(bounds.top.toFloat(), bounds.left.toFloat(), bounds.bottom.toFloat(), bounds.right.toFloat())
     }
 
     fun isInside(bounds: Bounds): Boolean {

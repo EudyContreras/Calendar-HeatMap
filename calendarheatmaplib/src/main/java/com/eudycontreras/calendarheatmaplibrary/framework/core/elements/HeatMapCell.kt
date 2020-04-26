@@ -11,7 +11,6 @@ import com.eudycontreras.calendarheatmaplibrary.animations.AnimationEvent
 import com.eudycontreras.calendarheatmaplibrary.common.Animateable
 import com.eudycontreras.calendarheatmaplibrary.common.TouchConsumer
 import com.eudycontreras.calendarheatmaplibrary.extensions.dp
-import com.eudycontreras.calendarheatmaplibrary.extensions.sp
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Rectangle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Text
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
@@ -44,9 +43,16 @@ internal class HeatMapCell(
 
     private var highlightSavedState: Triple<Float, Bounds, MutableColor>? = null
     private var highlightSavedStateText: Pair<Float, Bounds>? = null
-    private var revealAnimationState: Pair<Int, Bounds> = Pair(0, Bounds())
+    private var revealAnimationState: Triple<Int, Bounds, Float?> = Triple(0, Bounds(), null)
 
     override var touchHandler: ((TouchConsumer, MotionEvent, Bounds, Float, Float) -> Unit)? = null
+
+    override var render: Boolean
+        get() = super.render
+        set(value) {
+            super.render = value
+            cellText?.render = value
+        }
 
     override fun onTouch(event: MotionEvent, bounds: Bounds, x: Float, y: Float) {
         if (allowInteraction) {
@@ -140,11 +146,19 @@ internal class HeatMapCell(
         this.colIndex = colIndex
     }
 
+    fun isInViewport(viewport: Bounds): Boolean {
+        return bounds.intercepts(viewport)
+    }
+
     override fun onPreAnimation() {
-        revealAnimationState = Pair(opacity, bounds.copy())
+        revealAnimationState = Triple(opacity, bounds.copy(), cellText?.textSize)
         bounds.width = MIN_OFFSET
         bounds.height = MIN_OFFSET
         render = true
+        cellText?.let {
+            it.textSize = MIN_OFFSET
+            it.render = true
+        }
     }
 
     override fun onPostAnimation() {}
@@ -154,5 +168,6 @@ internal class HeatMapCell(
         bounds.centerY = revealAnimationState.second.centerY
         bounds.width = revealAnimationState.second.width * delta
         bounds.height = revealAnimationState.second.height * delta
+        cellText?.textSize =  (revealAnimationState.third?: MIN_OFFSET) * delta
     }
 }

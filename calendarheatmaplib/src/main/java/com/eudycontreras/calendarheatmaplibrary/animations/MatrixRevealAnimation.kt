@@ -7,6 +7,7 @@ import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.Animateable
 import com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMap
+import com.eudycontreras.calendarheatmaplibrary.manDistance
 import com.eudycontreras.calendarheatmaplibrary.mapRange
 import com.eudycontreras.calendarheatmaplibrary.properties.Index
 
@@ -39,7 +40,7 @@ internal class MatrixRevealAnimation<T: Animateable> : HeatMapAnimation<Array<Ar
         heatMap: CalHeatMap,
         animateable: Array<Array<T>>
     ) {
-        val indexes = createOrder(animateable.size,  animateable[0].size, fromIndex)
+        val indexMaps = createOrder(animateable.size,  animateable[0].size, fromIndex)
 
         val startPoints = Array(animateable.size) {
             Array(animateable[it].size) { Pair(MIN_OFFSET, MIN_OFFSET) }
@@ -53,15 +54,20 @@ internal class MatrixRevealAnimation<T: Animateable> : HeatMapAnimation<Array<Ar
         var end = start + duration
         var totalDuration = duration
 
-        startPoints[indexes[0].row][indexes[0].col] = (start.toFloat() to end.toFloat())
+        startPoints[0][0] = (start.toFloat() to end.toFloat())
 
-        for (index in indexes) {
-            values[index.row][index.col] = (MIN_OFFSET to MAX_OFFSET)
+        for (entries in indexMaps) {
             start += stagger
             end = start + duration
             totalDuration += stagger
-            startPoints[index.row][index.col] = (start.toFloat() to end.toFloat())
+            for (index in entries.value) {
+                values[index.row][index.col] = (MIN_OFFSET to MAX_OFFSET)
+                startPoints[index.row][index.col] = (start.toFloat() to end.toFloat())
+            }
         }
+
+        val indexes = indexMaps.values.flatten()
+
         val animation = AnimationEvent(
             duration = totalDuration,
             startDelay = delay,
@@ -98,17 +104,21 @@ internal class MatrixRevealAnimation<T: Animateable> : HeatMapAnimation<Array<Ar
         heatMap.addAnimation(animation)
     }
 
-    private fun createOrder(itemRowCount: Int, itemColCount: Int, fromIndex: Index): ArrayList<Index> {
+    private fun createOrder(itemRowCount: Int, itemColCount: Int, fromIndex: Index): Map<Int, List<Index>> {
         val indexes: ArrayList<Index> = ArrayList()
 
         for (row in 0 until itemRowCount) {
             for (col in 0 until itemColCount) {
-                indexes.add(Index(row, col))
+                indexes.add(Index(
+                    row = row,
+                    col = col,
+                    weight = manDistance(fromIndex.row, fromIndex.col, row, col)
+                ))
             }
         }
-        indexes.sortByDescending { it.col + it.row }
-        indexes.reverse()
 
-        return indexes
+        indexes.sortBy { it.weight }
+
+        return indexes.groupBy { it.weight }
     }
 }

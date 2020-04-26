@@ -23,42 +23,42 @@ internal abstract class DrawableShape: RenderTarget {
 
     var renderIndex: Int = 0
 
-    var color: MutableColor = MutableColor()
+    open var color: MutableColor = MutableColor()
 
-    var bounds: Bounds = Bounds()
+    open var bounds: Bounds = Bounds()
 
-    var elevation: Float = MIN_OFFSET
+    open var elevation: Float = MIN_OFFSET
 
-    var strokeWidth: Float = MIN_OFFSET
+    open var strokeWidth: Float = MIN_OFFSET
 
-    var shadowAlpha: Int = MAX_COLOR
+    open var shadowAlpha: Int = MAX_COLOR
 
-    var corners: CornerRadii = CornerRadii()
+    open var corners: CornerRadii = CornerRadii()
 
-    val alpha: Float
+    open val alpha: Float
         get() = opacity.toFloat() / MAX_COLOR.toFloat()
 
-    var opacity: Int = MAX_COLOR
+    open var opacity: Int = MAX_COLOR
         set(value) {
             field = value
             color.updateAlpha(opacity)
         }
 
-    val drawShadows: Boolean
+    open val drawShadows: Boolean
         get() = elevation > MIN_OFFSET && shadowAlpha > MIN_OFFSET
 
-    var strokeColor: MutableColor? = null
+    open var strokeColor: MutableColor? = null
 
-    var shadowColor: MutableColor? = null
+    open var shadowColor: MutableColor? = null
 
-    var shader: Shader? = null
+    open var shader: Shader? = null
 
-    var render: Boolean = true
+    open var render: Boolean = true
 
-    var showStroke: Boolean = false
+    open var showStroke: Boolean = false
         get() = field && strokeWidth > 0
 
-    fun reset() {
+    open fun reset() {
         color.reset()
         bounds.reset()
         corners.reset()
@@ -71,31 +71,31 @@ internal abstract class DrawableShape: RenderTarget {
         render = true
     }
 
-    var x: Float
+    open var x: Float
         get() = bounds.x
         set(value) {
             bounds.x = value
         }
 
-    var y: Float
+    open var y: Float
         get() = bounds.y
         set(value) {
             bounds.y = value
         }
 
-    var width: Float
+    open var width: Float
         get() = bounds.width
         set(value) {
             bounds.width = value
         }
 
-    var height: Float
+    open var height: Float
         get() = bounds.height
         set(value) {
             bounds.height = value
         }
 
-    val radii: FloatArray
+    open val radii: FloatArray
         get() = corners.corners
 
     val left: Float = bounds.left

@@ -8,7 +8,7 @@ package com.eudycontreras.calendarheatmaplibrary.properties
  * @since January 2019
  */
 
-internal data class Dimension(
+data class Dimension(
     var width: Float,
     var height: Float
 ) {
