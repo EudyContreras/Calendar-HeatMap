@@ -15,7 +15,6 @@ import kotlin.math.*
  * @author Eudy Contreras.
  * @since March 2020
  */
-
 internal object ShadowUtility {
     internal const val DEFAULT_COLOR = 0x30000000
 
@@ -28,7 +27,7 @@ internal object ShadowUtility {
     private const val SHADOW_BOTTOM_OFFSET = 0.90f
 
     private const val MIN_SHADOW_ALPHA = 10f
-    private const val MAX_SHADOW_ALPHA = 50f
+    private const val MAX_SHADOW_ALPHA = 60f
 
     private const val MIN_SHADOW_RADIUS = 1f
     private const val MAX_SHADOW_RADIUS = 60f

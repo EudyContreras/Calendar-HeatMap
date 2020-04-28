@@ -24,16 +24,14 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 internal class CellInterceptor(
+    val infoBubble: CellInfoBubble?,
     markerRadius: Float = MIN_OFFSET,
     lineThickness: Float = MIN_OFFSET
 ) : RenderTarget, TouchableShape {
     var bounds: Bounds = Bounds()
 
     var viewPort: Dimension = Dimension(MIN_OFFSET, MIN_OFFSET)
-
-    var maxX: Float = MIN_OFFSET
 
     var markerRadius: Float = markerRadius
         set(value) {
@@ -105,6 +103,16 @@ internal class CellInterceptor(
                 lineTop.render = false
                 lineBottom.render = false
             }
+            if (showTopLine) {
+                lineTop.render = value
+            } else {
+                lineTop.render = false
+            }
+            if (showBottomLine) {
+                lineBottom.render = value
+            } else {
+                lineBottom.render = false
+            }
             marker.render = value
         }
 
@@ -112,6 +120,18 @@ internal class CellInterceptor(
         set(value) {
             field = value
             shouldRender = false
+        }
+
+    var showTopLine: Boolean = true
+        set(value) {
+            field = value
+            lineTop.render = value
+        }
+
+    var showBottomLine: Boolean = true
+        set(value) {
+            field = value
+            lineBottom.render = value
         }
 
     var showVerticalLine: Boolean = true
@@ -128,7 +148,7 @@ internal class CellInterceptor(
             lineRight.render = value
         }
 
-    fun setPositionX(value: Float, viewBounds: Rect) {
+    private fun setPositionX(value: Float, viewBounds: Rect, eventAction: Int) {
         val section = (viewPort.width / 2)
         val offset = mapRange(viewBounds.left.toFloat(), MIN_OFFSET, -bounds.left, 0f, bounds.left)
         val minX = (bounds.left - viewBounds.left) - offset
@@ -136,12 +156,19 @@ internal class CellInterceptor(
         val shift = mapRange(value - (minX + section), -section, section, -(shiftOffsetX * 1.5f), shiftOffsetX)
 
         marker.centerX = (value + shift)
-
+        infoBubble?.offsetX = viewBounds.left.toFloat()
         if (marker.centerX < (minX + marker.radius)) {
             marker.centerX = (minX + marker.radius)
         } else if (marker.centerX > (maxX - marker.radius)) {
             marker.centerX = (maxX - marker.radius)
         }
+        infoBubble?.onInterception(
+            x = marker.centerX,
+            y = marker.centerY,
+            minInX = (minX + marker.radius),
+            maxInX = (maxX - marker.radius),
+            eventAction = eventAction
+        )
 
         lineTop.bounds.left = (marker.centerX - (lineTop.width / 2))
         lineTop.bounds.right = lineTop.bounds.left + lineThickness
@@ -156,28 +183,28 @@ internal class CellInterceptor(
         lineRight.bounds.right = bounds.right
     }
 
-    var positionY: Float = 0f
-        private set(value) {
-            field = value
-            marker.centerY = (value - shiftOffsetY)
-            if (marker.centerY < (bounds.top + marker.radius)) {
-                marker.centerY = (bounds.top + marker.radius)
-            } else if (marker.centerY > (bounds.bottom - marker.radius)) {
-                marker.centerY = (bounds.bottom - marker.radius)
-            }
+    private fun setPositionY(value: Float, viewBounds: Rect) {
+        infoBubble?.offsetY = viewBounds.top.toFloat()
 
-            lineTop.bounds.y = bounds.top
-            lineTop.bounds.bottom = (marker.centerY - marker.radius)
-
-            lineBottom.bounds.top = (marker.centerY + marker.radius)
-            lineBottom.bounds.bottom = bounds.bottom
-
-            lineLeft.bounds.top = (marker.centerY - (lineThickness / 2))
-            lineLeft.bounds.bottom = lineLeft.bounds.top + lineThickness
-
-            lineRight.bounds.top = (marker.centerY - (lineThickness / 2))
-            lineRight.bounds.bottom = lineRight.bounds.top + lineThickness
+        marker.centerY = (value - shiftOffsetY)
+        if (marker.centerY < (bounds.top + marker.radius)) {
+            marker.centerY = (bounds.top + marker.radius)
+        } else if (marker.centerY > (bounds.bottom - marker.radius)) {
+            marker.centerY = (bounds.bottom - marker.radius)
         }
+
+        lineTop.bounds.y = bounds.top
+        lineTop.bounds.bottom = (marker.centerY - marker.radius)
+
+        lineBottom.bounds.top = (marker.centerY + marker.radius)
+        lineBottom.bounds.bottom = bounds.bottom
+
+        lineLeft.bounds.top = (marker.centerY - (lineThickness / 2))
+        lineLeft.bounds.bottom = lineLeft.bounds.top + lineThickness
+
+        lineRight.bounds.top = (marker.centerY - (lineThickness / 2))
+        lineRight.bounds.bottom = lineRight.bounds.top + lineThickness
+    }
 
     var shiftOffsetX: Float = Float.MAX_VALUE
         get() = if (field == Float.MAX_VALUE) (marker.radius) else field
@@ -232,20 +259,12 @@ internal class CellInterceptor(
                     shouldRender = false
                 }
                 hovered = false
-                shapeManager.delegateTouchEvent(event, marker.bounds, marker.centerX, marker.centerY, this)
-            }
-            MotionEvent.ACTION_MOVE, MotionEvent.ACTION_DOWN -> {
-                if (visible) {
-                    setPositionX(x, viewBounds)
-                    positionY = y
-                    shapeManager.delegateTouchEvent(event, marker.bounds, marker.centerX, marker.centerY, this)
-                } else {
-                    setPositionX(x, viewBounds)
-                    positionY = y
-                    shapeManager.delegateTouchEvent(event, marker.bounds, marker.centerX, marker.centerY, this)
-                }
             }
         }
+        setPositionX(x, viewBounds, event.action)
+        setPositionY(y, viewBounds)
+
+        shapeManager.delegateTouchEvent(event.action, marker.bounds, marker.centerX, marker.centerY, this)
     }
 
     override fun onLongPressed(
@@ -259,8 +278,10 @@ internal class CellInterceptor(
             return
         if (!shouldRender && visible) {
             shouldRender = true
-            setPositionX(x, viewBounds)
-            positionY = y
+            setPositionX(x, viewBounds, event.action)
+            setPositionY(y, viewBounds)
+
+            shapeManager.delegateTouchEvent(MotionEvent.ACTION_BUTTON_PRESS, marker.bounds, marker.centerX, marker.centerY, this)
         }
     }
 

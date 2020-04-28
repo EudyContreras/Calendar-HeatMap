@@ -11,7 +11,6 @@ import android.graphics.Path
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 internal interface RenderTarget {
     fun onRender(canvas: Canvas, paint: Paint, shapePath: Path, shadowPath: Path)
 }

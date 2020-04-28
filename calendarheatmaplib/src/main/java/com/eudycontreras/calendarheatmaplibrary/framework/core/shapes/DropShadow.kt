@@ -4,11 +4,9 @@ import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
-import com.eudycontreras.calendarheatmaplibrary.extensions.addRoundRect
 import com.eudycontreras.calendarheatmaplibrary.extensions.addShadowBounds
 import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
-import com.eudycontreras.calendarheatmaplibrary.properties.Color
 import com.eudycontreras.calendarheatmaplibrary.utilities.ShadowUtility
 
 /**
@@ -18,7 +16,7 @@ import com.eudycontreras.calendarheatmaplibrary.utilities.ShadowUtility
  * @author Eudy Contreras.
  * @since April 2020
  */
-internal open class Rectangle : DrawableShape() {
+internal open class DropShadow : DrawableShape() {
 
     protected open var shadowFilter: BlurMaskFilter? = null
 
@@ -34,14 +32,6 @@ internal open class Rectangle : DrawableShape() {
 
         if (drawShadows) {
             renderShadow(canvas, paint, shadowPath)
-        }
-
-        renderShape(canvas, paint, shapePath)
-
-        if (showStroke) {
-            strokeColor?.let {
-                renderStroke(canvas, paint, shapePath, it)
-            }
         }
     }
 
@@ -61,29 +51,5 @@ internal open class Rectangle : DrawableShape() {
         shadowPath.addShadowBounds(bounds, radii, elevation)
 
         canvas.drawPath(shadowPath, paint)
-    }
-
-    protected open fun renderShape(canvas: Canvas, paint: Paint, shapePath: Path) {
-        paint.recycle()
-        paint.style = Paint.Style.FILL
-        paint.color = color.toColor()
-
-        if (shader != null) {
-            paint.shader = shader
-        }
-
-        shapePath.rewind()
-        shapePath.addRoundRect(bounds, radii)
-
-        canvas.drawPath(shapePath, paint)
-    }
-
-    protected open fun renderStroke(canvas: Canvas, paint: Paint, shapePath: Path, stroke: Color) {
-        paint.recycle()
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = strokeWidth
-        paint.color = stroke.toColor()
-
-        canvas.drawPath(shapePath, paint)
     }
 }

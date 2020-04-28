@@ -14,7 +14,6 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 internal open class Text(
     var text: String,
     val paint: Paint

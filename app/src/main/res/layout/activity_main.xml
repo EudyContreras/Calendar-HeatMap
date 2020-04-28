@@ -17,6 +17,7 @@
     </data>
 
     <FrameLayout
+        android:background="@color/colorPrimaryDark"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -35,14 +36,16 @@
                 app:layout_constraintTop_toTopOf="parent">
 
                 <HorizontalScrollView
+                    android:background="@color/colorPrimaryDark"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
                     <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
+                        android:background="@color/colorPrimaryDark"
                         android:layout_width="wrap_content"
                         android:layout_height="250dp"
-                        app:cellInfoOverlay="@{overlay}"
-                        app:cellInfoLayout="@{@layout/cell_info_layout}"
+                        android:hapticFeedbackEnabled="true"
+                        app:cellInfoView="@{cellInfoBox}"
                         app:calHeatMapData="@{viewModel.demoData1}"
                         app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
                         app:cellColorMax="@{@color/colorMax}"
@@ -54,12 +57,15 @@
                 </HorizontalScrollView>
 
                 <HorizontalScrollView
+                    android:background="@color/colorPrimaryDark"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
                     <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
+                        android:background="@color/colorPrimaryDark"
                         android:layout_width="wrap_content"
                         android:layout_height="250dp"
+                        android:hapticFeedbackEnabled="false"
                         app:calHeatMapData="@{viewModel.demoData2}"
                         app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
                         app:cellColorMax="@{@color/colorMaxAlt1}"
@@ -138,8 +144,18 @@
         </ScrollView>
 
         <FrameLayout
-            android:id="@+id/overlay"
+            android:clipChildren="false"
+            android:clipToPadding="false"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent" >
+            <include
+                android:id="@+id/cellInfoBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:layout_marginStart="30dp"
+                android:visibility="invisible"
+                layout="@layout/cell_info_layout"/>
+        </FrameLayout>
     </FrameLayout>
 </layout>

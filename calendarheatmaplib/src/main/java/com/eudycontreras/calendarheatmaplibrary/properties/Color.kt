@@ -12,7 +12,6 @@ import com.eudycontreras.calendarheatmaplibrary.AndroidColor
  * Class which holds information about color channels allowing
  * access to the alpha, red, green and blue channels of a color
  */
-
 abstract class Color(
     alpha: Int = MAX_COLOR,
     red: Int = MIN_COLOR,

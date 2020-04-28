@@ -87,6 +87,10 @@ data class Frequency(
     val count: Int,
     @ContextualSerialization val data: Any?
 ) {
+    val countString: String
+        get() = if (count > 0) { count.toString().padStart(2, '0')
+        } else "No"
+
     companion object {
         const val MIN_VALUE = 0
         const val MAX_VALUE = 50

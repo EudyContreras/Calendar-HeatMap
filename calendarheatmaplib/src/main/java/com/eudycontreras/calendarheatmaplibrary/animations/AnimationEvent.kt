@@ -14,7 +14,6 @@ import com.eudycontreras.calendarheatmaplibrary.mapRange
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 class AnimationEvent(
     internal val minOffset: Float = MIN_OFFSET,
     internal val maxOffset: Float = MAX_OFFSET,
@@ -24,7 +23,7 @@ class AnimationEvent(
     internal val onStart: Action? = null,
     internal val onEnd: Action? = null,
     internal val updateListener: (animation: AnimationEvent, currentPlayTime: Long, delta: Float) -> Unit
-): UpdateTarget {
+) : UpdateTarget {
 
     internal var startTime: Long = System.currentTimeMillis() + startDelay
 

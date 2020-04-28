@@ -14,7 +14,6 @@ import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 internal class ShapeManager {
 
     private val shapePath: Path = Path()
@@ -58,10 +57,10 @@ internal class ShapeManager {
         }
     }
 
-    fun delegateTouchEvent(motionEvent: MotionEvent, bounds: Bounds, x: Float, y: Float, caller: TouchableShape) {
+    fun delegateTouchEvent(eventAction: Int, bounds: Bounds, x: Float, y: Float, caller: TouchableShape) {
         for (shape in shapes) {
             if (shape is TouchConsumer && shape != caller) {
-                shape.onTouch(motionEvent, bounds, x, y)
+                shape.onTouch(eventAction, bounds, x, y)
             }
         }
     }

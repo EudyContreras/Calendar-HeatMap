@@ -16,7 +16,6 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 internal abstract class DrawableShape: RenderTarget {
 
     var id: Int = View.NO_ID
@@ -98,8 +97,12 @@ internal abstract class DrawableShape: RenderTarget {
     open val radii: FloatArray
         get() = corners.corners
 
-    val left: Float = bounds.left
-    val right: Float = bounds.right
-    val bottom: Float = bounds.bottom
-    val top: Float = bounds.top
+    val left: Float
+        get() = bounds.left
+    val right: Float
+        get() = bounds.right
+    val bottom: Float
+        get() = bounds.bottom
+    val top: Float
+        get() = bounds.top
 }

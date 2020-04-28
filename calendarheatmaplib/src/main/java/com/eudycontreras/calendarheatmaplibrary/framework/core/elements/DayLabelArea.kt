@@ -18,7 +18,6 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 internal class DayLabelArea(
     val style: HeatMapStyle,
     val bounds: Bounds
@@ -40,7 +39,9 @@ internal class DayLabelArea(
 
         for (label in labels) {
             if (label.active) {
-                val dayLabel = Text(text = label.text, paint = paint
+                val dayLabel = Text(
+                    text = label.text,
+                    paint = paint
                 ).build()
                 dayLabel.x = bounds.right
                 dayLabel.y = verticalOffset + ((cellSize / 2) + (dayLabel.height / 2))

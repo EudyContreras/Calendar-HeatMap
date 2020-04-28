@@ -12,7 +12,6 @@ import android.graphics.Shader.TileMode.MIRROR
  * @author Eudy Contreras.
  * @since January 2019
  */
-
 internal data class Gradient(
     val colors: Array<MutableColor>,
     val type: Int = TOP_TO_BOTTOM

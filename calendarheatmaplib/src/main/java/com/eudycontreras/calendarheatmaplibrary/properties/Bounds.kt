@@ -3,6 +3,7 @@ package com.eudycontreras.calendarheatmaplibrary.properties
 import android.graphics.Rect
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import kotlin.math.abs
+import kotlin.math.min
 
 /**
  * Copyright (C) 2020 Project X
@@ -11,7 +12,6 @@ import kotlin.math.abs
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 data class Bounds(
     var left: Float = 0f,
     var top: Float = 0f,
@@ -61,6 +61,9 @@ data class Bounds(
             top = (value - (height / 2))
             bottom = (value + (height / 2))
         }
+
+    val radius: Float
+        get() = min(width, height)
 
     fun getVerticalOverlap(other: Bounds): Float {
         val top1 = this.top

@@ -7,7 +7,6 @@ package com.eudycontreras.calendarheatmaplibrary.properties
  * @author Eudy Contreras.
  * @since January 2019
  */
-
 data class Dimension(
     var width: Float,
     var height: Float

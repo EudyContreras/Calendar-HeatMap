@@ -1,10 +1,10 @@
 package com.eudycontreras.calendarheatmaplibrary.framework
 
-import android.content.Context
 import android.graphics.Rect
 import android.util.SparseArray
 import com.eudycontreras.calendarheatmaplibrary.AndroidColor
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
+import com.eudycontreras.calendarheatmaplibrary.common.BubbleLayout
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.core.elements.*
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
@@ -22,28 +22,27 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
 /**
  * TODO list:
- * - Take overlay input in order to render the tooltip information. Or better yet
- * allow the user to specify a layout for the tooltip. The layout should take the frequency data
- * draw the the given layout inside of the tooltip somehow.
+ * - Draw shadow under the cell info layout
+ * - Refactor code for better standards
+ * - Put relevant styling and settings data inside the
+ * data wrappers for easier user customization.
  */
 internal class CalHeatMapBuilder(
     private val shapeManager: ShapeManager,
     private var styleContext: () -> HeatMapStyle,
     private var optionsContext: () -> HeatMapOptions,
-    private var contextProvider: (() -> Context)?,
     private var viewportProvider: () -> Rect
 ) {
-    private var interceptListener: ((WeekDay) -> Unit)? = null
-
     private var calHeatMapData: HeatMapData = generatePlaceholderData()
 
     fun getData(): HeatMapData? = calHeatMapData
 
-    fun setInterceptionListener(interceptionListener: (WeekDay) -> Unit) {
-        this.interceptListener = interceptionListener
-    }
-
-    fun buildWithBounds(heatMap: CalHeatMap, bounds: Bounds, measurements: Measurements) {
+    fun buildWithBounds(
+        heatMap: CalHeatMap,
+        bounds: Bounds,
+        measurements: Measurements,
+        bubbleLayout: BubbleLayout<WeekDay>?
+    ) {
         val data = calHeatMapData
         val style = styleContext.invoke()
         val options = optionsContext.invoke()
@@ -51,6 +50,7 @@ internal class CalHeatMapBuilder(
         val legendArea = buildLegendArea(options, style, bounds, measurements)
         val dayLabelArea = buildDayLabelArea(options, style, bounds, measurements)
         val monthLabelArea = buildMonthLabelArea(options, style, bounds, measurements)
+        val cellInfoBubble: CellInfoBubble? = buildCellBubble(bounds, bubbleLayout, measurements)
 
         val monthIndexes = SparseArray<HeatMapLabel>()
 
@@ -62,15 +62,15 @@ internal class CalHeatMapBuilder(
             viewportArea = Dimension(
                 width = measurements.viewportWidth,
                 height = measurements.viewportHeight
-            )
+            ),
+            cellInfoBubble = cellInfoBubble
         ).buildWith(
             measurements = measurements,
             monthIndexes = monthIndexes,
             monthLabels = options.monthLabels
         )
 
-        val interceptor: CellInterceptor =
-            buildInterceptor(options, style, heatMapArea.bounds, measurements)
+        val interceptor: CellInterceptor = buildInterceptor(options, style, heatMapArea.bounds, measurements, cellInfoBubble)
 
         legendArea?.buildWith(measurements, options)
         dayLabelArea?.buildWith(measurements, options.dayLabels)
@@ -87,16 +87,19 @@ internal class CalHeatMapBuilder(
         options: HeatMapOptions,
         style: HeatMapStyle,
         bounds: Bounds,
-        measurements: Measurements
+        measurements: Measurements,
+        cellInfoBubble: CellInfoBubble?
     ): CellInterceptor {
         val gapSize: Float = measurements.cellGap
         val cellSize: Float = measurements.cellSize
 
         val interceptor = CellInterceptor(
+            infoBubble = cellInfoBubble,
             markerRadius = cellSize / 3,
             lineThickness = style.interceptorLineThickness
         ).apply {
             visible = true
+            showTopLine = false
             viewPort = Dimension(measurements.viewportWidth, measurements.viewportHeight)
             lineColor = MutableColor(AndroidColor.WHITE)
             markerFillColor = MutableColor(style.minCellColor)
@@ -115,6 +118,17 @@ internal class CalHeatMapBuilder(
         return interceptor
     }
 
+    private fun buildCellBubble(
+        bounds: Bounds,
+        bubbleLayout: BubbleLayout<WeekDay>?,
+        measurements: Measurements
+    ): CellInfoBubble? {
+        if (bubbleLayout != null) {
+            return CellInfoBubble(bounds, measurements.cellGap, bubbleLayout)
+        }
+        return null
+    }
+
     private fun buildHeatMapArea(
         options: HeatMapOptions,
         heatMap: CalHeatMap,
@@ -123,10 +137,11 @@ internal class CalHeatMapBuilder(
         paddingLeft: Float,
         paddingTop: Float,
         paddingBottom: Float,
-        viewportArea: Dimension
+        viewportArea: Dimension,
+        cellInfoBubble: CellInfoBubble?
     ): HeatMapArea {
         return HeatMapArea(
-            interceptListener,
+            cellInfoBubble,
             viewportProvider, viewportArea, options, heatMap, calHeatMapData, style, bounds.copy(
                 left = bounds.left + paddingLeft,
                 top = bounds.top + paddingTop,

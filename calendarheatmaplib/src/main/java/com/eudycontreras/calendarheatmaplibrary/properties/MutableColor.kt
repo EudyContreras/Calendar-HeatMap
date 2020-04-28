@@ -18,7 +18,6 @@ import com.eudycontreras.calendarheatmaplibrary.utilities.ColorUtility
  *
  * @see Color
  */
-
 class MutableColor(
     alpha: Int = MAX_COLOR,
     red: Int = MIN_COLOR,

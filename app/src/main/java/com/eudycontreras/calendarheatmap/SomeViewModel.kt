@@ -72,7 +72,7 @@ internal class SomeViewModel : ViewModel() {
         }
         var maxFrequencyValue = 0
 
-        val dateFormatter = DateTimeFormatter.ofPattern("MMM d, YYYY")
+        val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, YYYY")
 
         weeks@ for (index in 0L..weeksInYear) {
             val weekFields: WeekFields = WeekFields.of(Locale.getDefault())
@@ -86,12 +86,13 @@ internal class SomeViewModel : ViewModel() {
                 }
                 val date = dateFrom.toDate()
 
-                val frequency = if (holidays.contains(date)) {
+                val frequency = if (holidays.contains(date) || vacation.contains(date)) {
                     0
                 } else if (day > 0 && day < DAYS_IN_WEEK - 1) {
+                    (Frequency.MIN_VALUE .. Frequency.MAX_VALUE).random()
                     Random.nextInt(Frequency.MAX_VALUE + 1)
                 } else if (Random.nextBoolean()) {
-                    Random.nextInt(Frequency.MAX_VALUE / 2)
+                    (Frequency.MIN_VALUE until Frequency.MAX_VALUE.div(2)).random()
                 } else 0
 
                 if (frequency > maxFrequencyValue) {

@@ -52,7 +52,7 @@ fun View.getBounds(): Bounds {
     return Bounds(
         left = this.left.toFloat(),
         top = this.top.toFloat(),
-        right =  this.left.toFloat() + this.measuredWidth.toFloat(),
+        right = this.left.toFloat() + this.measuredWidth.toFloat(),
         bottom = this.top.toFloat() + this.measuredHeight.toFloat()
     )
 }
@@ -65,17 +65,17 @@ internal fun View.getBackgroundColor(): MutableColor? {
     if (backgroundTintList != null) {
         return MutableColor.fromColor(backgroundTintList?.defaultColor)
     } else {
-       background?.let {
-           if (it is ColorDrawable) {
-               return MutableColor.fromColor(it.color)
-           } else if (it is GradientDrawable) {
-               if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                   if (it.color != null) {
-                       return MutableColor.fromColor(it.color?.defaultColor)
-                   }
-               }
-           }
-       }
+        background?.let {
+            if (it is ColorDrawable) {
+                return MutableColor.fromColor(it.color)
+            } else if (it is GradientDrawable) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    if (it.color != null) {
+                        return MutableColor.fromColor(it.color?.defaultColor)
+                    }
+                }
+            }
+        }
     }
     return null
 }
@@ -135,7 +135,7 @@ internal tailrec fun View.findParent(criteria: ((parent: View) -> Boolean)? = nu
 
 internal fun View.findView(criteria: (child: View) -> Boolean): View? {
     if (criteria(this)) {
-       return this
+        return this
     }
     if (this is ViewGroup) {
         for (child in children) {

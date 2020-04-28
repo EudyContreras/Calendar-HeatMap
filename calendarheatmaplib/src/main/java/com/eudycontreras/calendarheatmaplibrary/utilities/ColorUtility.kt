@@ -14,7 +14,6 @@ import kotlin.math.roundToInt
  * @author Eudy Contreras.
  * @since March 2020
  */
-
 object ColorUtility {
 
     fun colorDecToHex(r: Int, g: Int, b: Int): Int {

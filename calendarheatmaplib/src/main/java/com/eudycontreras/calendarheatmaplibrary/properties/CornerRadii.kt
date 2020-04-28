@@ -1,5 +1,6 @@
 package com.eudycontreras.calendarheatmaplibrary.properties
 
+import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.Cloneable
 
 /**
@@ -12,12 +13,11 @@ import com.eudycontreras.calendarheatmaplibrary.common.Cloneable
  * Class which holds information about corner radius for all
  * 4 corners of a rounded rectangle
  */
-
 class CornerRadii(
-    topLeft: Float = 0f,
-    topRight: Float = 0f,
-    bottomRight: Float = 0f,
-    bottomLeft: Float = 0f
+    topLeft: Float = MIN_OFFSET,
+    topRight: Float = MIN_OFFSET,
+    bottomRight: Float = MIN_OFFSET,
+    bottomLeft: Float = MIN_OFFSET
 ): Cloneable<CornerRadii> {
 
     val rx: Float
@@ -64,10 +64,10 @@ class CornerRadii(
     }
 
     fun apply(
-        topLeft: Float = 0f,
-        topRight: Float = 0f,
-        bottomRight: Float = 0f,
-        bottomLeft: Float = 0f
+        topLeft: Float = MIN_OFFSET,
+        topRight: Float = MIN_OFFSET,
+        bottomRight: Float = MIN_OFFSET,
+        bottomLeft: Float = MIN_OFFSET
     ) {
         corners[0] = topLeft
         corners[1] = topLeft

@@ -10,7 +10,7 @@ import android.graphics.Paint
  * @since April 2020
  */
 
-fun Paint.recycle(){
+fun Paint.recycle() {
     shader = null
     maskFilter = null
     pathEffect = null

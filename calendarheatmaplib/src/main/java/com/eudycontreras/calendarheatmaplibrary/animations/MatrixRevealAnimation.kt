@@ -18,8 +18,7 @@ import com.eudycontreras.calendarheatmaplibrary.properties.Index
  * @author Eudy Contreras.
  * @since April 2020
  */
-
-internal class MatrixRevealAnimation<T: Animateable> : HeatMapAnimation<Array<Array<T>>> {
+internal class MatrixRevealAnimation<T : Animateable> : HeatMapAnimation<Array<Array<T>>> {
 
     override var interpolator: Interpolator = FastOutSlowInInterpolator()
 
@@ -47,8 +46,7 @@ internal class MatrixRevealAnimation<T: Animateable> : HeatMapAnimation<Array<Ar
         heatMap: CalHeatMap,
         animateable: Array<Array<T>>
     ) {
-
-        val indexMaps = createOrder(animateable.size,  animateable[0].size, epiCenter)
+        val indexMaps = createOrder(animateable.size, animateable[0].size, epiCenter)
 
         val startPoints = Array(animateable.size) {
             Array(animateable[it].size) { Pair(MIN_OFFSET, MIN_OFFSET) }
@@ -112,16 +110,22 @@ internal class MatrixRevealAnimation<T: Animateable> : HeatMapAnimation<Array<Ar
         heatMap.addAnimation(animation)
     }
 
-    private fun createOrder(itemRowCount: Int, itemColCount: Int, fromIndex: Index): Map<Int, List<Index>> {
+    private fun createOrder(
+        itemRowCount: Int,
+        itemColCount: Int,
+        fromIndex: Index
+    ): Map<Int, List<Index>> {
         val indexes: ArrayList<Index> = ArrayList()
 
         for (row in 0 until itemRowCount) {
             for (col in 0 until itemColCount) {
-                indexes.add(Index(
-                    row = row,
-                    col = col,
-                    weight = manDistance(fromIndex.row, fromIndex.col, row, col)
-                ))
+                indexes.add(
+                    Index(
+                        row = row,
+                        col = col,
+                        weight = manDistance(fromIndex.row, fromIndex.col, row, col)
+                    )
+                )
             }
         }
 

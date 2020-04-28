@@ -4,6 +4,14 @@ import com.eudycontreras.calendarheatmaplibrary.extensions.dp
 import com.eudycontreras.calendarheatmaplibrary.properties.Index
 import kotlinx.serialization.Serializable
 
+/**
+ * Copyright (C) 2020 Project X
+ *
+ * @Project ProjectX
+ * @author Eudy Contreras.
+ * @since April 2020
+ */
+
 @Serializable
 data class HeatMapLabel(
     val text: String,
@@ -14,7 +22,7 @@ data class HeatMapLabel(
 @Serializable
 data class AnimationData(
     val delay: Long = 0,
-    val duration: Long = 400,
+    val duration: Long = 250,
     val stagger: Long = 50,
     val epiCenter: Index? = null
 )
@@ -23,14 +31,14 @@ data class AnimationData(
 data class HeatMapOptions(
     var legendLessLabel: String = LESS,
     var legendMoreLabel: String = MORE,
-    var showCellDayText: Boolean = true,
+    var showCellDayText: Boolean = false,
     var showMonthLabels: Boolean = true,
     var showDayLabels: Boolean = true,
     var showLegend: Boolean = true,
     var legendAlignment: Alignment = Alignment.LEFT,
     var cellHighlightDuration: Long = 250,
     var interceptorOffsetX: Float = 60.dp,
-    var interceptorOffsetY: Float = 60.dp,
+    var interceptorOffsetY: Float = 70.dp,
     var maxFrequencyValue: Int = Frequency.MAX_VALUE,
     var matrixRevealAnimation: AnimationData? = AnimationData(),
     var dayLabels: List<HeatMapLabel> = STANDARD_DAY_LABELS,

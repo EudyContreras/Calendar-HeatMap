@@ -16,8 +16,14 @@
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
+        android:outlineProvider="bounds"
+        android:hardwareAccelerated="true"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:elevation="6dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:background="@drawable/cell_info_layout_bg"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
@@ -25,10 +31,12 @@
             android:id="@+id/contributionCountLabel"
             android:layout_width="wrap_content"
             android:textStyle="bold"
+            android:textColor="@color/white"
+            android:alpha="0.9"
             android:gravity="center_vertical|end"
             android:textAlignment="gravity"
-            android:layout_height="25dp"
-            android:text="@{viewModel.frequencyData.count + ` contributions`}"
+            android:layout_height="34dp"
+            android:text="@{viewModel.frequencyData.countString + ` contributions`}"
             tools:text="No contributions"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -38,8 +46,10 @@
             android:id="@+id/contributionDateLabel"
             android:gravity="center_vertical|start"
             android:textAlignment="gravity"
+            android:textColor="@color/white"
+            android:alpha="0.4"
             android:layout_width="wrap_content"
-            android:layout_height="25dp"
+            android:layout_height="34dp"
             android:layout_marginStart="4dp"
             android:text="@{`on ` + viewModel.dateString }"
             app:layout_constraintTop_toTopOf="parent"

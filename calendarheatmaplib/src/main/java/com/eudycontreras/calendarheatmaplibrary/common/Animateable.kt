@@ -7,7 +7,6 @@ package com.eudycontreras.calendarheatmaplibrary.common
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 interface Animateable {
     fun onPreAnimation()
     fun onPostAnimation()

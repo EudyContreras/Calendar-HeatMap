@@ -5,10 +5,11 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
-import com.eudycontreras.calendarheatmaplibrary.extensions.*
+import com.eudycontreras.calendarheatmaplibrary.extensions.addCircle
+import com.eudycontreras.calendarheatmaplibrary.extensions.addShadowOval
+import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
 import com.eudycontreras.calendarheatmaplibrary.utilities.ShadowUtility
-import kotlin.math.min
 
 /**
  * Copyright (C) 2020 Project X
@@ -17,7 +18,6 @@ import kotlin.math.min
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 internal open class Circle : DrawableShape() {
 
     var centerX: Float = MIN_OFFSET
@@ -32,8 +32,8 @@ internal open class Circle : DrawableShape() {
             y = value - (radius / 2)
         }
 
-
-    var radius: Float = min(width, height)
+    var radius: Float = MIN_OFFSET
+        get() = bounds.radius
         set(value) {
             field = value
             width = value
@@ -58,10 +58,7 @@ internal open class Circle : DrawableShape() {
         if (shader != null) {
             paint.shader = shader
         }
-
-        shapePath.rewind()
-        canvas.drawOval(left, top, right, bottom, paint)
-
+        
         shapePath.rewind()
         shapePath.addCircle(centerX, centerY, radius)
         canvas.drawPath(shapePath, paint)

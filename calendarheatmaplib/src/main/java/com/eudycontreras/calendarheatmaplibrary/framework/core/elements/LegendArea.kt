@@ -22,7 +22,6 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 internal class LegendArea(
     val style: HeatMapStyle,
     val bounds: Bounds

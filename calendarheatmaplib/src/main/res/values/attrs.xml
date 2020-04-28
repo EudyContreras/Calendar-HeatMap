@@ -10,9 +10,7 @@
         is only meant to be used with data-binding-->
         <attr name="calHeatMapData" format="reference" />
 
-        <attr name="cellInfoOverlay" format="reference" />
-
-        <attr name="cellInfoLayout" format="reference" />
+        <attr name="cellInfoView" format="reference" />
 
         <!-- Sets the style object containing the styling data used
           for styling the calendar HeatMap view. This attribute
