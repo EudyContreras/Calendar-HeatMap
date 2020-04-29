@@ -3,6 +3,7 @@ package com.eudycontreras.calendarheatmaplibrary.properties
 import androidx.annotation.ColorInt
 import com.eudycontreras.calendarheatmaplibrary.AndroidColor
 import com.eudycontreras.calendarheatmaplibrary.common.Cloneable
+import com.eudycontreras.calendarheatmaplibrary.findMin
 import com.eudycontreras.calendarheatmaplibrary.utilities.ColorUtility
 
 /**
@@ -84,6 +85,21 @@ class MutableColor(
         color.red = (this.red * amount).toInt()
         color.green = (this.green * amount).toInt()
         color.blue = (this.blue * amount).toInt()
+
+        color.red = clamp(color.red)
+        color.green = clamp(color.green)
+        color.blue = clamp(color.blue)
+        return color
+    }
+
+    fun adjustMin(amount: Float): MutableColor {
+        val color = MutableColor(this)
+        val minColor  = if (this.green < this.red) this.green else if (this.blue < this.red) this.blue else this.red
+        val offset = minColor * amount
+
+        color.red = (this.red + offset).toInt()
+        color.green = (this.green + offset).toInt()
+        color.blue = (this.blue + offset).toInt()
 
         color.red = clamp(color.red)
         color.green = clamp(color.green)

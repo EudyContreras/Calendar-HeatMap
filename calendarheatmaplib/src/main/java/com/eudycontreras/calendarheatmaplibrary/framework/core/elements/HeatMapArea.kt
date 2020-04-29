@@ -148,7 +148,7 @@ internal class HeatMapArea(
         var horizontalOffset = (offset + bounds.left)
 
         shapes = Array(data.getColumnCount()) {
-            Array(data.getRowCount()) { HeatMapCell() }
+            Array(data.getRowCount()) { HeatMapCell(measurements.cellGap) }
         }
         val viewport = viewportProvider().let {
             Bounds(
@@ -163,7 +163,7 @@ internal class HeatMapArea(
             val rows: Array<HeatMapCell> = shapes[rowIndex]
 
             for ((colIndex, day) in week.weekDays.withIndex()) {
-                val shape = HeatMapCell()
+                val shape = HeatMapCell(measurements.cellGap)
                 shape.touchHandler = { touchConsumer, action, _, x, y, minX, maxX, minY, maxY ->
                     touchConsumer(touchConsumer, action, day, x, y, minX, maxX, minY, maxY)
                 }
@@ -233,10 +233,16 @@ internal class HeatMapArea(
                 x = shape.bounds.centerX
                 y = shape.bounds.centerY + (height / 2)
                 alignment = Alignment.CENTER
-                textColor = if (shape.color.isBright(TEXT_COLOR_BRIGHT_THRESHOLD)) {
-                    shape.color.adjust(TEXT_COLOR_DARKEN_OFFSET)
-                } else {
-                    shape.color.adjust(TEXT_COLOR_BRIGHTEN_OFFSET)
+                textColor = when {
+                    shape.color.isBright(TEXT_COLOR_BRIGHT_THRESHOLD) -> {
+                        shape.color.adjustMin(TEXT_COLOR_DARKEN_OFFSET)
+                    }
+                    shape.color.isDark(TEXT_COLOR_DARK_THRESHOLD) -> {
+                        shape.color.adjustMin(TEXT_COLOR_BRIGHTEN_OFFSET)
+                    }
+                    else -> {
+                        shape.color.adjustMin(TEXT_COLOR_DEFAUlT_OFFSET)
+                    }
                 }
             }
         }
@@ -263,8 +269,11 @@ internal class HeatMapArea(
     }
 
     private companion object {
-        const val TEXT_COLOR_BRIGHT_THRESHOLD = 210
-        const val TEXT_COLOR_DARKEN_OFFSET = 0.85f
-        const val TEXT_COLOR_BRIGHTEN_OFFSET = 1.5f
+        const val TEXT_COLOR_BRIGHT_THRESHOLD = 225
+        const val TEXT_COLOR_DARK_THRESHOLD = 120
+
+        const val TEXT_COLOR_DARKEN_OFFSET = -0.16f
+        const val TEXT_COLOR_DEFAUlT_OFFSET = 0.5f
+        const val TEXT_COLOR_BRIGHTEN_OFFSET = 1f
     }
 }

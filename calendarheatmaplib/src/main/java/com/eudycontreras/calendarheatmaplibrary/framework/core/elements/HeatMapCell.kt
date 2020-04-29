@@ -15,7 +15,6 @@ import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Rectangle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Text
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
-import kotlin.math.abs
 
 /**
  * Copyright (C) 2020 Project X
@@ -24,7 +23,9 @@ import kotlin.math.abs
  * @author Eudy Contreras.
  * @since April 2020
  */
-internal class HeatMapCell : Rectangle(), TouchConsumer, Animateable {
+internal class HeatMapCell(
+    val cellGap: Float
+) : Rectangle(), TouchConsumer, Animateable {
 
     var hovered: Boolean = false
 
@@ -38,7 +39,7 @@ internal class HeatMapCell : Rectangle(), TouchConsumer, Animateable {
     private val interpolatorOut = DecelerateInterpolator()
 
     private var highlightSavedState: Triple<Float, Bounds, MutableColor>? = null
-    private var highlightSavedStateText: Pair<Float, Bounds>? = null
+    private var highlightSavedStateText: Pair<Float, MutableColor>? = null
     private var revealAnimationState: Triple<Int, Bounds, Float?> = Triple(0, Bounds(), null)
 
     override var touchHandler: ((TouchConsumer, Int, Bounds, Float, Float, Float, Float, Float, Float) -> Unit)? = null
@@ -71,7 +72,7 @@ internal class HeatMapCell : Rectangle(), TouchConsumer, Animateable {
         if (highlightSavedState == null) {
             highlightSavedState = Triple(elevation, bounds.copy(), color.clone())
             cellText?.let {
-                highlightSavedStateText = Pair(it.textSize, it.bounds.copy())
+                highlightSavedStateText = Pair(it.textSize, it.textColor)
             }
         }
         return highlightSavedState?.let { savedState ->
@@ -84,7 +85,7 @@ internal class HeatMapCell : Rectangle(), TouchConsumer, Animateable {
                 updateListener = { _, _, offset ->
                     val elevate = DEPTH_AMOUNT
                     val adjust = COLOR_AMOUNT
-                    val zoom = abs(savedState.second.right - savedState.second.left) * ZOOM_AMOUNT
+                    val zoom = cellGap * ZOOM_AMOUNT
                     val delta = interpolatorIn.getInterpolation(offset)
                     bounds.left = savedState.second.left - (zoom * delta)
                     bounds.right = savedState.second.right + (zoom * delta)
@@ -109,17 +110,20 @@ internal class HeatMapCell : Rectangle(), TouchConsumer, Animateable {
                 duration = duration,
                 onEnd = { isHighlighting = false },
                 updateListener = { _, _, offset ->
+                    val elevate = DEPTH_AMOUNT
                     val adjust = COLOR_AMOUNT
+                    val zoom = cellGap * ZOOM_AMOUNT
                     val delta = interpolatorOut.getInterpolation(MAX_OFFSET - offset)
-                    bounds.left = savedState.second.left - abs(bounds.left - savedState.second.left) * delta
-                    bounds.right = savedState.second.right + abs(bounds.right - savedState.second.right) * delta
-                    bounds.top =  savedState.second.top - abs(bounds.top - savedState.second.top) * delta
-                    bounds.bottom =  savedState.second.bottom + abs(bounds.bottom - savedState.second.bottom) * delta
+                    bounds.left = savedState.second.left - (zoom * delta)
+                    bounds.right = savedState.second.right + (zoom * delta)
+                    bounds.top = savedState.second.top - (zoom * delta)
+                    bounds.bottom = savedState.second.bottom + (zoom * delta)
                     color = savedState.third.adjust(MAX_OFFSET + (adjust * delta))
-                    elevation =  savedState.first - abs(elevation - savedState.first) * delta
+                    elevation = savedState.first + (elevate * delta)
+
                     cellText?.let {
                         highlightSavedStateText?.let { textState ->
-                            it.textSize = textState.first + abs(it.textSize - textState.first) * delta
+                            it.textSize = textState.first + (zoom * delta)
                         }
                     }
                 }
@@ -153,8 +157,8 @@ internal class HeatMapCell : Rectangle(), TouchConsumer, Animateable {
     }
 
     companion object {
-        val ZOOM_AMOUNT = 0.1f.dp
-        val DEPTH_AMOUNT = 6.dp
+        const val ZOOM_AMOUNT = 1f
+        val DEPTH_AMOUNT = 4.dp
 
         const val COLOR_AMOUNT = 0.2f
     }

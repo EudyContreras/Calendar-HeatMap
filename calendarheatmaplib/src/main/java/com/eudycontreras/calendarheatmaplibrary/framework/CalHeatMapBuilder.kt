@@ -125,10 +125,10 @@ internal class CalHeatMapBuilder(
         measurements: Measurements
     ): CellInfoBubble? {
         if (bubbleLayout != null) {
-            val offset = HeatMapCell.ZOOM_AMOUNT + MAX_OFFSET
+            val offset = measurements.cellGap * 2
             return CellInfoBubble(
                 bounds = bounds,
-                topOffset = measurements.cellSize * offset,
+                topOffset = measurements.cellSize + offset,
                 sideOffset = measurements.cellGap,
                 bubbleLayout = bubbleLayout
             )

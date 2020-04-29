@@ -31,10 +31,10 @@ data class AnimationData(
 data class HeatMapOptions(
     var legendLessLabel: String = LESS,
     var legendMoreLabel: String = MORE,
-    var showCellDayText: Boolean = true,
+    var showCellDayText: Boolean = false,
     var showMonthLabels: Boolean = true,
     var showDayLabels: Boolean = true,
-    var showLegend: Boolean = true,
+    var showLegend: Boolean = false,
     var legendAlignment: Alignment = Alignment.LEFT,
     var cellHighlightDuration: Long = 250,
     var interceptorOffsetX: Float = 60.dp,

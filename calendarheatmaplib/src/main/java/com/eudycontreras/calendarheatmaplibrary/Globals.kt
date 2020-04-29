@@ -5,6 +5,7 @@ import android.view.ViewParent
 import androidx.core.math.MathUtils
 import com.eudycontreras.calendarheatmaplibrary.properties.Coordinate
 import com.eudycontreras.calendarheatmaplibrary.properties.Property
+import kotlin.contracts.contract
 import kotlin.math.abs
 import kotlin.math.hypot
 
@@ -175,6 +176,22 @@ internal inline fun <T> doWith(receiver: T, block: (T) -> Unit) {
 
 internal inline fun <reified T, X> T.map(block: (T) -> X): X {
     return block(this)
+}
+
+fun findMin(vararg values: Float): Float {
+    return values.min() ?: return MIN_OFFSET
+}
+
+fun findMin(vararg values: Int): Int {
+    return values.min() ?: return 0
+}
+
+fun findMax(vararg values: Float): Float {
+    return values.max() ?: return MIN_OFFSET
+}
+
+fun findMax(vararg values: Int): Int {
+    return values.max() ?: return 0
 }
 
 fun findScrollParent(parent: ViewGroup, criteria: (ViewGroup) -> Boolean): ViewParent? {

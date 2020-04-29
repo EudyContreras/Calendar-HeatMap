@@ -38,9 +38,6 @@ internal class SomeViewModel : ViewModel() {
     val demoData5: HeatMapData
         get() = getSafeData()
 
-    val demoData6: HeatMapData
-        get() = getSafeData()
-
     private fun getSafeData(): HeatMapData {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             generateData()
@@ -72,7 +69,7 @@ internal class SomeViewModel : ViewModel() {
         }
         var maxFrequencyValue = 0
 
-        val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, YYYY")
+        val dateFormatter = DateTimeFormatter.ofPattern(DEFAULT_DATE_FORMAT)
 
         weeks@ for (index in 0L..weeksInYear) {
             val weekFields: WeekFields = WeekFields.of(Locale.getDefault())
@@ -131,5 +128,7 @@ internal class SomeViewModel : ViewModel() {
     private companion object {
         const val DAYS_IN_WEEK = 7
         const val WEEKS_IN_YEAR = 52
+
+        const val DEFAULT_DATE_FORMAT = "MMM dd, YYYY"
     }
 }
