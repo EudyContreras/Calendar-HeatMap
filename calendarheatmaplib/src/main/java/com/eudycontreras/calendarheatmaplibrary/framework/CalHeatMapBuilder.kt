@@ -3,6 +3,7 @@ package com.eudycontreras.calendarheatmaplibrary.framework
 import android.graphics.Rect
 import android.util.SparseArray
 import com.eudycontreras.calendarheatmaplibrary.AndroidColor
+import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.BubbleLayout
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
@@ -22,7 +23,6 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
 /**
  * TODO list:
- * - Draw shadow under the cell info layout
  * - Refactor code for better standards
  * - Put relevant styling and settings data inside the
  * data wrappers for easier user customization.
@@ -81,6 +81,7 @@ internal class CalHeatMapBuilder(
         shapeManager.addShape(dayLabelArea)
         shapeManager.addShape(legendArea)
         shapeManager.addShape(interceptor)
+        shapeManager.addShape(cellInfoBubble)
     }
 
     private fun buildInterceptor(
@@ -124,7 +125,13 @@ internal class CalHeatMapBuilder(
         measurements: Measurements
     ): CellInfoBubble? {
         if (bubbleLayout != null) {
-            return CellInfoBubble(bounds, measurements.cellGap, bubbleLayout)
+            val offset = HeatMapCell.ZOOM_AMOUNT + MAX_OFFSET
+            return CellInfoBubble(
+                bounds = bounds,
+                topOffset = measurements.cellSize * offset,
+                sideOffset = measurements.cellGap,
+                bubbleLayout = bubbleLayout
+            )
         }
         return null
     }

@@ -10,6 +10,6 @@ import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
  * @since April 2020
  */
 internal interface TouchConsumer {
-    fun onTouch(eventAction: Int, bounds: Bounds, x: Float, y: Float)
-    var touchHandler: ((TouchConsumer, Int, Bounds, Float, Float) -> Unit)?
+    fun onTouch(eventAction: Int, bounds: Bounds, x: Float, y: Float, minX: Float, maxX: Float, minY: Float, maxY: Float)
+    var touchHandler: ((TouchConsumer, Int, Bounds, Float, Float, minX: Float,  maxX: Float, minY: Float, maxY: Float) -> Unit)?
 }

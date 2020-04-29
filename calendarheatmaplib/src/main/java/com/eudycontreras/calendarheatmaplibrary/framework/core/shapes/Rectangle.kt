@@ -54,6 +54,7 @@ internal open class Rectangle : DrawableShape() {
         }
         paint.recycle()
         paint.shader = null
+        paint.style = Paint.Style.FILL
         paint.maskFilter = shadowFilter
         paint.color = shadowColor?.toColor() ?: ShadowUtility.DEFAULT_COLOR
 

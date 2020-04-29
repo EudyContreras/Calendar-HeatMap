@@ -5,6 +5,7 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Rect
 import android.view.MotionEvent
+import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
@@ -16,6 +17,7 @@ import com.eudycontreras.calendarheatmaplibrary.mapRange
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.Dimension
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
+import kotlin.math.max
 
 /**
  * Copyright (C) 2020 Project X
@@ -148,27 +150,18 @@ internal class CellInterceptor(
             lineRight.render = value
         }
 
-    private fun setPositionX(value: Float, viewBounds: Rect, eventAction: Int) {
+    private fun setPositionX(value: Float, viewBounds: Rect, minX: Float, maxX: Float) {
         val section = (viewPort.width / 2)
-        val offset = mapRange(viewBounds.left.toFloat(), MIN_OFFSET, -bounds.left, 0f, bounds.left)
-        val minX = (bounds.left - viewBounds.left) - offset
-        val maxX = (bounds.left + viewPort.width) - viewBounds.left
+
         val shift = mapRange(value - (minX + section), -section, section, -(shiftOffsetX * 1.5f), shiftOffsetX)
 
         marker.centerX = (value + shift)
-        infoBubble?.offsetX = viewBounds.left.toFloat()
+
         if (marker.centerX < (minX + marker.radius)) {
             marker.centerX = (minX + marker.radius)
         } else if (marker.centerX > (maxX - marker.radius)) {
             marker.centerX = (maxX - marker.radius)
         }
-        infoBubble?.onInterception(
-            x = marker.centerX,
-            y = marker.centerY,
-            minInX = (minX + marker.radius),
-            maxInX = (maxX - marker.radius),
-            eventAction = eventAction
-        )
 
         lineTop.bounds.left = (marker.centerX - (lineTop.width / 2))
         lineTop.bounds.right = lineTop.bounds.left + lineThickness
@@ -183,9 +176,7 @@ internal class CellInterceptor(
         lineRight.bounds.right = bounds.right
     }
 
-    private fun setPositionY(value: Float, viewBounds: Rect) {
-        infoBubble?.offsetY = viewBounds.top.toFloat()
-
+    private fun setPositionY(value: Float, viewBounds: Rect, minY: Float, maxY: Float) {
         marker.centerY = (value - shiftOffsetY)
         if (marker.centerY < (bounds.top + marker.radius)) {
             marker.centerY = (bounds.top + marker.radius)
@@ -249,6 +240,21 @@ internal class CellInterceptor(
         }
     }
 
+    override fun onLongPressed(
+        event: MotionEvent,
+        x: Float,
+        y: Float,
+        viewBounds: Rect,
+        shapeManager: ShapeManager
+    ) {
+        if (!allowIntercept)
+            return
+        if (!shouldRender && visible) {
+            shouldRender = true
+            applyPositions(viewBounds, x, y, shapeManager, event)
+        }
+    }
+
     override fun onTouch(event: MotionEvent, x: Float, y: Float, viewBounds: Rect, shapeManager: ShapeManager) {
         if (!allowIntercept || !shouldRender)
             return
@@ -261,28 +267,49 @@ internal class CellInterceptor(
                 hovered = false
             }
         }
-        setPositionX(x, viewBounds, event.action)
-        setPositionY(y, viewBounds)
-
-        shapeManager.delegateTouchEvent(event.action, marker.bounds, marker.centerX, marker.centerY, this)
+        applyPositions(viewBounds, x, y, shapeManager, event)
     }
 
-    override fun onLongPressed(
-        event: MotionEvent,
+    private fun applyPositions(
+        viewBounds: Rect,
         x: Float,
         y: Float,
-        viewBounds: Rect,
-        shapeManager: ShapeManager
+        shapeManager: ShapeManager,
+        event: MotionEvent
     ) {
-        if (!allowIntercept)
-            return
-        if (!shouldRender && visible) {
-            shouldRender = true
-            setPositionX(x, viewBounds, event.action)
-            setPositionY(y, viewBounds)
+        val offsetx = mapRange(viewBounds.left.toFloat(), MIN_OFFSET, -bounds.left, MIN_OFFSET, bounds.left)
+        val offsetY = mapRange(viewBounds.top.toFloat(), MIN_OFFSET, -bounds.top, MIN_OFFSET, bounds.top)
 
-            shapeManager.delegateTouchEvent(MotionEvent.ACTION_BUTTON_PRESS, marker.bounds, marker.centerX, marker.centerY, this)
-        }
+        val minX = (bounds.left - viewBounds.left) - offsetx
+        val maxX = (bounds.left + viewPort.width) - viewBounds.left
+
+        val minY = (bounds.top - viewBounds.top) - offsetY
+        val maxY = (bounds.top + viewPort.height) - viewBounds.top
+
+        setPositionX(x, viewBounds, minX, maxX)
+        setPositionY(y, viewBounds, minY, maxY)
+
+        infoBubble?.offsetY = viewBounds.top.toFloat()
+        infoBubble?.offsetX = viewBounds.left.toFloat()
+
+        infoBubble?.onInterception(
+            x = marker.centerX,
+            y = marker.centerY,
+            minInX = minX,
+            maxInX = maxX
+        )
+
+        shapeManager.delegateTouchEvent(
+            eventAction = event.action,
+            bounds = marker.bounds,
+            x = marker.centerX,
+            y = marker.centerY,
+            minX = minX,
+            maxX = maxX,
+            minY = minY,
+            maxY = maxY,
+            caller = this
+        )
     }
 
     companion object {

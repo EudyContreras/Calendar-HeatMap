@@ -43,15 +43,17 @@ internal class HeatMapArea(
 
     private var shapes: Array<Array<HeatMapCell>> = emptyArray()
 
-    override var touchHandler: ((TouchConsumer, Int, Bounds, Float, Float) -> Unit)? = null
+    override var touchHandler: ((TouchConsumer, Int, Bounds, Float, Float, Float, Float, Float, Float) -> Unit)? = null
 
-    private val touchConsumer: ((TouchConsumer, Int, WeekDay, Float, Float) -> Unit) = { consumer, eventAction: Int, day, x, y ->
+    private val touchConsumer: ((TouchConsumer, Int, WeekDay, Float, Float, Float, Float, Float, Float) -> Unit) = { consumer, eventAction: Int, day, x, y, minX, maxX, minY, maxY ->
         when (eventAction) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE, MotionEvent.ACTION_BUTTON_PRESS -> {
                 if (consumer is HeatMapCell) {
                     if (eventAction == MotionEvent.ACTION_BUTTON_PRESS) {
-                        if (!consumer.hovered && !consumer.isHighlighting) {
-                            cellInfoBubble?.revealInfoBubble()
+                        if (consumer.bounds.isInside(x, y)) {
+                            if (!consumer.hovered && !consumer.isHighlighting) {
+                                cellInfoBubble?.revealInfoBubble(x, y, minX, maxX)
+                            }
                         }
                     }
                     if (consumer.bounds.isInside(x, y)) {
@@ -66,7 +68,11 @@ internal class HeatMapArea(
                                 } else {
                                     heatMap.hapticFeeback(HapticFeedbackConstants.CLOCK_TICK)
                                 }
-                                cellInfoBubble?.bringToFront()
+                                if (cellInfoBubble?.isRevealed == false) {
+                                    cellInfoBubble?.revealInfoBubble(x, y, minX, maxX)
+                                } else {
+                                    cellInfoBubble?.bringToFront()
+                                }
                             }
                             heatMap.addAnimation(consumer.applyHighlight(options.cellHighlightDuration))
                         }
@@ -85,6 +91,7 @@ internal class HeatMapArea(
                         consumer.hovered = false
                     }
                 }
+                cellInfoBubble?.concealInfoBubble(x, y,  minX, maxX)
             }
         }
     }
@@ -157,8 +164,8 @@ internal class HeatMapArea(
 
             for ((colIndex, day) in week.weekDays.withIndex()) {
                 val shape = HeatMapCell()
-                shape.touchHandler = { touchConsumer, action, _, x, y ->
-                    touchConsumer(touchConsumer, action, day, x, y)
+                shape.touchHandler = { touchConsumer, action, _, x, y, minX, maxX, minY, maxY ->
+                    touchConsumer(touchConsumer, action, day, x, y, minX, maxX, minY, maxY)
                 }
                 shape.renderIndex = renderIndex
                 shape.bounds = Bounds(
@@ -247,17 +254,17 @@ internal class HeatMapArea(
         frontShape?.onRender(canvas, paint, shapePath, shadowPath)
     }
 
-    override fun onTouch(event: Int, bounds: Bounds, x: Float, y: Float) {
+    override fun onTouch(eventAction: Int, bounds: Bounds, x: Float, y: Float, minX: Float, maxX: Float, minY: Float, maxY: Float) {
         for (cols in shapes) {
             for (shape in cols) {
-                shape.onTouch(event, bounds, x, y)
+                shape.onTouch(eventAction, bounds, x, y, minX, maxX, minY, maxY)
             }
         }
     }
 
     private companion object {
-        const val TEXT_COLOR_BRIGHT_THRESHOLD = 200
-        const val TEXT_COLOR_DARKEN_OFFSET = 0.8f
+        const val TEXT_COLOR_BRIGHT_THRESHOLD = 210
+        const val TEXT_COLOR_DARKEN_OFFSET = 0.85f
         const val TEXT_COLOR_BRIGHTEN_OFFSET = 1.5f
     }
 }

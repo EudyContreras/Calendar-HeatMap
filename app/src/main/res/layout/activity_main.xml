@@ -17,15 +17,14 @@
     </data>
 
     <FrameLayout
-        android:background="@color/colorPrimaryDark"
+        android:background="@color/white"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <ScrollView
             android:id="@+id/scroller"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/colorPrimaryDark">
+            android:layout_height="match_parent">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -36,44 +35,42 @@
                 app:layout_constraintTop_toTopOf="parent">
 
                 <HorizontalScrollView
-                    android:background="@color/colorPrimaryDark"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
                     <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
-                        android:background="@color/colorPrimaryDark"
                         android:layout_width="wrap_content"
                         android:layout_height="250dp"
                         android:hapticFeedbackEnabled="true"
                         app:cellInfoView="@{cellInfoBox}"
                         app:calHeatMapData="@{viewModel.demoData1}"
-                        app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
+                        app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMax}"
                         app:cellColorMin="@{@color/colorMin}"
                         app:cellElevation="@{Utils.getDp(2)}"
-                        app:legendLabelColor="@{@color/white}"
-                        app:monthLabelColor="@{@color/white}"
-                        app:weekDayLabelColor="@{@color/white}" />
+                        app:legendLabelColor="@{@color/colorPrimaryVeryLight}"
+                        app:monthLabelColor="@{@color/colorPrimaryVeryLight}"
+                        app:weekDayLabelColor="@{@color/colorPrimaryVeryLight}" />
                 </HorizontalScrollView>
 
                 <HorizontalScrollView
-                    android:background="@color/colorPrimaryDark"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
                     <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
-                        android:background="@color/colorPrimaryDark"
                         android:layout_width="wrap_content"
                         android:layout_height="250dp"
                         android:hapticFeedbackEnabled="false"
+                        app:cellInfoView="@{cellInfoBox}"
                         app:calHeatMapData="@{viewModel.demoData2}"
-                        app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
+                        app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMaxAlt1}"
                         app:cellColorMin="@{@color/colorMinAlt1}"
-                        app:legendLabelColor="@{@color/white}"
+                        app:legendLabelColor="@{@color/colorPrimaryVeryLight}"
+                        app:cellElevation="@{Utils.getDp(2)}"
                         app:legendLabelTypeFace="@{Typeface.DEFAULT_BOLD}"
-                        app:monthLabelColor="@{@color/white}"
-                        app:weekDayLabelColor="@{@color/white}" />
+                        app:monthLabelColor="@{@color/colorPrimaryVeryLight}"
+                        app:weekDayLabelColor="@{@color/colorPrimaryVeryLight}" />
                 </HorizontalScrollView>
 
                 <HorizontalScrollView
@@ -83,8 +80,11 @@
                     <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
                         android:layout_width="wrap_content"
                         android:layout_height="200dp"
+                        app:cellInfoView="@{cellInfoBox}"
+                        app:showCellDayText="@{false}"
+                        app:cellElevation="@{Utils.getDp(2)}"
                         app:calHeatMapData="@{viewModel.demoData3}"
-                        app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
+                        app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMaxAlt2}"
                         app:cellColorMin="@{@color/colorMinAlt2}"
                         app:legendLabelColor="@{@color/white}"
@@ -100,7 +100,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="250dp"
                         app:calHeatMapData="@{viewModel.demoData4}"
-                        app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
+                        app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMaxAlt2}"
                         app:cellColorMin="@{@color/colorMinAlt2}"
                         app:legendLabelColor="@{@color/white}"
@@ -116,7 +116,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="250dp"
                         app:calHeatMapData="@{viewModel.demoData5}"
-                        app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
+                        app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMaxAlt2}"
                         app:cellColorMin="@{@color/colorMinAlt2}"
                         app:legendLabelColor="@{@color/white}"
@@ -132,7 +132,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="250dp"
                         app:calHeatMapData="@{viewModel.demoData6}"
-                        app:cellColorEmpty="@{@color/colorPrimaryVeryLight}"
+                        app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMaxAlt2}"
                         app:cellColorMin="@{@color/colorMinAlt2}"
                         app:legendLabelColor="@{@color/white}"

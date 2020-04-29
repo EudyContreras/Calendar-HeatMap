@@ -41,7 +41,7 @@ internal class HeatMapCell : Rectangle(), TouchConsumer, Animateable {
     private var highlightSavedStateText: Pair<Float, Bounds>? = null
     private var revealAnimationState: Triple<Int, Bounds, Float?> = Triple(0, Bounds(), null)
 
-    override var touchHandler: ((TouchConsumer, Int, Bounds, Float, Float) -> Unit)? = null
+    override var touchHandler: ((TouchConsumer, Int, Bounds, Float, Float, Float, Float, Float, Float) -> Unit)? = null
 
     override var render: Boolean
         get() = super.render
@@ -50,9 +50,9 @@ internal class HeatMapCell : Rectangle(), TouchConsumer, Animateable {
             cellText?.render = value
         }
 
-    override fun onTouch(eventAction: Int, bounds: Bounds, x: Float, y: Float) {
+    override fun onTouch(eventAction: Int, bounds: Bounds, x: Float, y: Float, minX: Float, maxX: Float, minY: Float, maxY: Float) {
         if (allowInteraction) {
-            touchHandler?.invoke(this, eventAction, bounds, x, y)
+            touchHandler?.invoke(this, eventAction, bounds, x, y, minX, maxX, minY, maxY)
         }
     }
 
@@ -110,7 +110,6 @@ internal class HeatMapCell : Rectangle(), TouchConsumer, Animateable {
                 onEnd = { isHighlighting = false },
                 updateListener = { _, _, offset ->
                     val adjust = COLOR_AMOUNT
-                    val zoom = abs(savedState.second.right - savedState.second.left) * ZOOM_AMOUNT
                     val delta = interpolatorOut.getInterpolation(MAX_OFFSET - offset)
                     bounds.left = savedState.second.left - abs(bounds.left - savedState.second.left) * delta
                     bounds.right = savedState.second.right + abs(bounds.right - savedState.second.right) * delta
@@ -120,7 +119,7 @@ internal class HeatMapCell : Rectangle(), TouchConsumer, Animateable {
                     elevation =  savedState.first - abs(elevation - savedState.first) * delta
                     cellText?.let {
                         highlightSavedStateText?.let { textState ->
-                            it.textSize = textState.first + ((textState.first * zoom) * delta)
+                            it.textSize = textState.first + abs(it.textSize - textState.first) * delta
                         }
                     }
                 }
@@ -153,7 +152,7 @@ internal class HeatMapCell : Rectangle(), TouchConsumer, Animateable {
         cellText?.textSize =  (revealAnimationState.third?: MIN_OFFSET) * delta
     }
 
-    private companion object {
+    companion object {
         val ZOOM_AMOUNT = 0.1f.dp
         val DEPTH_AMOUNT = 6.dp
 

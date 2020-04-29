@@ -20,8 +20,6 @@ import androidx.core.widget.NestedScrollView
 import androidx.databinding.ViewDataBinding
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.eudycontreras.calendarheatmaplibrary.*
-import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
-import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.animations.AnimationEvent
 import com.eudycontreras.calendarheatmaplibrary.common.BubbleLayout
 import com.eudycontreras.calendarheatmaplibrary.extensions.findMaster
@@ -29,9 +27,9 @@ import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
+import com.eudycontreras.calendarheatmaplibrary.properties.Coordinate
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 import com.eudycontreras.calendarheatmaplibrary.properties.Padding
-import kotlin.collections.map
 import kotlin.math.max
 
 /**
@@ -73,15 +71,15 @@ class CalHeatMapView : View, CalHeatMap {
     private var calHeatMapStyle: HeatMapStyle = HeatMapStyle()
     private var calHeatMapOptions: HeatMapOptions = HeatMapOptions()
 
+    override var animationCollection: MutableList<AnimationEvent> = mutableListOf()
     private var animationProposals: MutableList<AnimationEvent> = mutableListOf()
     private var animationRemovals: MutableList<AnimationEvent> = mutableListOf()
-    override var animationCollection: MutableList<AnimationEvent> = mutableListOf()
+
     private var infiniteAnimator: ValueAnimator? = ValueAnimator.ofFloat(MAX_OFFSET, MIN_OFFSET)
 
     private var shapeManager: ShapeManager = ShapeManager()
 
     private var cellBubbleLayout: (View, ViewGroup, (WeekDay) -> Unit) -> BubbleLayout<WeekDay> = { bubbleView, parent, listener ->
-
         object : BubbleLayout<WeekDay> {
 
             override val x: Float
@@ -89,6 +87,12 @@ class CalHeatMapView : View, CalHeatMap {
 
             override val y: Float
                 get() = bubbleView.translationY
+
+            override val scaleX: Float
+                get() = bubbleView.scaleX
+
+            override val scaleY: Float
+                get() = bubbleView.scaleY
 
             override val width: Float
                 get() = bubbleView.measuredWidth.toFloat()
@@ -103,7 +107,7 @@ class CalHeatMapView : View, CalHeatMap {
                 get() = parent.measuredHeight.toFloat()
 
             override val elevation: Float
-                get() = parent.elevation
+                get() = bubbleView.elevation
 
             override fun toFront(offset: Float, pivotX: Float, pivotY: Float, duration: Long) {
                 bubbleView.pivotX = pivotX
@@ -111,39 +115,39 @@ class CalHeatMapView : View, CalHeatMap {
                 bubbleView.scaleX = 0.75f
                 bubbleView.scaleY = 0.75f
                 bubbleView.animate()
-                    .scaleX(1f)
-                    .scaleY(1f)
                     .setInterpolator(OvershootInterpolator())
                     .setDuration(duration)
+                    .scaleX(1f)
+                    .scaleY(1f)
                     .start()
             }
 
-            override fun reveal(offset: Float, pivotX: Float, pivotY: Float, duration: Long) {
+            override fun reveal(offset: Float, pivot: Coordinate, duration: Long) {
                 if (bubbleView.visibility != VISIBLE) {
                     bubbleView.visibility = VISIBLE
                 }
-                bubbleView.pivotX = pivotX
-                bubbleView.pivotY = pivotY
+                bubbleView.pivotX = pivot.x
+                bubbleView.pivotY = pivot.y
                 bubbleView.scaleX = 0.25f
                 bubbleView.scaleY = 0.25f
                 bubbleView.animate()
-                    .alpha(1f)
-                    .scaleX(1f)
-                    .scaleY(1f)
                     .setInterpolator(OvershootInterpolator())
                     .setDuration(duration)
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .alpha(1f)
                     .start()
             }
 
-            override fun conceal(offset: Float, pivotX: Float, pivotY: Float, duration: Long) {
-                bubbleView.pivotX = pivotX
-                bubbleView.pivotY = pivotY
+            override fun conceal(offset: Float, pivot: Coordinate, duration: Long) {
+                bubbleView.pivotX = pivot.x
+                bubbleView.pivotY = pivot.y
                 bubbleView.animate()
+                    .setInterpolator(FastOutSlowInInterpolator())
+                    .setDuration(duration)
                     .alpha(0f)
                     .scaleX(0.4f)
                     .scaleY(0.4f)
-                    .setInterpolator(FastOutSlowInInterpolator())
-                    .setDuration(duration)
                     .start()
             }
 
@@ -408,15 +412,12 @@ class CalHeatMapView : View, CalHeatMap {
             paddingBottom = paddingBottom
         )
 
-        var cellBubbleLayout: BubbleLayout<WeekDay>? = null
-
-        infoViewBinding?.apply {
-            val parent = this.root.parent as? ViewGroup ?: return@apply
-            cellBubbleLayout = this@CalHeatMapView.cellBubbleLayout(root, parent) {
+        val cellBubbleLayout: BubbleLayout<WeekDay>? = infoViewBinding?.run {
+            val parent = this.root.parent as? ViewGroup ?: return
+            this@CalHeatMapView.cellBubbleLayout(root, parent) {
                 setVariable(VIEWMODEL, it)
-            }
-            cellBubbleLayout?.let {
-                it.conceal(MIN_OFFSET,  MIN_OFFSET, MIN_OFFSET, 0L)
+            }.apply {
+                conceal(MIN_OFFSET, Coordinate(MIN_OFFSET, MIN_OFFSET),0L)
             }
         }
 
@@ -539,7 +540,7 @@ class CalHeatMapView : View, CalHeatMap {
 
     private fun getDayLabelAreaMeasurement(gapSize: Float): Float {
         return if (calHeatMapOptions.showDayLabels) {
-            val textMeasurement = calHeatMapOptions.dayLabels.map { label ->
+            val textMeasurement = calHeatMapOptions.dayLabels.mapIndexed { _, label ->
                 getTextMeasurement(
                     paint = shapeManager.paint,
                     text = label.text,
@@ -555,7 +556,7 @@ class CalHeatMapView : View, CalHeatMap {
         return if (calHeatMapOptions.showMonthLabels) {
             val textMeasurement = getTextMeasurement(
                 paint = shapeManager.paint,
-                text = calHeatMapOptions.monthLabels.map { it.text }.first { it.any { text -> Character.isUpperCase(text) } },
+                text = calHeatMapOptions.monthLabels.mapIndexed { _, it -> it.text }.first { it.any { text -> Character.isUpperCase(text) } },
                 textSize = calHeatMapStyle.monthLabelStyle.textSize,
                 typeFace = calHeatMapStyle.monthLabelStyle.typeFace
             )
@@ -605,6 +606,8 @@ class CalHeatMapView : View, CalHeatMap {
         getDrawingRect(viewBounds)
         parent?.offsetDescendantRectToMyCoords(this, viewBounds)
         parent?.getDrawingRect(scrollBounds)
+        viewBounds.top = scrollBounds.top
+        viewBounds.bottom = scrollBounds.bottom
     }
 
     private fun notifyVisibility(
@@ -636,7 +639,10 @@ class CalHeatMapView : View, CalHeatMap {
 
             retrieveBounds(viewBounds, scrollBounds, scrollingParent as? ViewGroup)
 
-            viewBounds.top = scrollBounds.top
+            getDrawingRect(viewBounds)
+            (scrollingParent as? ViewGroup)?.offsetDescendantRectToMyCoords(this@CalHeatMapView, viewBounds)
+
+            viewBounds.top = viewBounds.top - scrollBounds.top
             viewBounds.bottom = scrollBounds.bottom
 
             hapticFeeback(HapticFeedbackConstants.LONG_PRESS)

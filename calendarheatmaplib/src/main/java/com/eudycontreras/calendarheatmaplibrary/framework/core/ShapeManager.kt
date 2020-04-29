@@ -57,10 +57,10 @@ internal class ShapeManager {
         }
     }
 
-    fun delegateTouchEvent(eventAction: Int, bounds: Bounds, x: Float, y: Float, caller: TouchableShape) {
+    fun delegateTouchEvent(eventAction: Int, bounds: Bounds, x: Float, y: Float, minX: Float, maxX: Float, minY: Float, maxY: Float, caller: TouchableShape) {
         for (shape in shapes) {
             if (shape is TouchConsumer && shape != caller) {
-                shape.onTouch(eventAction, bounds, x, y)
+                shape.onTouch(eventAction, bounds, x, y, minX, maxX, minY, maxY)
             }
         }
     }
