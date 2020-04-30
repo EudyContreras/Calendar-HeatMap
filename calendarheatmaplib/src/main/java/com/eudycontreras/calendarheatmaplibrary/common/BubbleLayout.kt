@@ -17,6 +17,7 @@ internal interface BubbleLayout<T> {
     val scaleY: Float
     val width: Float
     val height: Float
+    val drawOverlay: DrawOverlay?
     val boundsWidth: Float
     val boundsHeight: Float
     val elevation: Float

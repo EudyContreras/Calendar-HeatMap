@@ -25,6 +25,9 @@ val Int.dp: Float
 val Float.dp: Float
     get() = this * Resources.getSystem().displayMetrics.density
 
+val Double.dp: Float
+    get() = this.toFloat() * Resources.getSystem().displayMetrics.density
+
 /**
  * Use the float as scale independent pixels and return the pixel value
  */
@@ -33,6 +36,9 @@ val Int.sp: Float
 
 val Float.sp: Float
     get() = this * Resources.getSystem().displayMetrics.scaledDensity
+
+val Double.sp: Float
+    get() = this.toFloat() * Resources.getSystem().displayMetrics.scaledDensity
 
 
 fun getDps(value: Float): Float {

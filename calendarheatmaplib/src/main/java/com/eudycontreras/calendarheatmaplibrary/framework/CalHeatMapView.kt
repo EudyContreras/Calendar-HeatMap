@@ -25,6 +25,7 @@ import com.eudycontreras.calendarheatmaplibrary.common.BubbleLayout
 import com.eudycontreras.calendarheatmaplibrary.extensions.findMaster
 import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
+import com.eudycontreras.calendarheatmaplibrary.common.DrawOverlay
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.Coordinate
@@ -64,6 +65,7 @@ class CalHeatMapView : View, CalHeatMap {
     private val viewBounds: Rect = Rect()
     private val scrollBounds: Rect = Rect()
 
+    private var drawOverlayView: DrawOverlay? = null
     private var scrollingParent: ViewParent? = null
 
     private var measurements: Measurements = Measurements()
@@ -79,7 +81,7 @@ class CalHeatMapView : View, CalHeatMap {
 
     private var shapeManager: ShapeManager = ShapeManager()
 
-    private var cellBubbleLayout: (View, ViewGroup, (WeekDay) -> Unit) -> BubbleLayout<WeekDay> = { bubbleView, parent, listener ->
+    private var cellBubbleLayout: (View, ViewGroup, DrawOverlay?, (WeekDay) -> Unit) -> BubbleLayout<WeekDay> = { bubbleView, parent, drawOverlay, listener ->
         object : BubbleLayout<WeekDay> {
 
             override val x: Float
@@ -108,6 +110,9 @@ class CalHeatMapView : View, CalHeatMap {
 
             override val elevation: Float
                 get() = bubbleView.elevation
+
+            override val drawOverlay: DrawOverlay?
+                get() = drawOverlay
 
             override fun toFront(offset: Float, pivotX: Float, pivotY: Float, duration: Long) {
                 bubbleView.pivotX = pivotX
@@ -311,6 +316,11 @@ class CalHeatMapView : View, CalHeatMap {
         this.calHeatMapOptions.legendMoreLabel = moreLabelText
     }
 
+    fun setDrawOverlayView(drawOverlayView: DrawOverlay) {
+        this.drawOverlayView = drawOverlayView
+        this.drawOverlayView?.setRenderData(shapeManager.renderData)
+    }
+
     fun setRevealOnVisible(revealOnVisible: Boolean) {
 
     }
@@ -414,7 +424,7 @@ class CalHeatMapView : View, CalHeatMap {
 
         val cellBubbleLayout: BubbleLayout<WeekDay>? = infoViewBinding?.run {
             val parent = this.root.parent as? ViewGroup ?: return
-            this@CalHeatMapView.cellBubbleLayout(root, parent) {
+            this@CalHeatMapView.cellBubbleLayout(root, parent, drawOverlayView) {
                 setVariable(VIEWMODEL, it)
             }.apply {
                 conceal(MIN_OFFSET, Coordinate(MIN_OFFSET, MIN_OFFSET),0L)

@@ -3,6 +3,7 @@ package com.eudycontreras.calendarheatmaplibrary.framework.core.elements
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
+import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
@@ -36,7 +37,7 @@ internal class HeatMapCell(
     private var allowInteraction: Boolean = true
 
     private val interpolatorIn = OvershootInterpolator()
-    private val interpolatorOut = DecelerateInterpolator()
+    private val interpolatorOut = AccelerateInterpolator()
 
     private var highlightSavedState: Triple<Float, Bounds, MutableColor>? = null
     private var highlightSavedStateText: Pair<Float, MutableColor>? = null

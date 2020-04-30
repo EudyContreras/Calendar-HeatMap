@@ -6,6 +6,7 @@ import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchConsumer
 import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
+import com.eudycontreras.calendarheatmaplibrary.properties.RenderData
 
 /**
  * Copyright (C) 2020 Project X
@@ -25,6 +26,10 @@ internal class ShapeManager {
     internal val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         isAntiAlias = true
         xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
+    }
+
+    val renderData: RenderData by lazy {
+        RenderData(paint, shapePath, shadowPath)
     }
 
     var renderShapes: Boolean = true

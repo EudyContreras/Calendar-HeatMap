@@ -19,6 +19,8 @@ import com.eudycontreras.calendarheatmaplibrary.utilities.ShadowUtility
 
 internal class Bubble: DrawableShape() {
 
+    var dirty = false
+
     var pointerOffset = 0.5f
 
     var pointerWidth = 10.dp
@@ -33,6 +35,14 @@ internal class Bubble: DrawableShape() {
 
     var contentBounds: Bounds = Bounds()
 
+    var parentBounds: Bounds = Bounds()
+
+    override var bounds: Bounds = Bounds()
+        set(value) {
+            field = value
+            dirty = true
+        }
+
     private val pathPlot: PathPlot = PathPlot(Path())
 
     private var shadowFilter: BlurMaskFilter? = null
@@ -45,13 +55,15 @@ internal class Bubble: DrawableShape() {
         val offsetLeft = 1f * mapRange(pointerOffset, 0f, 0.5f, 0f, 0.5f, 0f, 1f)
         val offsetRight = 1f * mapRange(pointerOffset, 0.5f, 1f, 0.5f, 0f, 0f, 1f)
 
-        if (!pathPlot.pathCreated) {
+        if (!pathPlot.pathCreated || dirty) {
 
+            pathPlot.points.clear()
+            pathPlot.path.reset()
             pathPlot.width = bounds.width - (cornerRadius * 2)
             pathPlot.height = bounds.height - (cornerRadius * 2)
 
-            pathPlot.contentBounds.width = pathPlot.width + cornerRadius
-            pathPlot.contentBounds.height = pathPlot.height + cornerRadius
+            pathPlot.contentBounds.width = pathPlot.width
+            pathPlot.contentBounds.height = pathPlot.height
 
             val shift = (pathPlot.width - pointerWidth)
 
@@ -70,6 +82,7 @@ internal class Bubble: DrawableShape() {
             pathPlot.points.add(PathPoint(PathPlot.Type.LINE, true, -(shift - (pointerOffset * shift)), 0f))
             pathPlot.points.add(PathPoint(PathPlot.Type.LINE, true, -(pointerWidth * offsetRight), pointerLength))
 
+            dirty = false
             pathPlot.build()
         }
 
@@ -83,10 +96,10 @@ internal class Bubble: DrawableShape() {
         pathPlot.points[9].startX = -(shift-(pointerOffset * shift))
         pathPlot.points[10].startX = -(pointerWidth * offsetRight)
 
-        pathPlot.contentBounds.x = bounds.x - ((pathPlot.width/2) + (cornerRadius/2))
+        pathPlot.contentBounds.x = bounds.x - ((pathPlot.width/2))
         pathPlot.contentBounds.y = bounds.y - (pointerLength + (pathPlot.height + (cornerRadius / 2)))
 
-        contentBounds.centerX = pathPlot.contentBounds.centerX -((pointerOffset * shift))
+        contentBounds.centerX = pathPlot.contentBounds.centerX - ((pointerOffset * shift)) - (pointerWidth / 2)
         contentBounds.centerY = pathPlot.contentBounds.centerY
         contentBounds.height = bounds.height
 
@@ -116,14 +129,15 @@ internal class Bubble: DrawableShape() {
 
     private fun renderShadow(canvas: Canvas, paint: Paint, shadowPath: Path) {
         if (shadowColor == null) {
-            val color = ShadowUtility.COLOR
-            this.shadowAlpha = color.alpha
-            this.shadowColor = ShadowUtility.getShadowColor(color, elevation)
+            val color = ShadowUtility.getShadowColor(ShadowUtility.COLOR, elevation)
+            this.shadowAlpha = color?.alpha ?: ShadowUtility.COLOR.alpha
+            this.shadowColor = color?.updateAlpha(this.shadowAlpha * 1.05f)
             this.shadowFilter = ShadowUtility.getShadowFilter(elevation)
         }
         paint.recycle()
         paint.shader = null
         paint.maskFilter = shadowFilter
+        paint.style = Paint.Style.FILL
         paint.color = shadowColor?.toColor() ?: ShadowUtility.DEFAULT_COLOR
 
         canvas.drawPath(shadowPath, paint)

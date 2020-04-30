@@ -66,6 +66,7 @@
                         app:cellInfoView="@{cellInfoBox}"
                         app:showCellDayText="@{true}"
                         app:showLegend="@{true}"
+                        app:drawOverlayView="@{cellInfoViewOverlay}"
                         app:calHeatMapData="@{viewModel.demoData2}"
                         app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMaxAlt1}"
@@ -134,6 +135,11 @@
             </LinearLayout>
 
         </ScrollView>
+
+        <com.eudycontreras.calendarheatmaplibrary.framework.InfoViewOverlay
+            android:id="@+id/cellInfoViewOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
 
         <FrameLayout
             android:clipChildren="false"

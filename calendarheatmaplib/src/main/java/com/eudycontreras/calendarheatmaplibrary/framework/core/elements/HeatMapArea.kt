@@ -71,7 +71,7 @@ internal class HeatMapArea(
                                 if (cellInfoBubble?.isRevealed == false) {
                                     cellInfoBubble?.revealInfoBubble(x, y, minX, maxX)
                                 } else {
-                                    cellInfoBubble?.bringToFront()
+                                    cellInfoBubble?.bringToFront(x, y, minX, maxX)
                                 }
                             }
                             heatMap.addAnimation(consumer.applyHighlight(options.cellHighlightDuration))
