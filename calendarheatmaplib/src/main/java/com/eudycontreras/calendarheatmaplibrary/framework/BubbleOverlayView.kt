@@ -18,7 +18,7 @@ import com.eudycontreras.calendarheatmaplibrary.properties.RenderData
  */
 
 @MainThread
-class InfoViewOverlay : FrameLayout, DrawOverlay {
+class BubbleOverlayView : FrameLayout, DrawOverlay {
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(

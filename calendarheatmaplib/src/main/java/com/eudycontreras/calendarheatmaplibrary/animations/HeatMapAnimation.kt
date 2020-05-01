@@ -2,7 +2,7 @@ package com.eudycontreras.calendarheatmaplibrary.animations
 
 import android.view.animation.Interpolator
 import com.eudycontreras.calendarheatmaplibrary.Action
-import com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMap
+import com.eudycontreras.calendarheatmaplibrary.common.CalHeatMap
 
 /**
  * Copyright (C) 2020 Project X

@@ -1,7 +1,6 @@
 package com.eudycontreras.calendarheatmaplibrary.common
 
 import com.eudycontreras.calendarheatmaplibrary.Action
-import com.eudycontreras.calendarheatmaplibrary.framework.BubblePathDrawable
 import com.eudycontreras.calendarheatmaplibrary.properties.Coordinate
 
 /**
@@ -12,16 +11,16 @@ import com.eudycontreras.calendarheatmaplibrary.properties.Coordinate
  * @since April 2020
  */
 internal interface BubbleLayout<T> {
-    val x: Float
-    val y: Float
-    val scaleX: Float
-    val scaleY: Float
-    val width: Float
-    val height: Float
+    val bubbleX: Float
+    val bubbleY: Float
+    val bubbleScaleX: Float
+    val bubbleScaleY: Float
+    val bubbleWidth: Float
+    val bubbleHeight: Float
     val drawOverlay: DrawOverlay?
     val boundsWidth: Float
     val boundsHeight: Float
-    val elevation: Float
+    val bubbleElevation: Float
     fun onLayout(delay: Long, action: Action)
     fun toFront(offset: Float, pivotX: Float, pivotY: Float, duration: Long = 0)
     fun reveal(offset: Float, pivot: Coordinate, duration: Long = 0, onDone: Action? = null)

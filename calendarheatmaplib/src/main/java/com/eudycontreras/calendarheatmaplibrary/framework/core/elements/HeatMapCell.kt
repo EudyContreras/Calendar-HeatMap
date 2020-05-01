@@ -75,15 +75,17 @@ internal class HeatMapCell(
         }
         return highlightSavedState?.let { savedState ->
             isHighlighting = true
+            val elevate = DEPTH_AMOUNT.dp
+            val adjust = COLOR_AMOUNT
+            val darkAdjust = COLOR_AMOUNT_DARK
+            val brightAdjust = COLOR_AMOUNT_BRIGHT
+            val zoom = cellGap * ZOOM_AMOUNT
             AnimationEvent(
                 duration = duration,
                 onEnd = {
                     isHighlighting = true
                 },
                 updateListener = { _, _, offset ->
-                    val elevate = DEPTH_AMOUNT
-                    val adjust = COLOR_AMOUNT
-                    val zoom = cellGap * ZOOM_AMOUNT.dp
                     val delta = interpolatorIn.getInterpolation(offset)
                     bounds.left = savedState.second.left - (zoom * delta)
                     bounds.right = savedState.second.right + (zoom * delta)
@@ -94,6 +96,11 @@ internal class HeatMapCell(
 
                     cellText?.let {
                         highlightSavedStateText?.let { textState ->
+                            if (savedState.third.isBright(TEXT_COLOR_BRIGHT_THRESHOLD)) {
+                                it.textColor = textState.second.adjust(MAX_OFFSET + (darkAdjust * delta))
+                            } else {
+                                it.textColor = textState.second.adjust(MAX_OFFSET + (brightAdjust * delta))
+                            }
                             it.textSize = textState.first + (zoom * delta)
                         }
                     }
@@ -104,13 +111,15 @@ internal class HeatMapCell(
 
     fun removeHighlight(duration: Long): AnimationEvent? {
         return highlightSavedState?.let { savedState ->
+            val elevate = DEPTH_AMOUNT.dp
+            val adjust = COLOR_AMOUNT
+            val darkAdjust = COLOR_AMOUNT_DARK
+            val brightAdjust = COLOR_AMOUNT_BRIGHT
+            val zoom = cellGap * ZOOM_AMOUNT
             AnimationEvent(
                 duration = duration,
                 onEnd = { isHighlighting = false },
                 updateListener = { _, _, offset ->
-                    val elevate = DEPTH_AMOUNT
-                    val adjust = COLOR_AMOUNT
-                    val zoom = cellGap * ZOOM_AMOUNT.dp
                     val delta = interpolatorOut.getInterpolation(offset)
                     bounds.left = (savedState.second.left - zoom) + (zoom * delta)
                     bounds.right = (savedState.second.right + zoom) - (zoom * delta)
@@ -121,11 +130,30 @@ internal class HeatMapCell(
 
                     cellText?.let {
                         highlightSavedStateText?.let { textState ->
+                            if (savedState.third.isBright(TEXT_COLOR_BRIGHT_THRESHOLD)) {
+                                it.textColor = textState.second.adjust((MAX_OFFSET + darkAdjust) - (darkAdjust * delta))
+                            } else {
+                                it.textColor = textState.second.adjust((MAX_OFFSET + brightAdjust) - (brightAdjust * delta))
+                            }
                             it.textSize = (textState.first + zoom) - (zoom * delta)
                         }
                     }
                 }
             )
+        }
+    }
+
+    fun getAdjustedColor(color: MutableColor, offset: Float = MAX_OFFSET): MutableColor {
+        return when {
+            color.isBright(TEXT_COLOR_BRIGHT_THRESHOLD) -> {
+                color.adjustMin(TEXT_COLOR_DARKEN_OFFSET * offset)
+            }
+            color.isDark(TEXT_COLOR_DARK_THRESHOLD) -> {
+                color.adjustMin(TEXT_COLOR_BRIGHTEN_OFFSET * offset)
+            }
+            else -> {
+                color.adjustMin(TEXT_COLOR_DEFAUlT_OFFSET * offset)
+            }
         }
     }
 
@@ -158,5 +186,15 @@ internal class HeatMapCell(
         const val DEPTH_AMOUNT = 4f
         const val ZOOM_AMOUNT = 1f
         const val COLOR_AMOUNT = 0.2f
+
+        const val COLOR_AMOUNT_BRIGHT = 0.2f
+        const val COLOR_AMOUNT_DARK = -0.05f
+
+        const val TEXT_COLOR_BRIGHT_THRESHOLD = 225
+        const val TEXT_COLOR_DARK_THRESHOLD = 140
+
+        const val TEXT_COLOR_DARKEN_OFFSET = -0.16f
+        const val TEXT_COLOR_DEFAUlT_OFFSET = 0.5f
+        const val TEXT_COLOR_BRIGHTEN_OFFSET = 1f
     }
 }

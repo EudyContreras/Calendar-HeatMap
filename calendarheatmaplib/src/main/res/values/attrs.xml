@@ -104,4 +104,9 @@
         </attr>
 
     </declare-styleable>
+    <declare-styleable name="BubbleWrapperView">
+        <attr name="bubbleColor" format="reference|color"/>
+        <attr name="bubbleCornerRadius" format="reference|dimension"/>
+        <attr name="bubblePointerLength" format="reference|dimension"/>
+    </declare-styleable>
 </resources>

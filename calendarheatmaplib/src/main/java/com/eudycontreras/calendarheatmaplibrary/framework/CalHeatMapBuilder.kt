@@ -3,9 +3,9 @@ package com.eudycontreras.calendarheatmaplibrary.framework
 import android.graphics.Rect
 import android.util.SparseArray
 import com.eudycontreras.calendarheatmaplibrary.AndroidColor
-import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.BubbleLayout
+import com.eudycontreras.calendarheatmaplibrary.common.CalHeatMap
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.core.elements.*
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*

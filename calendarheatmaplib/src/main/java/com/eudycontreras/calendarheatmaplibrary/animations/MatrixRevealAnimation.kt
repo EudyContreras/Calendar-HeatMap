@@ -6,7 +6,7 @@ import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.Animateable
-import com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMap
+import com.eudycontreras.calendarheatmaplibrary.common.CalHeatMap
 import com.eudycontreras.calendarheatmaplibrary.manDistance
 import com.eudycontreras.calendarheatmaplibrary.mapRange
 import com.eudycontreras.calendarheatmaplibrary.properties.Index

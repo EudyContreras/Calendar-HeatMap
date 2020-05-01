@@ -1,7 +1,5 @@
 package com.eudycontreras.calendarheatmaplibrary.framework
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.TypedArray
@@ -12,24 +10,23 @@ import android.graphics.Typeface
 import android.os.Build
 import android.util.AttributeSet
 import android.view.*
-import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.view.animation.OvershootInterpolator
 import android.widget.ScrollView
 import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
 import androidx.annotation.MainThread
-import androidx.core.view.doOnLayout
 import androidx.core.widget.NestedScrollView
 import androidx.databinding.ViewDataBinding
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.eudycontreras.calendarheatmaplibrary.*
 import com.eudycontreras.calendarheatmaplibrary.animations.AnimationEvent
 import com.eudycontreras.calendarheatmaplibrary.common.BubbleLayout
+import com.eudycontreras.calendarheatmaplibrary.common.CalHeatMap
+import com.eudycontreras.calendarheatmaplibrary.common.DrawOverlay
 import com.eudycontreras.calendarheatmaplibrary.extensions.findMaster
 import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
-import com.eudycontreras.calendarheatmaplibrary.common.DrawOverlay
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.Coordinate
@@ -44,17 +41,6 @@ import kotlin.math.max
  * @author Eudy Contreras.
  * @since April 2020
  */
-
-interface CalHeatMap: ValueAnimator.AnimatorUpdateListener {
-    fun startAnimation()
-    fun stopAnimation()
-    fun hapticFeeback(feedback: Int)
-    fun fullyVisible(): Boolean
-    fun addAnimation(animation: AnimationEvent?)
-    fun removeAnimation(animation: AnimationEvent?)
-    var animationCollection: MutableList<AnimationEvent>
-    var onFullyVisible: ((CalHeatMap, Boolean) -> Unit)?
-}
 
 @MainThread
 class CalHeatMapView : View, CalHeatMap {
@@ -77,9 +63,9 @@ class CalHeatMapView : View, CalHeatMap {
     private var calHeatMapStyle: HeatMapStyle = HeatMapStyle()
     private var calHeatMapOptions: HeatMapOptions = HeatMapOptions()
 
-    override var animationCollection: MutableList<AnimationEvent> = mutableListOf()
     private var animationProposals: MutableList<AnimationEvent> = mutableListOf()
     private var animationRemovals: MutableList<AnimationEvent> = mutableListOf()
+    override var animationCollection: MutableList<AnimationEvent> = mutableListOf()
 
     private var infiniteAnimator: ValueAnimator? = ValueAnimator.ofFloat(MAX_OFFSET, MIN_OFFSET)
 
@@ -88,22 +74,22 @@ class CalHeatMapView : View, CalHeatMap {
     private var cellBubbleLayout: (View, ViewGroup, DrawOverlay?, (WeekDay) -> Unit) -> BubbleLayout<WeekDay> = { bubbleView, parent, drawOverlay, listener ->
         object : BubbleLayout<WeekDay> {
 
-            override val x: Float
+            override val bubbleX: Float
                 get() = bubbleView.translationX
 
-            override val y: Float
+            override val bubbleY: Float
                 get() = bubbleView.translationY
 
-            override val scaleX: Float
+            override val bubbleScaleX: Float
                 get() = bubbleView.scaleX
 
-            override val scaleY: Float
+            override val bubbleScaleY: Float
                 get() = bubbleView.scaleY
 
-            override val width: Float
+            override val bubbleWidth: Float
                 get() = bubbleView.measuredWidth.toFloat()
 
-            override val height: Float
+            override val bubbleHeight: Float
                 get() = bubbleView.measuredHeight.toFloat()
 
             override val boundsWidth: Float
@@ -112,7 +98,7 @@ class CalHeatMapView : View, CalHeatMap {
             override val boundsHeight: Float
                 get() = parent.measuredHeight.toFloat()
 
-            override val elevation: Float
+            override val bubbleElevation: Float
                 get() = bubbleView.elevation
 
             override val drawOverlay: DrawOverlay?
@@ -144,6 +130,7 @@ class CalHeatMapView : View, CalHeatMap {
                 bubbleView.scaleX = 0.25f
                 bubbleView.scaleY = 0.25f
                 bubbleView.animate()
+                    .withEndAction(onDone)
                     .setInterpolator(OvershootInterpolator())
                     .setDuration(duration)
                     .scaleX(1f)

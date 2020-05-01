@@ -35,8 +35,6 @@ internal class Bubble: DrawableShape() {
 
     var contentBounds: Bounds = Bounds()
 
-    var parentBounds: Bounds = Bounds()
-
     override var bounds: Bounds = Bounds()
         set(value) {
             field = value

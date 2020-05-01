@@ -8,9 +8,9 @@ import android.view.MotionEvent
 import android.view.animation.OvershootInterpolator
 import androidx.core.util.set
 import com.eudycontreras.calendarheatmaplibrary.animations.MatrixRevealAnimation
+import com.eudycontreras.calendarheatmaplibrary.common.CalHeatMap
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchConsumer
-import com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMap
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Text
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
@@ -233,17 +233,7 @@ internal class HeatMapArea(
                 x = shape.bounds.centerX
                 y = shape.bounds.centerY + (height / 2)
                 alignment = Alignment.CENTER
-                textColor = when {
-                    shape.color.isBright(TEXT_COLOR_BRIGHT_THRESHOLD) -> {
-                        shape.color.adjustMin(TEXT_COLOR_DARKEN_OFFSET)
-                    }
-                    shape.color.isDark(TEXT_COLOR_DARK_THRESHOLD) -> {
-                        shape.color.adjustMin(TEXT_COLOR_BRIGHTEN_OFFSET)
-                    }
-                    else -> {
-                        shape.color.adjustMin(TEXT_COLOR_DEFAUlT_OFFSET)
-                    }
-                }
+                textColor = shape.getAdjustedColor(shape.color)
             }
         }
         return null
@@ -266,14 +256,5 @@ internal class HeatMapArea(
                 shape.onTouch(eventAction, bounds, x, y, minX, maxX, minY, maxY)
             }
         }
-    }
-
-    private companion object {
-        const val TEXT_COLOR_BRIGHT_THRESHOLD = 225
-        const val TEXT_COLOR_DARK_THRESHOLD = 120
-
-        const val TEXT_COLOR_DARKEN_OFFSET = -0.16f
-        const val TEXT_COLOR_DEFAUlT_OFFSET = 0.5f
-        const val TEXT_COLOR_BRIGHTEN_OFFSET = 1f
     }
 }

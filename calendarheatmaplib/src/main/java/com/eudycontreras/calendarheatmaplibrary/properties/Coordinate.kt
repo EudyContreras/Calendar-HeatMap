@@ -7,7 +7,7 @@ package com.eudycontreras.calendarheatmaplibrary.properties
  * @author Eudy Contreras.
  * @since January 2019
  */
-internal data class Coordinate(
+data class Coordinate(
     var x: Float,
     var y: Float
 )
