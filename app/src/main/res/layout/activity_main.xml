@@ -43,9 +43,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="250dp"
                         android:hapticFeedbackEnabled="true"
-                        app:cellInfoView="@{cellInfoBox}"
                         app:showCellDayText="@{true}"
                         app:showLegend="@{true}"
+                        app:cellInfoView="@{cellInfoBox}"
+                        app:drawOverlayView="@{cellInfoViewOverlay}"
                         app:calHeatMapData="@{viewModel.demoData1}"
                         app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMaxAlt0}"
@@ -63,9 +64,9 @@
                     <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
                         android:layout_width="wrap_content"
                         android:layout_height="250dp"
-                        app:cellInfoView="@{cellInfoBox}"
                         app:showCellDayText="@{true}"
                         app:showLegend="@{true}"
+                        app:cellInfoView="@{cellInfoBox}"
                         app:drawOverlayView="@{cellInfoViewOverlay}"
                         app:calHeatMapData="@{viewModel.demoData2}"
                         app:cellColorEmpty="@{@color/colorEmpty}"
@@ -84,9 +85,10 @@
 
                     <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
                         android:layout_width="wrap_content"
-                        android:layout_height="200dp"
+                        android:layout_height="250dp"
                         app:showLegend="@{true}"
                         app:cellInfoView="@{cellInfoBox}"
+                        app:drawOverlayView="@{cellInfoViewOverlay}"
                         app:cellElevation="@{Utils.getDp(2)}"
                         app:calHeatMapData="@{viewModel.demoData3}"
                         app:cellColorEmpty="@{@color/colorEmpty}"
@@ -103,9 +105,10 @@
 
                     <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
                         android:layout_width="wrap_content"
-                        android:layout_height="175dp"
+                        android:layout_height="250dp"
                         app:cellElevation="@{Utils.getDp(1)}"
                         app:cellInfoView="@{cellInfoBox}"
+                        app:drawOverlayView="@{cellInfoViewOverlay}"
                         app:calHeatMapData="@{viewModel.demoData4}"
                         app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMaxAlt0}"
@@ -124,6 +127,7 @@
                         android:layout_height="175dp"
                         app:cellElevation="@{Utils.getDp(1)}"
                         app:cellInfoView="@{cellInfoBox}"
+                        app:drawOverlayView="@{cellInfoViewOverlay}"
                         app:calHeatMapData="@{viewModel.demoData5}"
                         app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMaxAlt1}"
@@ -139,21 +143,14 @@
         <com.eudycontreras.calendarheatmaplibrary.framework.InfoViewOverlay
             android:id="@+id/cellInfoViewOverlay"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-
-        <FrameLayout
-            android:clipChildren="false"
-            android:clipToPadding="false"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" >
+            android:layout_height="match_parent">
             <include
                 android:id="@+id/cellInfoBox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="30dp"
                 android:layout_marginStart="30dp"
-                android:visibility="invisible"
                 layout="@layout/cell_info_layout"/>
-        </FrameLayout>
+        </com.eudycontreras.calendarheatmaplibrary.framework.InfoViewOverlay>
     </FrameLayout>
 </layout>

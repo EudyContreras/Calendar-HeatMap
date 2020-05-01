@@ -62,8 +62,8 @@ internal class Bubble: DrawableShape() {
             pathPlot.width = bounds.width - (cornerRadius * 2)
             pathPlot.height = bounds.height - (cornerRadius * 2)
 
-            pathPlot.contentBounds.width = pathPlot.width
-            pathPlot.contentBounds.height = pathPlot.height
+            pathPlot.contentBounds.width = pathPlot.width + cornerRadius
+            pathPlot.contentBounds.height = pathPlot.height + cornerRadius
 
             val shift = (pathPlot.width - pointerWidth)
 
@@ -96,10 +96,10 @@ internal class Bubble: DrawableShape() {
         pathPlot.points[9].startX = -(shift-(pointerOffset * shift))
         pathPlot.points[10].startX = -(pointerWidth * offsetRight)
 
-        pathPlot.contentBounds.x = bounds.x - ((pathPlot.width/2))
+        pathPlot.contentBounds.x = bounds.x - ((pathPlot.width/2) + (cornerRadius/2))
         pathPlot.contentBounds.y = bounds.y - (pointerLength + (pathPlot.height + (cornerRadius / 2)))
 
-        contentBounds.centerX = pathPlot.contentBounds.centerX - ((pointerOffset * shift)) - (pointerWidth / 2)
+        contentBounds.centerX = pathPlot.contentBounds.centerX -((pointerOffset * shift))
         contentBounds.centerY = pathPlot.contentBounds.centerY
         contentBounds.height = bounds.height
 

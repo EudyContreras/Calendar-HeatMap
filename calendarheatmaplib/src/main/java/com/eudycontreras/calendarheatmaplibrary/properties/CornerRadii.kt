@@ -142,7 +142,7 @@ class CornerRadii(
 
     companion object {
         const val SIZE = 8
-        fun create(corners: Float) = CornerRadii(corners)
+        fun create(corners: Float) = create(corners, corners, corners, corners)
 
         @JvmStatic
         fun create(

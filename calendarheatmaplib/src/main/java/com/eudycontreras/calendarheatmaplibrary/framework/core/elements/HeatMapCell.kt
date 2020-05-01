@@ -3,7 +3,6 @@ package com.eudycontreras.calendarheatmaplibrary.framework.core.elements
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
-import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
@@ -25,19 +24,17 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  * @since April 2020
  */
 internal class HeatMapCell(
-    val cellGap: Float
+    val cellGap: Float,
+    var cellText: Text? = null
 ) : Rectangle(), TouchConsumer, Animateable {
 
-    var hovered: Boolean = false
-
-    var isHighlighting = false
-
-    var cellText: Text? = null
+    internal var hovered: Boolean = false
+    internal var isHighlighting: Boolean = false
 
     private var allowInteraction: Boolean = true
 
     private val interpolatorIn = OvershootInterpolator()
-    private val interpolatorOut = AccelerateInterpolator()
+    private val interpolatorOut = DecelerateInterpolator()
 
     private var highlightSavedState: Triple<Float, Bounds, MutableColor>? = null
     private var highlightSavedStateText: Pair<Float, MutableColor>? = null
@@ -86,7 +83,7 @@ internal class HeatMapCell(
                 updateListener = { _, _, offset ->
                     val elevate = DEPTH_AMOUNT
                     val adjust = COLOR_AMOUNT
-                    val zoom = cellGap * ZOOM_AMOUNT
+                    val zoom = cellGap * ZOOM_AMOUNT.dp
                     val delta = interpolatorIn.getInterpolation(offset)
                     bounds.left = savedState.second.left - (zoom * delta)
                     bounds.right = savedState.second.right + (zoom * delta)
@@ -113,18 +110,18 @@ internal class HeatMapCell(
                 updateListener = { _, _, offset ->
                     val elevate = DEPTH_AMOUNT
                     val adjust = COLOR_AMOUNT
-                    val zoom = cellGap * ZOOM_AMOUNT
-                    val delta = interpolatorOut.getInterpolation(MAX_OFFSET - offset)
-                    bounds.left = savedState.second.left - (zoom * delta)
-                    bounds.right = savedState.second.right + (zoom * delta)
-                    bounds.top = savedState.second.top - (zoom * delta)
-                    bounds.bottom = savedState.second.bottom + (zoom * delta)
-                    color = savedState.third.adjust(MAX_OFFSET + (adjust * delta))
-                    elevation = savedState.first + (elevate * delta)
+                    val zoom = cellGap * ZOOM_AMOUNT.dp
+                    val delta = interpolatorOut.getInterpolation(offset)
+                    bounds.left = (savedState.second.left - zoom) + (zoom * delta)
+                    bounds.right = (savedState.second.right + zoom) - (zoom * delta)
+                    bounds.top = (savedState.second.top - zoom) + (zoom * delta)
+                    bounds.bottom = (savedState.second.bottom + zoom) - (zoom * delta)
+                    color = savedState.third.adjust((MAX_OFFSET + adjust) - (adjust * delta))
+                    elevation = (savedState.first + elevate) - (elevate * delta)
 
                     cellText?.let {
                         highlightSavedStateText?.let { textState ->
-                            it.textSize = textState.first + (zoom * delta)
+                            it.textSize = (textState.first + zoom) - (zoom * delta)
                         }
                     }
                 }
@@ -158,9 +155,8 @@ internal class HeatMapCell(
     }
 
     companion object {
+        const val DEPTH_AMOUNT = 4f
         const val ZOOM_AMOUNT = 1f
-        val DEPTH_AMOUNT = 4.dp
-
         const val COLOR_AMOUNT = 0.2f
     }
 }

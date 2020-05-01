@@ -130,7 +130,7 @@ internal class CalHeatMapBuilder(
                 bounds = bounds,
                 topOffset = measurements.cellSize + offset,
                 sideOffset = measurements.cellGap,
-                measurements = measurements,
+                measuremendts = measurements,
                 bubbleLayout = bubbleLayout
             )
         }

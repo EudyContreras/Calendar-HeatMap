@@ -3,7 +3,7 @@ package com.eudycontreras.calendarheatmaplibrary.framework
 import android.content.Context
 import android.graphics.Canvas
 import android.util.AttributeSet
-import android.view.View
+import android.widget.FrameLayout
 import androidx.annotation.MainThread
 import com.eudycontreras.calendarheatmaplibrary.DrawTarget
 import com.eudycontreras.calendarheatmaplibrary.common.DrawOverlay
@@ -18,8 +18,7 @@ import com.eudycontreras.calendarheatmaplibrary.properties.RenderData
  */
 
 @MainThread
-class InfoViewOverlay : View,
-    DrawOverlay {
+class InfoViewOverlay : FrameLayout, DrawOverlay {
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
@@ -33,6 +32,10 @@ class InfoViewOverlay : View,
     private val drawTargets: MutableList<DrawTarget> = mutableListOf()
 
     private val invalidator: () -> Unit = {
+        invalidate()
+    }
+
+    override fun reDraw() {
         invalidate()
     }
 
@@ -52,10 +55,10 @@ class InfoViewOverlay : View,
         drawTargets.remove(drawTarget)
     }
 
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
+    override fun dispatchDraw(canvas: Canvas) {
         for(target in drawTargets) {
             target(canvas, renderData, invalidator)
         }
+        super.dispatchDraw(canvas)
     }
 }

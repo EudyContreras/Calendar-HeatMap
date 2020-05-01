@@ -16,14 +16,8 @@
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:outlineProvider="bounds"
-        android:hardwareAccelerated="true"
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
-        android:elevation="12dp"
-        android:clipChildren="false"
-        android:clipToPadding="false"
-        android:background="@drawable/cell_info_layout_bg"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 

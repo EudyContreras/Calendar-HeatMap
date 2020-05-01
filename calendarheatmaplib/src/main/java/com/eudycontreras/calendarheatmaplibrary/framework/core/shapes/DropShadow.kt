@@ -45,7 +45,7 @@ internal open class DropShadow(
         if (shadowColor == null) {
             val color = ShadowUtility.getShadowColor(ShadowUtility.COLOR, elevation)
             this.shadowAlpha = color?.alpha ?: ShadowUtility.COLOR.alpha
-            this.shadowColor = color?.updateAlpha(this.shadowAlpha * 1.05f)
+            this.shadowColor = color?.updateAlpha(this.shadowAlpha * 1.044f)
             this.shadowFilter = ShadowUtility.getShadowFilter(elevation)
         }
         paint.recycle()

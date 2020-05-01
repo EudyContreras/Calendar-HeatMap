@@ -1,5 +1,7 @@
 package com.eudycontreras.calendarheatmaplibrary.framework
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.TypedArray
@@ -10,12 +12,14 @@ import android.graphics.Typeface
 import android.os.Build
 import android.util.AttributeSet
 import android.view.*
+import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.view.animation.OvershootInterpolator
 import android.widget.ScrollView
 import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
 import androidx.annotation.MainThread
+import androidx.core.view.doOnLayout
 import androidx.core.widget.NestedScrollView
 import androidx.databinding.ViewDataBinding
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
@@ -114,6 +118,10 @@ class CalHeatMapView : View, CalHeatMap {
             override val drawOverlay: DrawOverlay?
                 get() = drawOverlay
 
+            override fun onLayout(delay: Long, action: Action) {
+                bubbleView.postDelayed(action, delay)
+            }
+
             override fun toFront(offset: Float, pivotX: Float, pivotY: Float, duration: Long) {
                 bubbleView.pivotX = pivotX
                 bubbleView.pivotY = pivotY
@@ -127,7 +135,7 @@ class CalHeatMapView : View, CalHeatMap {
                     .start()
             }
 
-            override fun reveal(offset: Float, pivot: Coordinate, duration: Long) {
+            override fun reveal(offset: Float, pivot: Coordinate, duration: Long, onDone: Action?) {
                 if (bubbleView.visibility != VISIBLE) {
                     bubbleView.visibility = VISIBLE
                 }
@@ -144,7 +152,7 @@ class CalHeatMapView : View, CalHeatMap {
                     .start()
             }
 
-            override fun conceal(offset: Float, pivot: Coordinate, duration: Long) {
+            override fun conceal(offset: Float, pivot: Coordinate, duration: Long, onDone: Action?) {
                 bubbleView.pivotX = pivot.x
                 bubbleView.pivotY = pivot.y
                 bubbleView.animate()
@@ -163,10 +171,6 @@ class CalHeatMapView : View, CalHeatMap {
             override fun onMove(x: Float, y: Float) {
                 bubbleView.x = x
                 bubbleView.y = y
-            }
-
-            override fun onRender(canvas: Canvas) {
-                bubbleView.draw(canvas)
             }
         }
     }

@@ -30,7 +30,7 @@ internal class CellInfoBubble(
     val bounds: Bounds,
     val topOffset: Float,
     val sideOffset: Float,
-    val measurements: Measurements,
+    val measuremendts: Measurements,
     val bubbleLayout: BubbleLayout<WeekDay>
 ): RenderTarget {
     var offsetX: Float = MIN_OFFSET
@@ -39,15 +39,21 @@ internal class CellInfoBubble(
     var isRevealed: Boolean = false
     var isRevealing: Boolean = false
 
+    var elevation: Float = 8.dp
+
     private val bubble: Bubble by lazy {
         Bubble().also {
-            it.cornerRadius = 0f
+            it.cornerRadius = 4.dp
             it.pointerLength = 15.dp
             it.pointerOffset = 0f
-            it.strokeWidth = 1.dp
-            it.elevation = 4.dp
+            it.strokeWidth = 0f
+            it.elevation = 0f
             it.parentBounds = this.bounds
-            it.color = MutableColor.rgb(MAX_COLOR)
+            it.bounds = Bounds().apply {
+                this.width = bubbleLayout.width
+                this.height = bubbleLayout.height
+            }
+            it.color = MutableColor.fromHexString("#3C3C3C")
         }
     }
     private val shadow: DropShadow by lazy {
@@ -58,7 +64,7 @@ internal class CellInfoBubble(
                 right = bubbleLayout.x + bubbleLayout.width,
                 bottom = bubbleLayout.y + bubbleLayout.height
             )
-            it.elevation = bubbleLayout.elevation
+            it.elevation = elevation
             it.render = false
         }
     }
@@ -76,32 +82,30 @@ internal class CellInfoBubble(
     }
 
     fun onInterception(x: Float, y: Float, minInX: Float, maxInX: Float): Float {
-        var positionY = y - (bubbleLayout.height + topOffset) + offsetY
+        var positionY = y - (bubbleLayout.height)
 
-        if (positionY < (bounds.top - offsetY)) {
-            positionY = (bounds.top - offsetY)
+        if (positionY < (bounds.top - offsetY) + topOffset) {
+            positionY = (bounds.top - offsetY) + topOffset
         }
 
-        val minX = bounds.left
-
-        val maxX = (((bounds.left + bubbleLayout.boundsWidth) - bubbleLayout.width))
-
-        bubble.x = x
-        bubble.y = ((positionY + bubble.pointerLength) + bubbleLayout.height)
+        val minX = (bounds.left + offsetX)
+        val maxX = (((bounds.left + bubbleLayout.boundsWidth) - bubbleLayout.width)) + sideOffset
 
         bubble.pointerOffset = mapRange(x, minInX, maxInX, MIN_OFFSET, MAX_OFFSET)
 
-        val interpolatedX = mapRange(bubble.pointerOffset, MIN_OFFSET, MAX_OFFSET, minInX + offsetX, maxX)
-        bubbleLayout.onMove(interpolatedX, bubble.contentBounds.y)
+        val interpolatedX = mapRange(bubble.pointerOffset, MIN_OFFSET, MAX_OFFSET, (minInX - measuremendts.cellGap) + offsetX, maxX)
+        val interpolatedY = positionY - (bubble.height) + offsetY
 
-        shadow.scaleX = bubbleLayout.scaleX
-        shadow.scaleY = bubbleLayout.scaleY
+        bubbleLayout.onMove(interpolatedX, interpolatedY)
 
-        shadow.bounds.x = bubble.contentBounds.x
-        shadow.bounds.y = bubble.contentBounds.y
+        bubble.x = x + offsetX
+        bubble.y = bubbleLayout.y + (bubbleLayout.height + bubble.height + (bubble.pointerLength / 2))
+
+        shadow.bounds.x = interpolatedX
+        shadow.bounds.y = interpolatedY
 
         shadow.width = bubbleLayout.width
-        shadow.height = bubbleLayout.height
+        shadow.height = bubble.height
 
         return positionY
     }
@@ -131,25 +135,27 @@ internal class CellInfoBubble(
     fun revealInfoBubble(x: Float, y: Float, minInX: Float, maxInX: Float) {
         val pivotX = mapRange(x, minInX, maxInX, MIN_OFFSET, bubbleLayout.width)
         val pivotY = (bubbleLayout.height + topOffset)
-        val positionY = y - (bubbleLayout.height + topOffset)
+
         val pivot = Coordinate(pivotX, pivotY)
 
-        val left = x + sideOffset
-        val top = ((positionY + bubble.pointerLength) + bubbleLayout.height)
-
         isRevealing = true
-        val offset = MAX_OFFSET
-        shadow.render = true
-        bubbleLayout.reveal(offset, pivot,250)
-        isRevealed = true
-        isRevealing = false
 
-        bubble.bounds = Bounds(
-            left = left,
-            top = top,
-            right = (left + bubbleLayout.width),
-            bottom = top + bubbleLayout.height
-        )
+        bubbleLayout.onLayout(100) {
+            val bounds = Bounds().apply {
+                this.x =  x + offsetX
+                this.y = bubbleLayout.y + (bubbleLayout.height + bubble.height + (bubble.pointerLength / 2))
+                this.width = bubbleLayout.width
+                this.height = bubbleLayout.height
+            }
+            bubble.bounds = bounds
+            bubbleLayout.reveal(MAX_OFFSET, pivot,250)
+
+            shadow.render = true
+            bubble.render = true
+
+            isRevealed = true
+            isRevealing = false
+        }
     }
 
     fun concealInfoBubble(x: Float, y: Float, minInX: Float, maxInX: Float) {
@@ -158,10 +164,13 @@ internal class CellInfoBubble(
 
         val pivot = Coordinate(pivotX, pivotY)
 
-        isRevealed = false
-        val offset = MIN_OFFSET
         shadow.render = false
-        bubbleLayout.conceal(offset, pivot,250)
+        bubble.render = false
+
+        bubbleLayout.conceal(MIN_OFFSET, pivot,250)
+
         isRevealing = false
+        isRevealed = false
+
     }
 }
