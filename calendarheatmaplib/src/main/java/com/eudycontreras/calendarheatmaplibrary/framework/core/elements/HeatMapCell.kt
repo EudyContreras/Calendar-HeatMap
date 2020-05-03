@@ -195,6 +195,6 @@ internal class HeatMapCell(
 
         const val TEXT_COLOR_DARKEN_OFFSET = -0.16f
         const val TEXT_COLOR_DEFAUlT_OFFSET = 0.5f
-        const val TEXT_COLOR_BRIGHTEN_OFFSET = 1f
+        const val TEXT_COLOR_BRIGHTEN_OFFSET = 1.1f
     }
 }

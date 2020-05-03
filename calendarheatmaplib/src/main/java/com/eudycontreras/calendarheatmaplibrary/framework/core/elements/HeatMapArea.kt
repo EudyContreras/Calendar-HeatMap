@@ -7,6 +7,7 @@ import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.animation.OvershootInterpolator
 import androidx.core.util.set
+import com.eudycontreras.calendarheatmaplibrary.Action
 import com.eudycontreras.calendarheatmaplibrary.animations.MatrixRevealAnimation
 import com.eudycontreras.calendarheatmaplibrary.common.CalHeatMap
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
@@ -47,44 +48,25 @@ internal class HeatMapArea(
 
     private val touchConsumer: ((TouchConsumer, Int, WeekDay, Float, Float, Float, Float, Float, Float) -> Unit) = { consumer, eventAction: Int, day, x, y, minX, maxX, minY, maxY ->
         when (eventAction) {
-            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE, MotionEvent.ACTION_BUTTON_PRESS -> {
-                if (consumer is HeatMapCell) {
-                    if (eventAction == MotionEvent.ACTION_BUTTON_PRESS) {
-                        if (consumer.bounds.isInside(x, y)) {
-                            if (!consumer.hovered && !consumer.isHighlighting) {
-                                cellInfoBubble?.revealInfoBubble(x, y, minX, maxX)
-                            }
-                        }
-                    }
-                    if (consumer.bounds.isInside(x, y)) {
-                        if (!consumer.hovered && !consumer.isHighlighting) {
-
-                            consumer.hovered = true
-                            frontShape = consumer
-                            cellInfoBubble?.setInterceptedData(day)
-                            if (eventAction != MotionEvent.ACTION_BUTTON_PRESS) {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                                    heatMap.hapticFeeback(HapticFeedbackConstants.TEXT_HANDLE_MOVE)
-                                } else {
-                                    heatMap.hapticFeeback(HapticFeedbackConstants.CLOCK_TICK)
-                                }
-                                if (cellInfoBubble?.isRevealed == false) {
-                                    cellInfoBubble?.revealInfoBubble(x, y, minX, maxX)
-                                } else {
-                                    cellInfoBubble?.bringToFront(x, y, minX, maxX)
-                                }
-                            }
-                            heatMap.addAnimation(consumer.applyHighlight(options.cellHighlightDuration))
-                        }
-                    } else {
-                        if (consumer.hovered) {
-                            consumer.hovered = false
-                            heatMap.addAnimation(consumer.removeHighlight(options.cellHighlightDuration))
-                        }
-                    }
-                }
+            MotionEvent.ACTION_BUTTON_PRESS -> {
+                onInteraction(consumer, x, y, onIn = {
+                    cellInfoBubble?.setInterceptedData(day)
+                    cellInfoBubble?.revealInfoBubble(x, y, minX, maxX)
+                })
             }
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_BUTTON_RELEASE, MotionEvent.ACTION_OUTSIDE, MotionEvent.ACTION_CANCEL -> {
+            MotionEvent.ACTION_MOVE -> {
+                onInteraction(consumer, x, y, onIn = {
+                    cellInfoBubble?.setInterceptedData(day)
+                    if (cellInfoBubble?.isRevealed != true) {
+                        addFeedback()
+                        cellInfoBubble?.revealInfoBubble(x, y, minX, maxX)
+                    } else {
+                        addFeedback()
+                        cellInfoBubble?.bringToFront()
+                    }
+                })
+            }
+            else -> {
                 if (consumer is HeatMapCell) {
                     if (consumer.hovered) {
                         heatMap.addAnimation(consumer.removeHighlight(options.cellHighlightDuration))
@@ -93,6 +75,33 @@ internal class HeatMapArea(
                 }
                 cellInfoBubble?.concealInfoBubble(x, y,  minX, maxX)
             }
+        }
+    }
+
+    private fun onInteraction(consumer: TouchConsumer, x: Float, y: Float, onIn: Action? = null, onOut: Action? = null) {
+        if (consumer is HeatMapCell) {
+            if (consumer.bounds.isInside(x, y)) {
+                if (!consumer.hovered && !consumer.isHighlighting) {
+                    consumer.hovered = true
+                    frontShape = consumer
+                    heatMap.addAnimation(consumer.applyHighlight(options.cellHighlightDuration))
+                    onIn?.invoke()
+                }
+            } else {
+                if (consumer.hovered) {
+                    consumer.hovered = false
+                    heatMap.addAnimation(consumer.removeHighlight(options.cellHighlightDuration))
+                    onOut?.invoke()
+                }
+            }
+        }
+    }
+
+    private fun addFeedback() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            heatMap.hapticFeeback(HapticFeedbackConstants.TEXT_HANDLE_MOVE)
+        } else {
+            heatMap.hapticFeeback(HapticFeedbackConstants.CLOCK_TICK)
         }
     }
 

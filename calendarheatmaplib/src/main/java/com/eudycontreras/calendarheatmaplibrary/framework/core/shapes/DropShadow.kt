@@ -54,8 +54,6 @@ internal open class DropShadow(
         paint.style = Paint.Style.FILL
         paint.color = shadowColor?.toColor() ?: ShadowUtility.DEFAULT_COLOR
 
-        shadowPath.rewind()
-
         val offsetX = if (scaleX >= MAX_OFFSET) {
             (bounds.right - bounds.left) * scaleX
         } else {
@@ -67,6 +65,7 @@ internal open class DropShadow(
             (bounds.bottom - bounds.top) * scaleY
         }
 
+        shadowPath.rewind()
         shadowPath.addShadowBounds(bounds, radii, elevation,
             left = bounds.left + offsetX,
             right = bounds.right - offsetX,

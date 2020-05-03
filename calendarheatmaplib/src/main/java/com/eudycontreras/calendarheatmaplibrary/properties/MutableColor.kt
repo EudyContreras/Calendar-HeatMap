@@ -3,7 +3,6 @@ package com.eudycontreras.calendarheatmaplibrary.properties
 import androidx.annotation.ColorInt
 import com.eudycontreras.calendarheatmaplibrary.AndroidColor
 import com.eudycontreras.calendarheatmaplibrary.common.Cloneable
-import com.eudycontreras.calendarheatmaplibrary.findMin
 import com.eudycontreras.calendarheatmaplibrary.utilities.ColorUtility
 
 /**

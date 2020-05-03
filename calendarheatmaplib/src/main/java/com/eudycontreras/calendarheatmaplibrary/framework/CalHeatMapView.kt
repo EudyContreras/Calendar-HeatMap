@@ -11,25 +11,21 @@ import android.os.Build
 import android.util.AttributeSet
 import android.view.*
 import android.view.animation.LinearInterpolator
-import android.view.animation.OvershootInterpolator
 import android.widget.ScrollView
 import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
 import androidx.annotation.MainThread
 import androidx.core.widget.NestedScrollView
 import androidx.databinding.ViewDataBinding
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.eudycontreras.calendarheatmaplibrary.*
 import com.eudycontreras.calendarheatmaplibrary.animations.AnimationEvent
 import com.eudycontreras.calendarheatmaplibrary.common.BubbleLayout
 import com.eudycontreras.calendarheatmaplibrary.common.CalHeatMap
-import com.eudycontreras.calendarheatmaplibrary.common.DrawOverlay
 import com.eudycontreras.calendarheatmaplibrary.extensions.findMaster
 import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
-import com.eudycontreras.calendarheatmaplibrary.properties.Coordinate
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 import com.eudycontreras.calendarheatmaplibrary.properties.Padding
 import kotlin.math.max
@@ -47,6 +43,7 @@ class CalHeatMapView : View, CalHeatMap {
 
     private var sizeRatio = 0.75f
 
+    private var interactive: Boolean = false
     private var animStarted: Boolean = false
     private var fullyVisible: Boolean = false
 
@@ -557,6 +554,7 @@ class CalHeatMapView : View, CalHeatMap {
 
             shapeManager.delegateLongPressEvent(event, event.x, event.y, viewBounds)
 
+            interactive = true
             invalidate()
         }
     }).apply {
@@ -570,7 +568,7 @@ class CalHeatMapView : View, CalHeatMap {
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         return detector.onTouchEvent(event).let { result ->
-            if (animationCollection.size <= 0) {
+            if (animationCollection.size <= 0 && interactive) {
                 invalidate()
             }
 
@@ -580,6 +578,7 @@ class CalHeatMapView : View, CalHeatMap {
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {
                     performClick()
                     parent.requestDisallowInterceptTouchEvent(false)
+                    interactive = false
                 }
             }
             if (event.action == MotionEvent.ACTION_UP) {

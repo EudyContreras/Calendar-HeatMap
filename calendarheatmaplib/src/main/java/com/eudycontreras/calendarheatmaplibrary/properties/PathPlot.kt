@@ -44,20 +44,12 @@ class PathPlot(val path: Path){
         path.moveTo(startX, startY)
 
         for(point in points) {
-            when (point.type) {
-                Type.LINE -> {
-                    if(point.relative) {
-                        path.rLineTo(point.startX, point.startY)
-                    }else{
-                        path.lineTo(point.startX, point.startY)
-                    }
+            when (point) {
+                is PathPoint.Point -> {
+                    path.rLineTo(point.x, point.y)
                 }
-                Type.QUAD -> {
-                    if(point.relative) {
-                        path.rQuadTo(point.startX, point.startY, point.endX, point.endY)
-                    }else{
-                        path.quadTo(point.startX, point.startY, point.endX, point.endY)
-                    }
+                is PathPoint.Corner -> {
+                    path.rQuadTo(point.startX, point.startY, point.endX, point.endY)
                 }
             }
         }

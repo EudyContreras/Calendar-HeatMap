@@ -20,9 +20,10 @@
         android:id="@+id/cellInfoBox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:elevation="12dp"
         app:bubbleColor="@color/colorPrimaryVeryLight"
         app:bubbleCornerRadius="4dp"
-        app:bubblePointerLength="10dp">
+        app:bubblePointerLength="15dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="wrap_content"

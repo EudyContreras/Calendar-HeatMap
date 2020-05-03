@@ -20,12 +20,16 @@ internal interface BubbleLayout {
     val boundsWidth: Float
     val boundsHeight: Float
     val bubbleElevation: Float
+    var bubblePointerLength: Float
+    var bubbleCornerRadius: Float
+    var bubbleColor: Int
     val drawOverlay: DrawOverlay?
     fun onLayout(delay: Long = 0, action: Action)
     fun toFront(offset: Float, pivotX: Float, pivotY: Float, duration: Long = 0)
     fun reveal(offset: Float, pivot: Coordinate, duration: Long = 0, onDone: Action? = null)
     fun conceal(offset: Float, pivot: Coordinate, duration: Long = 0, onDone: Action? = null)
-    fun onMove(x: Float, y: Float)
+    fun onMove(x: Float, y: Float, bubbleX: Float, offsetX: Float, offsetY: Float)
+    fun setPointerOffset(offset: Float)
     fun onDataIntercepted(data: Any)
     fun setDataInteceptListener(dataListener: (Any) -> Unit)
 }

@@ -5,7 +5,6 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Rect
 import android.view.MotionEvent
-import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
@@ -17,7 +16,6 @@ import com.eudycontreras.calendarheatmaplibrary.mapRange
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.Dimension
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
-import kotlin.math.max
 
 /**
  * Copyright (C) 2020 Project X
@@ -251,7 +249,7 @@ internal class CellInterceptor(
             return
         if (!shouldRender && visible) {
             shouldRender = true
-            applyPositions(viewBounds, x, y, shapeManager, event)
+            applyPositions(viewBounds, x, y, shapeManager, MotionEvent.ACTION_BUTTON_PRESS)
         }
     }
 
@@ -267,7 +265,7 @@ internal class CellInterceptor(
                 hovered = false
             }
         }
-        applyPositions(viewBounds, x, y, shapeManager, event)
+        applyPositions(viewBounds, x, y, shapeManager, event.action)
     }
 
     private fun applyPositions(
@@ -275,7 +273,7 @@ internal class CellInterceptor(
         x: Float,
         y: Float,
         shapeManager: ShapeManager,
-        event: MotionEvent
+        eventAction: Int
     ) {
         val offsetx = mapRange(viewBounds.left.toFloat(), MIN_OFFSET, -bounds.left, MIN_OFFSET, bounds.left)
         val offsetY = mapRange(viewBounds.top.toFloat(), MIN_OFFSET, -bounds.top, MIN_OFFSET, bounds.top)
@@ -300,7 +298,7 @@ internal class CellInterceptor(
         )
 
         shapeManager.delegateTouchEvent(
-            eventAction = event.action,
+            eventAction = eventAction,
             bounds = marker.bounds,
             x = marker.centerX,
             y = marker.centerY,
