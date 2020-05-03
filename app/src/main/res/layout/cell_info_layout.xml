@@ -16,7 +16,7 @@
         <import type="android.graphics.Typeface" />
     </data>
 
-    <com.eudycontreras.calendarheatmaplibrary.framework.BubbleWrapperView
+    <com.eudycontreras.calendarheatmaplibrary.framework.BubbleLayoutView
         android:id="@+id/cellInfoBox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -63,5 +63,5 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </com.eudycontreras.calendarheatmaplibrary.framework.BubbleWrapperView>
+    </com.eudycontreras.calendarheatmaplibrary.framework.BubbleLayoutView>
 </layout>

@@ -55,7 +55,6 @@ class CalHeatMapView : View, CalHeatMap {
     private val viewBounds: Rect = Rect()
     private val scrollBounds: Rect = Rect()
 
-    private var drawOverlayView: DrawOverlay? = null
     private var scrollingParent: ViewParent? = null
 
     private var measurements: Measurements = Measurements()
@@ -70,97 +69,6 @@ class CalHeatMapView : View, CalHeatMap {
     private var infiniteAnimator: ValueAnimator? = ValueAnimator.ofFloat(MAX_OFFSET, MIN_OFFSET)
 
     private var shapeManager: ShapeManager = ShapeManager()
-
-    private var cellBubbleLayout: (View, ViewGroup, DrawOverlay?, (WeekDay) -> Unit) -> BubbleLayout<WeekDay> = { bubbleView, parent, drawOverlay, listener ->
-        object : BubbleLayout<WeekDay> {
-
-            override val bubbleX: Float
-                get() = bubbleView.translationX
-
-            override val bubbleY: Float
-                get() = bubbleView.translationY
-
-            override val bubbleScaleX: Float
-                get() = bubbleView.scaleX
-
-            override val bubbleScaleY: Float
-                get() = bubbleView.scaleY
-
-            override val bubbleWidth: Float
-                get() = bubbleView.measuredWidth.toFloat()
-
-            override val bubbleHeight: Float
-                get() = bubbleView.measuredHeight.toFloat()
-
-            override val boundsWidth: Float
-                get() = parent.measuredWidth.toFloat()
-
-            override val boundsHeight: Float
-                get() = parent.measuredHeight.toFloat()
-
-            override val bubbleElevation: Float
-                get() = bubbleView.elevation
-
-            override val drawOverlay: DrawOverlay?
-                get() = drawOverlay
-
-            override fun onLayout(delay: Long, action: Action) {
-                bubbleView.postDelayed(action, delay)
-            }
-
-            override fun toFront(offset: Float, pivotX: Float, pivotY: Float, duration: Long) {
-                bubbleView.pivotX = pivotX
-                bubbleView.pivotY = pivotY
-                bubbleView.scaleX = 0.75f
-                bubbleView.scaleY = 0.75f
-                bubbleView.animate()
-                    .setInterpolator(OvershootInterpolator())
-                    .setDuration(duration)
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .start()
-            }
-
-            override fun reveal(offset: Float, pivot: Coordinate, duration: Long, onDone: Action?) {
-                if (bubbleView.visibility != VISIBLE) {
-                    bubbleView.visibility = VISIBLE
-                }
-                bubbleView.pivotX = pivot.x
-                bubbleView.pivotY = pivot.y
-                bubbleView.scaleX = 0.25f
-                bubbleView.scaleY = 0.25f
-                bubbleView.animate()
-                    .withEndAction(onDone)
-                    .setInterpolator(OvershootInterpolator())
-                    .setDuration(duration)
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .alpha(1f)
-                    .start()
-            }
-
-            override fun conceal(offset: Float, pivot: Coordinate, duration: Long, onDone: Action?) {
-                bubbleView.pivotX = pivot.x
-                bubbleView.pivotY = pivot.y
-                bubbleView.animate()
-                    .setInterpolator(FastOutSlowInInterpolator())
-                    .setDuration(duration)
-                    .alpha(0f)
-                    .scaleX(0.4f)
-                    .scaleY(0.4f)
-                    .start()
-            }
-
-            override fun onDataIntercepted(data: WeekDay) {
-                listener(data)
-            }
-
-            override fun onMove(x: Float, y: Float) {
-                bubbleView.x = x
-                bubbleView.y = y
-            }
-        }
-    }
 
     private var heatMapBuilder: CalHeatMapBuilder = CalHeatMapBuilder(
         shapeManager = shapeManager,
@@ -307,11 +215,6 @@ class CalHeatMapView : View, CalHeatMap {
         this.calHeatMapOptions.legendMoreLabel = moreLabelText
     }
 
-    fun setDrawOverlayView(drawOverlayView: DrawOverlay) {
-        this.drawOverlayView = drawOverlayView
-        this.drawOverlayView?.setRenderData(shapeManager.renderData)
-    }
-
     fun setRevealOnVisible(revealOnVisible: Boolean) {
 
     }
@@ -413,13 +316,17 @@ class CalHeatMapView : View, CalHeatMap {
             paddingBottom = paddingBottom
         )
 
-        val cellBubbleLayout: BubbleLayout<WeekDay>? = infoViewBinding?.run {
-            val parent = this.root.parent as? ViewGroup ?: return
-            this@CalHeatMapView.cellBubbleLayout(root, parent, drawOverlayView) {
-                setVariable(VIEWMODEL, it)
-            }.apply {
-                conceal(MIN_OFFSET, Coordinate(MIN_OFFSET, MIN_OFFSET),0L)
-            }
+        val cellBubbleLayout: BubbleLayout? = infoViewBinding?.run {
+            val view = this.root
+            if (view is BubbleLayoutView) {
+                view.attachOverlay {
+                    setRenderData(shapeManager.renderData)
+                }
+                view.setDataInteceptListener {
+                    setVariable(VIEWMODEL, it as WeekDay)
+                }
+                view
+            } else null
         }
 
         this.heatMapBuilder.buildWithBounds(

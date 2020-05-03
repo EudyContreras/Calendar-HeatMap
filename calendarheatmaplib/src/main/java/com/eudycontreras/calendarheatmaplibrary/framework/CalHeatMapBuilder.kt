@@ -41,7 +41,7 @@ internal class CalHeatMapBuilder(
         heatMap: CalHeatMap,
         bounds: Bounds,
         measurements: Measurements,
-        bubbleLayout: BubbleLayout<WeekDay>?
+        bubbleLayout: BubbleLayout?
     ) {
         val data = calHeatMapData
         val style = styleContext.invoke()
@@ -121,7 +121,7 @@ internal class CalHeatMapBuilder(
 
     private fun buildCellBubble(
         bounds: Bounds,
-        bubbleLayout: BubbleLayout<WeekDay>?,
+        bubbleLayout: BubbleLayout?,
         measurements: Measurements
     ): CellInfoBubble? {
         if (bubbleLayout != null) {

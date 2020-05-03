@@ -1,20 +1,22 @@
 package com.eudycontreras.calendarheatmaplibrary.framework
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.content.res.TypedArray
-import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
+import android.view.View
+import android.view.animation.OvershootInterpolator
 import android.widget.FrameLayout
+import androidx.core.view.doOnLayout
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.eudycontreras.calendarheatmaplibrary.Action
 import com.eudycontreras.calendarheatmaplibrary.AndroidColor
+import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.R
 import com.eudycontreras.calendarheatmaplibrary.common.BubbleLayout
 import com.eudycontreras.calendarheatmaplibrary.common.DrawOverlay
 import com.eudycontreras.calendarheatmaplibrary.extensions.dp
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Bubble
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.DropShadow
-import com.eudycontreras.calendarheatmaplibrary.framework.data.WeekDay
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.Coordinate
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
@@ -27,7 +29,10 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  * @since April 2020
  */
 
-class BubbleWrapperView: FrameLayout, BubbleLayout<WeekDay> {
+class BubbleLayoutView: FrameLayout, BubbleLayout {
+    internal var overlay: DrawOverlay? = null
+
+    internal var dataListener: ((Any) -> Unit)? = null
 
     private var bubbleColor: Int = AndroidColor.TRANSPARENT
     private var bubblePointerLength: Float = 15.dp
@@ -66,80 +71,124 @@ class BubbleWrapperView: FrameLayout, BubbleLayout<WeekDay> {
         attrs,
         defStyleAttr
     ) {
-        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.BubbleWrapperView)
+        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.BubbleLayoutView)
         try {
             setUpAttributes(typedArray)
         } finally {
             typedArray.recycle()
         }
+        doOnLayout {
+            if (overlay == null) {
+                attachOverlay {  }
+            }
+        }
     }
 
     private fun setUpAttributes(typedArray: TypedArray) {
-        this.bubbleColor = typedArray.getColor(R.styleable.BubbleWrapperView_bubbleColor, AndroidColor.TRANSPARENT)
-        this.bubblePointerLength = typedArray.getDimension(R.styleable.BubbleWrapperView_bubblePointerLength, 15.dp)
-        this.bubbleCornerRadius = typedArray.getDimension(R.styleable.BubbleWrapperView_bubbleCornerRadius, 4.dp)
+        this.bubbleColor = typedArray.getColor(R.styleable.BubbleLayoutView_bubbleColor, AndroidColor.TRANSPARENT)
+        this.bubblePointerLength = typedArray.getDimension(R.styleable.BubbleLayoutView_bubblePointerLength, 15.dp)
+        this.bubbleCornerRadius = typedArray.getDimension(R.styleable.BubbleLayoutView_bubbleCornerRadius, 4.dp)
 
-        this.setBackgroundColor(bubbleColor)
 
-        this.background = GradientDrawable().apply {
-            this.shape = GradientDrawable.RECTANGLE
-            this.color = ColorStateList.valueOf(bubbleColor)
-            this.cornerRadius = bubbleCornerRadius
+    }
+
+    fun attachOverlay(onAttach: DrawOverlay.() -> Unit) {
+        if (parent !is BubbleLayoutContainer) {
+            throw IllegalStateException("The parent of a BubbleLayout must be BubbleLayoutContainer")
+        } else {
+            overlay = parent as BubbleLayoutContainer
+            overlay?.let(onAttach)
         }
     }
 
     override val bubbleX: Float
-        get() = super.getX()
+        get() = this.translationX
 
     override val bubbleY: Float
-        get() = super.getY()
+        get() = this.translationY
 
     override val bubbleScaleX: Float
-        get() = super.getScaleX()
+        get() = this.scaleX
 
     override val bubbleScaleY: Float
-        get() = super.getScaleY()
+        get() = this.scaleY
 
     override val bubbleWidth: Float
-        get() = super.getMeasuredWidth().toFloat()
+        get() = this.measuredWidth.toFloat()
 
     override val bubbleHeight: Float
-        get() = super.getMeasuredHeight().toFloat()
+        get() = this.measuredHeight.toFloat()
 
     override val drawOverlay: DrawOverlay?
-        get() = TODO("Not yet implemented")
+        get() = overlay
 
     override val boundsWidth: Float
-        get() = TODO("Not yet implemented")
+        get() = overlay?.overlayWidth ?: MIN_OFFSET
 
     override val boundsHeight: Float
-        get() = TODO("Not yet implemented")
+        get() = overlay?.overlayHeight ?: MIN_OFFSET
 
     override val bubbleElevation: Float
-        get() = TODO("Not yet implemented")
+        get() = this.elevation
 
     override fun onLayout(delay: Long, action: Action) {
-        TODO("Not yet implemented")
+        postDelayed(action, delay)
     }
 
     override fun toFront(offset: Float, pivotX: Float, pivotY: Float, duration: Long) {
-        TODO("Not yet implemented")
+        this.pivotX = pivotX
+        this.pivotY = pivotY
+        this.scaleX = 0.75f
+        this.scaleY = 0.75f
+        this.animate()
+            .setInterpolator(OvershootInterpolator())
+            .setDuration(duration)
+            .scaleX(1f)
+            .scaleY(1f)
+            .start()
     }
 
     override fun reveal(offset: Float, pivot: Coordinate, duration: Long, onDone: Action?) {
-        TODO("Not yet implemented")
+        if (visibility != View.VISIBLE) {
+            visibility = View.VISIBLE
+        }
+        this.pivotX = pivot.x
+        this.pivotY = pivot.y
+        this.scaleX = 0.25f
+        this.scaleY = 0.25f
+        this.animate()
+            .withEndAction(onDone)
+            .setInterpolator(OvershootInterpolator())
+            .setDuration(duration)
+            .scaleX(1f)
+            .scaleY(1f)
+            .alpha(1f)
+            .start()
     }
 
     override fun conceal(offset: Float, pivot: Coordinate, duration: Long, onDone: Action?) {
-        TODO("Not yet implemented")
+        this.pivotX = pivot.x
+        this.pivotY = pivot.y
+        this.animate()
+            .setInterpolator(FastOutSlowInInterpolator())
+            .setDuration(duration)
+            .alpha(0f)
+            .scaleX(0.4f)
+            .scaleY(0.4f)
+            .start()
     }
 
     override fun onMove(x: Float, y: Float) {
-        TODO("Not yet implemented")
+        this.x = x
+        this.y = y
     }
 
-    override fun onDataIntercepted(data: WeekDay) {
-        TODO("Not yet implemented")
+    override fun onDataIntercepted(data: Any) {
+        dataListener?.invoke(data)
+    }
+
+    override fun setDataInteceptListener(dataListener: (Any) -> Unit) {
+        this.dataListener = dataListener
     }
 
     companion object {

@@ -11,6 +11,8 @@ import com.eudycontreras.calendarheatmaplibrary.properties.RenderData
  * @since April 2020
  */
 interface DrawOverlay {
+    val overlayWidth: Float
+    val overlayHeight: Float
     fun reDraw()
     fun getRenderData(): RenderData
     fun setRenderData(renderData: RenderData)

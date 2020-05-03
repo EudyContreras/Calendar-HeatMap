@@ -18,18 +18,21 @@ import com.eudycontreras.calendarheatmaplibrary.properties.RenderData
  */
 
 @MainThread
-class BubbleOverlayView : FrameLayout, DrawOverlay {
-    constructor(context: Context) : this(context, null)
-    constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
-    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
-    )
+class BubbleLayoutContainer @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : FrameLayout(context, attrs, defStyleAttr), DrawOverlay {
 
     private lateinit var renderData: RenderData
 
     private val drawTargets: MutableList<DrawTarget> = mutableListOf()
+
+    override val overlayWidth: Float
+        get() = this.measuredWidth.toFloat()
+
+    override val overlayHeight: Float
+        get() = this.measuredHeight.toFloat()
 
     private val invalidator: () -> Unit = {
         invalidate()

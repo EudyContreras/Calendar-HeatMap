@@ -24,16 +24,17 @@
         <ScrollView
             android:id="@+id/scroller"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content">
 
             <LinearLayout
-                android:layout_marginBottom="8dp"
+                android:paddingBottom="8dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
 
                 <HorizontalScrollView
                     android:layout_width="match_parent"
@@ -46,7 +47,6 @@
                         app:showCellDayText="@{true}"
                         app:showLegend="@{true}"
                         app:cellInfoView="@{cellInfoBox}"
-                        app:drawOverlayView="@{cellInfoViewOverlay}"
                         app:calHeatMapData="@{viewModel.demoData1}"
                         app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMaxAlt0}"
@@ -67,7 +67,6 @@
                         app:showCellDayText="@{true}"
                         app:showLegend="@{true}"
                         app:cellInfoView="@{cellInfoBox}"
-                        app:drawOverlayView="@{cellInfoViewOverlay}"
                         app:calHeatMapData="@{viewModel.demoData2}"
                         app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMaxAlt1}"
@@ -88,7 +87,6 @@
                         android:layout_height="250dp"
                         app:showLegend="@{true}"
                         app:cellInfoView="@{cellInfoBox}"
-                        app:drawOverlayView="@{cellInfoViewOverlay}"
                         app:cellElevation="@{Utils.getDp(2)}"
                         app:calHeatMapData="@{viewModel.demoData3}"
                         app:cellColorEmpty="@{@color/colorEmpty}"
@@ -108,7 +106,6 @@
                         android:layout_height="250dp"
                         app:cellElevation="@{Utils.getDp(1)}"
                         app:cellInfoView="@{cellInfoBox}"
-                        app:drawOverlayView="@{cellInfoViewOverlay}"
                         app:calHeatMapData="@{viewModel.demoData4}"
                         app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMaxAlt0}"
@@ -127,7 +124,6 @@
                         android:layout_height="175dp"
                         app:cellElevation="@{Utils.getDp(1)}"
                         app:cellInfoView="@{cellInfoBox}"
-                        app:drawOverlayView="@{cellInfoViewOverlay}"
                         app:calHeatMapData="@{viewModel.demoData5}"
                         app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMaxAlt1}"
@@ -140,7 +136,7 @@
 
         </ScrollView>
 
-        <com.eudycontreras.calendarheatmaplibrary.framework.BubbleOverlayView
+        <com.eudycontreras.calendarheatmaplibrary.framework.BubbleLayoutContainer
             android:id="@+id/cellInfoViewOverlay"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
@@ -151,6 +147,6 @@
                 android:layout_marginTop="30dp"
                 android:layout_marginStart="30dp"
                 layout="@layout/cell_info_layout"/>
-        </com.eudycontreras.calendarheatmaplibrary.framework.BubbleOverlayView>
+        </com.eudycontreras.calendarheatmaplibrary.framework.BubbleLayoutContainer>
     </FrameLayout>
 </layout>

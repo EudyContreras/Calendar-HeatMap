@@ -12,7 +12,6 @@
 
         <attr name="cellInfoView" format="reference" />
 
-        <attr name="drawOverlayView" format="reference"/>
         <!-- Sets the style object containing the styling data used
           for styling the calendar HeatMap view. This attribute
         is only meant to be used with data-binding-->
@@ -104,7 +103,7 @@
         </attr>
 
     </declare-styleable>
-    <declare-styleable name="BubbleWrapperView">
+    <declare-styleable name="BubbleLayoutView">
         <attr name="bubbleColor" format="reference|color"/>
         <attr name="bubbleCornerRadius" format="reference|dimension"/>
         <attr name="bubblePointerLength" format="reference|dimension"/>
