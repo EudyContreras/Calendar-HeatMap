@@ -23,6 +23,8 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
 /**
  * TODO list:
+ * - Handle vertical horientation where month labels on
+ * side and weekday labels on top
  * - Refactor code for better standards
  * - Put relevant styling and settings data inside the
  * data wrappers for easier user customization.
@@ -57,8 +59,8 @@ internal class CalHeatMapBuilder(
         val heatMapArea = buildHeatMapArea(
             options, heatMap, style, bounds,
             paddingLeft = dayLabelArea?.bounds?.width ?: MIN_OFFSET,
-            paddingTop = monthLabelArea?.bounds?.height ?: MIN_OFFSET,
-            paddingBottom = legendArea?.bounds?.height ?: MIN_OFFSET,
+            paddingTop = monthLabelArea?.bounds?.height ?: measurements.cellGap * 2,
+            paddingBottom = legendArea?.bounds?.height ?: measurements.cellGap * 2,
             viewportArea = Dimension(
                 width = measurements.viewportWidth,
                 height = measurements.viewportHeight
@@ -125,10 +127,9 @@ internal class CalHeatMapBuilder(
         measurements: Measurements
     ): CellInfoBubble? {
         if (bubbleLayout != null) {
-            val offset = measurements.cellGap * 2
             return CellInfoBubble(
                 bounds = bounds,
-                topOffset = measurements.cellSize + offset,
+                topOffset = measurements.cellSize + measurements.cellGap,
                 sideOffset = measurements.cellGap,
                 bubbleLayout = bubbleLayout
             )
@@ -183,11 +184,11 @@ internal class CalHeatMapBuilder(
         bounds: Bounds,
         measurements: Measurements
     ): DayLabelArea? {
-        if (options.showDayLabels) {
+        if (options.showDayLabels && options.dayLabels.any { it.active }) {
             return DayLabelArea(
                 style, bounds.copy(
                     left = bounds.left,
-                    top = if (options.showMonthLabels) {
+                    top = if (options.showMonthLabels && options.monthLabels.any { it.active }) {
                         measurements.monthLabelAreaHeight
                     } else MIN_OFFSET,
                     right = measurements.dayLabelAreaWidth
@@ -203,7 +204,7 @@ internal class CalHeatMapBuilder(
         bounds: Bounds,
         measurements: Measurements
     ): MonthLabelArea? {
-        if (options.showMonthLabels) {
+        if (options.showMonthLabels && options.monthLabels.any { it.active }) {
             return MonthLabelArea(
                 style, bounds.copy(
                     left = if (options.showDayLabels) {

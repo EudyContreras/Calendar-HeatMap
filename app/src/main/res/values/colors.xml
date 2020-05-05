@@ -7,7 +7,9 @@
     <color name="colorPrimaryVeryLight">#3C3C3C</color>
     <color name="colorAccent">#2D2D2D</color>
 
-    <color name="white">#ffffff</color>
+    <color name="cellInfoBubble">#3C3C3C</color>
+
+    <color name="background">#ffffff</color>
 
     <color name="colorMinAlt0">#c6e48a</color>
     <color name="colorMaxAlt0">#1a6127</color>
@@ -19,4 +21,6 @@
     <color name="colorMaxAlt2">#611A60</color>
 
     <color name="colorEmpty">#ecedf1</color>
+
+    <color name="white">#ffffff</color>
 </resources>

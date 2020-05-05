@@ -54,7 +54,7 @@ internal class CellInfoBubble(
     override fun onRender(canvas: Canvas, paint: Paint, shapePath: Path, shadowPath: Path) {}
 
     fun bringToFront() {
-        bubbleLayout.toFront(offsetX, bubbleLayout.bubbleWidth * 0.5f, bubbleLayout.bubbleHeight,250)
+        bubbleLayout.toFront(offsetX, bubbleLayout.bubbleWidth * 0.5f, bubbleLayout.bubbleHeight,200)
         isRevealing = false
     }
 

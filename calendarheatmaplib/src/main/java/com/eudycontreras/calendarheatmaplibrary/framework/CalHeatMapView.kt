@@ -91,8 +91,7 @@ class CalHeatMapView : View, CalHeatMap {
 
     private fun setUpAttributes(typedArray: TypedArray) {
         val defaultColor = MutableColor(AndroidColor.LTGRAY).toColor()
-        calHeatMapStyle.emptyCellColor = defaultColor
-
+        x
         typedArray.getColor(R.styleable.CalHeatMapView_legendLabelColor, -1).let {
             calHeatMapStyle.legendLabelStyle.textColor = if (it != -1) { it } else defaultColor
         }
@@ -210,10 +209,6 @@ class CalHeatMapView : View, CalHeatMap {
 
     fun setLegendMoreLabelText(moreLabelText: String) {
         this.calHeatMapOptions.legendMoreLabel = moreLabelText
-    }
-
-    fun setRevealOnVisible(revealOnVisible: Boolean) {
-
     }
 
     fun setCellInfoView(cellInfoView: ViewDataBinding?) {
@@ -444,7 +439,7 @@ class CalHeatMapView : View, CalHeatMap {
     }
 
     private fun getDayLabelAreaMeasurement(gapSize: Float): Float {
-        return if (calHeatMapOptions.showDayLabels) {
+        return if (calHeatMapOptions.showDayLabels && calHeatMapOptions.dayLabels.any { it.active }) {
             val textMeasurement = calHeatMapOptions.dayLabels.mapIndexed { _, label ->
                 getTextMeasurement(
                     paint = shapeManager.paint,
@@ -458,7 +453,7 @@ class CalHeatMapView : View, CalHeatMap {
     }
 
     private fun getMonthLabelAreaMeasurement(gapSize: Float): Float {
-        return if (calHeatMapOptions.showMonthLabels) {
+        return if (calHeatMapOptions.showMonthLabels && calHeatMapOptions.monthLabels.any { it.active }) {
             val textMeasurement = getTextMeasurement(
                 paint = shapeManager.paint,
                 text = calHeatMapOptions.monthLabels.mapIndexed { _, it -> it.text }.first { it.any { text -> Character.isUpperCase(text) } },
@@ -466,7 +461,7 @@ class CalHeatMapView : View, CalHeatMap {
                 typeFace = calHeatMapStyle.monthLabelStyle.typeFace
             )
             textMeasurement.height() + (gapSize * 2)
-        } else MIN_OFFSET
+        } else gapSize * 2
     }
 
     override var onFullyVisible: ((CalHeatMap, Boolean) -> Unit)? = null
@@ -474,6 +469,9 @@ class CalHeatMapView : View, CalHeatMap {
     override fun fullyVisible(): Boolean = fullyVisible
 
     private fun observeVisibility() {
+        val viewBounds = Rect()
+        val scrollBounds = Rect()
+
         scrollingParent = findScrollParent(this.parent as ViewGroup) {
             it !is NestedScrollView && it is ScrollView || it is NestedScrollView
         }
@@ -506,13 +504,17 @@ class CalHeatMapView : View, CalHeatMap {
     private fun retrieveBounds(
         viewBounds: Rect,
         scrollBounds: Rect,
-        parent: ViewGroup?
+        parent: ViewGroup?,
+        modifyBounds: Boolean = false
     ) {
         getDrawingRect(viewBounds)
         parent?.offsetDescendantRectToMyCoords(this, viewBounds)
         parent?.getDrawingRect(scrollBounds)
-        viewBounds.top = scrollBounds.top
-        viewBounds.bottom = scrollBounds.bottom
+
+        if (modifyBounds) {
+            viewBounds.top = scrollBounds.top
+            viewBounds.bottom = scrollBounds.bottom
+        }
     }
 
     private fun notifyVisibility(
@@ -542,7 +544,7 @@ class CalHeatMapView : View, CalHeatMap {
             super.onLongPress(event)
             parent.requestDisallowInterceptTouchEvent(true)
 
-            retrieveBounds(viewBounds, scrollBounds, scrollingParent as? ViewGroup)
+            retrieveBounds(viewBounds, scrollBounds, scrollingParent as? ViewGroup, modifyBounds = true)
 
             getDrawingRect(viewBounds)
             (scrollingParent as? ViewGroup)?.offsetDescendantRectToMyCoords(this@CalHeatMapView, viewBounds)
@@ -583,7 +585,7 @@ class CalHeatMapView : View, CalHeatMap {
             }
             if (event.action == MotionEvent.ACTION_UP) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                    hapticFeeback(HapticFeedbackConstants.KEYBOARD_RELEASE)
+                    hapticFeeback(HapticFeedbackConstants.VIRTUAL_KEY_RELEASE)
                 }
             }
             result

@@ -46,7 +46,7 @@ internal class HeatMapArea(
 
     override var touchHandler: ((TouchConsumer, Int, Bounds, Float, Float, Float, Float, Float, Float) -> Unit)? = null
 
-    private val touchConsumer: ((TouchConsumer, Int, WeekDay, Float, Float, Float, Float, Float, Float) -> Unit) = { consumer, eventAction: Int, day, x, y, minX, maxX, minY, maxY ->
+    private val touchConsumer: ((TouchConsumer, Int, WeekDay, Float, Float, Float, Float, Float, Float) -> Unit) = { consumer, eventAction: Int, day, x, y, minX, maxX, _, _ ->
         when (eventAction) {
             MotionEvent.ACTION_BUTTON_PRESS -> {
                 onInteraction(consumer, x, y, onIn = {
@@ -152,8 +152,8 @@ internal class HeatMapArea(
     ): HeatMapArea {
         val offset = measurements.cellGap
         val cellSize = measurements.cellSize
+        val hasMonthLabels = options.showMonthLabels && options.monthLabels.any { it.active }
 
-        var renderIndex = 0
         var horizontalOffset = (offset + bounds.left)
 
         shapes = Array(data.getColumnCount()) {
@@ -176,7 +176,6 @@ internal class HeatMapArea(
                 shape.touchHandler = { touchConsumer, action, _, x, y, minX, maxX, minY, maxY ->
                     touchConsumer(touchConsumer, action, day, x, y, minX, maxX, minY, maxY)
                 }
-                shape.renderIndex = renderIndex
                 shape.bounds = Bounds(
                     left = horizontalOffset,
                     top = verticalOffset,
@@ -188,12 +187,11 @@ internal class HeatMapArea(
                 shape.render = !shape.bounds.intercepts(viewport)
                 shape.elevation = style.cellElevation
                 verticalOffset += (cellSize + offset)
-                renderIndex++
                 rows[colIndex] = shape
             }
             shapes[rowIndex] = rows
 
-            if (options.showMonthLabels) {
+            if (hasMonthLabels) {
                 getMonthLabels(week, rowIndex, monthLabels, monthIndexes)
             }
             horizontalOffset += (cellSize + offset)
@@ -234,7 +232,7 @@ internal class HeatMapArea(
         day: WeekDay,
         cellSize: Float
     ): Text? {
-        if (options.showCellDayText) {
+        if (options.showCellDayText && options.dayLabels.any { it.active }) {
             return Text(day.date.day.toString(), Paint()).apply {
                 textSize = (cellSize / 2f)
                 typeFace = Typeface.DEFAULT_BOLD

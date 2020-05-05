@@ -21,9 +21,9 @@ data class HeatMapLabel(
 
 @Serializable
 data class AnimationData(
-    val delay: Long = 0,
-    val duration: Long = 250,
-    val stagger: Long = 50,
+    val delay: Long = 100,
+    val duration: Long = 350,
+    val stagger: Long = 40,
     val epiCenter: Index? = null
 )
 
@@ -37,7 +37,7 @@ data class HeatMapOptions(
     var showLegend: Boolean = false,
     var legendAlignment: Alignment = Alignment.LEFT,
     var cellHighlightDuration: Long = 250,
-    var interceptorOffsetX: Float = 60.dp,
+    var interceptorOffsetX: Float = 80.dp,
     var interceptorOffsetY: Float = 70.dp,
     var maxFrequencyValue: Int = Frequency.MAX_VALUE,
     var matrixRevealAnimation: AnimationData? = AnimationData(),

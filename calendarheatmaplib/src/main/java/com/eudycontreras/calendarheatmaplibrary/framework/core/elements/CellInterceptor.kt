@@ -148,10 +148,10 @@ internal class CellInterceptor(
             lineRight.render = value
         }
 
-    private fun setPositionX(value: Float, viewBounds: Rect, minX: Float, maxX: Float) {
+    private fun setPositionX(value: Float, minX: Float, maxX: Float) {
         val section = (viewPort.width / 2)
 
-        val shift = mapRange(value - (minX + section), -section, section, -(shiftOffsetX * 1.5f), shiftOffsetX)
+        val shift = mapRange(value - (minX + section), -section, section, -(shiftOffsetX * 4f), shiftOffsetX)
 
         marker.centerX = (value + shift)
 
@@ -174,8 +174,13 @@ internal class CellInterceptor(
         lineRight.bounds.right = bounds.right
     }
 
-    private fun setPositionY(value: Float, viewBounds: Rect, minY: Float, maxY: Float) {
-        marker.centerY = (value - shiftOffsetY)
+    private fun setPositionY(value: Float,  minY: Float, maxY: Float) {
+        val section = bounds.height / 2
+
+        val shift = mapRange(value - section, -section, bounds.height, -(shiftOffsetY * 3), MIN_OFFSET)
+
+        marker.centerY = (value + shift)
+
         if (marker.centerY < (bounds.top + marker.radius)) {
             marker.centerY = (bounds.top + marker.radius)
         } else if (marker.centerY > (bounds.bottom - marker.radius)) {
@@ -284,8 +289,8 @@ internal class CellInterceptor(
         val minY = (bounds.top - viewBounds.top) - offsetY
         val maxY = (bounds.top + viewPort.height) - viewBounds.top
 
-        setPositionX(x, viewBounds, minX, maxX)
-        setPositionY(y, viewBounds, minY, maxY)
+        setPositionX(x, minX, maxX)
+        setPositionY(y, minY, maxY)
 
         infoBubble?.offsetY = viewBounds.top.toFloat()
         infoBubble?.offsetX = viewBounds.left.toFloat()
@@ -313,6 +318,5 @@ internal class CellInterceptor(
     companion object {
         const val MARKER_FILL_ALPHA = 0.35f
         const val MARKER_STROKE_FILL_ALPHA = 0.8f
-        const val MARKER_STROKE_WIDTH = 2.5f
     }
 }

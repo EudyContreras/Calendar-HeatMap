@@ -16,7 +16,11 @@ import com.eudycontreras.calendarheatmaplibrary.properties.PathPoint
 import com.eudycontreras.calendarheatmaplibrary.utilities.ShadowUtility
 
 /**
- * Created by eudycontreras.
+ * Copyright (C) 2020 Project X
+ *
+ * @Project ProjectX
+ * @author Eudy Contreras.
+ * @since April 2020
  */
 
 internal class Bubble: DrawableShape() {
@@ -74,7 +78,7 @@ internal class Bubble: DrawableShape() {
             pathPlot.startY = (bounds.y + cornerRadius)
 
             pathPlot.points.add(PathPoint.Point(-(pointerWidth * offsetLeft), -pointerLength))
-            pathPlot.points.add(PathPoint.Point(-((pointerOffset * shift)), MIN_OFFSET))
+            pathPlot.points.add(PathPoint.Point(-(pointerOffset * shift), MIN_OFFSET))
 
             pathPlot.points.add(PathPoint.Corner(PathCorner.BOTTOM_LEFT, cornerRadius))
 
@@ -123,9 +127,15 @@ internal class Bubble: DrawableShape() {
 
         pathPlot.build()
 
+        val translateX: Float = elevation * 0.1f
+        val translateY: Float = elevation * 0.2f
+
         if (drawShadows) {
+            pathPlot.translate(translateX, translateY)
             renderShadow(canvas, paint, pathPlot.path, shadowPath)
         }
+
+        pathPlot.translate(-translateX, -translateY)
 
         paint.recycle()
         paint.style = Paint.Style.FILL
@@ -145,12 +155,6 @@ internal class Bubble: DrawableShape() {
         }
     }
 
-    private val shadowMatrix: Matrix by lazy {
-        Matrix().apply {
-            this.setTranslate(elevation * 0.1f, elevation * 0.2f)
-        }
-    }
-
     private fun renderShadow(canvas: Canvas, paint: Paint, shapePath: Path, shadowPath: Path) {
         if (shadowColor == null) {
             val color = ShadowUtility.getShadowColor(ShadowUtility.COLOR, elevation)
@@ -166,9 +170,9 @@ internal class Bubble: DrawableShape() {
         paint.maskFilter = shadowFilter
         paint.color = shadowColor?.toColor() ?: ShadowUtility.DEFAULT_COLOR
         paint.alpha = mapRange(opacity, MIN_COLOR, MAX_COLOR, MIN_COLOR, this.shadowColor?.alpha ?: MAX_COLOR)
+
         shadowPath.rewind()
         shadowPath.addPath(shapePath)
-        shadowPath.transform(shadowMatrix)
 
         canvas.drawPath(shadowPath, paint)
     }

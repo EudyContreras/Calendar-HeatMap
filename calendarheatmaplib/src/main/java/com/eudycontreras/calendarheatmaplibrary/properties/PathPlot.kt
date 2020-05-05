@@ -12,31 +12,20 @@ import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
  */
 class PathPlot(val path: Path){
 
-    enum class Type{
-        QUAD,
-        LINE
-    }
-
     val points: ArrayList<PathPoint> = ArrayList()
 
     var startX: Float = MIN_OFFSET
-
     var startY: Float = MIN_OFFSET
 
     var width: Float = MIN_OFFSET
-
     var height: Float = MIN_OFFSET
 
     var contentBounds: Bounds = Bounds()
 
     var pathCreated: Boolean = false
 
-    fun translate(dx: Float, dy: Float) {
-        val offsetX = dx - startX
-        val offsetY = dy - startY
+    fun translate(offsetX: Float, offsetY: Float) {
         path.offset(offsetX, offsetY)
-        startX = dx
-        startY = dy
     }
 
     fun build() {

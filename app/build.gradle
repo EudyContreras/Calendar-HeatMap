@@ -4,6 +4,10 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'org.jetbrains.kotlin.kapt'
 apply plugin: 'kotlin-kapt'
 
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
@@ -18,10 +22,25 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        debug {
+            storeFile file(keystoreProperties['calHeatMapDebugStorePath'])
+            storePassword keystoreProperties['calHeatMapDebugStorePassword']
+            keyAlias keystoreProperties['calHeatMapDebugKeyAlias']
+            keyPassword keystoreProperties['calHeatMapDebugKeyPassword']
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            signingConfig signingConfigs.debug
+            minifyEnabled false
+            debuggable true
+            shrinkResources false
         }
     }
     compileOptions {

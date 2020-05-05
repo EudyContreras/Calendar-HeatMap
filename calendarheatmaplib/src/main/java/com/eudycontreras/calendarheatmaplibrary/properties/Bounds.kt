@@ -13,10 +13,10 @@ import kotlin.math.min
  * @since April 2020
  */
 data class Bounds(
-    var left: Float = 0f,
-    var top: Float = 0f,
-    var right: Float = 0f,
-    var bottom: Float = 0f
+    var left: Float = MIN_OFFSET,
+    var top: Float = MIN_OFFSET,
+    var right: Float = MIN_OFFSET,
+    var bottom: Float = MIN_OFFSET
 ) {
     var x: Float
         get() = left

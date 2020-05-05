@@ -4,6 +4,8 @@ import android.graphics.LinearGradient
 import android.graphics.Shader
 import android.graphics.Shader.TileMode.CLAMP
 import android.graphics.Shader.TileMode.MIRROR
+import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
+import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 
 /**
  * Copyright (C) 2019 Project X
@@ -102,10 +104,10 @@ internal data class Gradient(
         }
 
         private fun getPositions(count: Int): FloatArray {
-            val value: Float = 1f / (count - 1)
+            val value: Float = MAX_OFFSET / (count - 1)
             val array = ArrayList<Float>()
             var increase = value
-            array.add(0f)
+            array.add(MIN_OFFSET)
             for (i in 0 until count - 1) {
                 array.add(increase)
                 increase += (value)

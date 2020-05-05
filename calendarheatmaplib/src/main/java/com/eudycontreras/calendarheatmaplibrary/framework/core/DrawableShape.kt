@@ -19,10 +19,6 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  */
 internal abstract class DrawableShape: RenderTarget {
 
-    var id: Int = View.NO_ID
-
-    var renderIndex: Int = 0
-
     open var color: MutableColor = MutableColor()
 
     open var bounds: Bounds = Bounds()

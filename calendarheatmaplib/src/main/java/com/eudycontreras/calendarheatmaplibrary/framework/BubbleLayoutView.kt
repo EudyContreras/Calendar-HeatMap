@@ -11,17 +11,12 @@ import android.widget.FrameLayout
 import androidx.core.view.doOnLayout
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.eudycontreras.calendarheatmaplibrary.*
-import com.eudycontreras.calendarheatmaplibrary.Action
-import com.eudycontreras.calendarheatmaplibrary.AndroidColor
-import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
-import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.BubbleLayout
 import com.eudycontreras.calendarheatmaplibrary.common.DrawOverlay
 import com.eudycontreras.calendarheatmaplibrary.extensions.clamp
 import com.eudycontreras.calendarheatmaplibrary.extensions.dp
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Bubble
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
-import com.eudycontreras.calendarheatmaplibrary.properties.Color.Companion.MAX_COLOR
 import com.eudycontreras.calendarheatmaplibrary.properties.Color.Companion.MIN_COLOR
 import com.eudycontreras.calendarheatmaplibrary.properties.Coordinate
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
@@ -42,13 +37,13 @@ class BubbleLayoutView: FrameLayout, BubbleLayout {
     internal var dataListener: ((Any) -> Unit)? = null
 
     override var bubbleColor: Int = AndroidColor.TRANSPARENT
-    override var bubblePointerLength: Float = 15.dp
-    override var bubbleCornerRadius: Float = 6.dp
+    override var bubblePointerLength: Float = DEFAULT_BUBBLE_POINTER_LENGTH
+    override var bubbleCornerRadius: Float = DEFAULT_BUBBLE_CORNER_RADIUS
 
     private val bubble: Bubble by lazy {
         Bubble().also {
             it.render = false
-            it.pointerOffset = 0f
+            it.pointerOffset = MIN_OFFSET
             it.elevation = elevation
             it.shadowAlphaOffset = 1.58f
             it.maxShadowRadius = 25f
@@ -85,8 +80,8 @@ class BubbleLayoutView: FrameLayout, BubbleLayout {
 
     private fun setUpAttributes(typedArray: TypedArray) {
         this.bubbleColor = typedArray.getColor(R.styleable.BubbleLayoutView_bubbleColor, AndroidColor.TRANSPARENT)
-        this.bubblePointerLength = typedArray.getDimension(R.styleable.BubbleLayoutView_bubblePointerLength, 15.dp)
-        this.bubbleCornerRadius = typedArray.getDimension(R.styleable.BubbleLayoutView_bubbleCornerRadius, 4.dp)
+        this.bubblePointerLength = typedArray.getDimension(R.styleable.BubbleLayoutView_bubblePointerLength, DEFAULT_BUBBLE_POINTER_LENGTH)
+        this.bubbleCornerRadius = typedArray.getDimension(R.styleable.BubbleLayoutView_bubbleCornerRadius, DEFAULT_BUBBLE_CORNER_RADIUS)
 
         this.background = GradientDrawable().apply {
             this.shape = GradientDrawable.RECTANGLE
@@ -151,8 +146,10 @@ class BubbleLayoutView: FrameLayout, BubbleLayout {
 
     private var adjustAlpha: Boolean = true
 
-    private fun adjustBubble(scaleX: Float = this.scaleX, scaleY: Float = this.scaleY) {
-        this.bubble.pointerLength = bubblePointerLength * scaleY
+    private fun adjustBubble(scaleX: Float = this.scaleX, scaleY: Float = this.scaleY, setPointer: Boolean  = true) {
+        if (setPointer) {
+            this.bubble.pointerLength = bubblePointerLength * scaleY
+        }
         this.bubble.alpha = alpha.clamp(MIN_OFFSET, MAX_OFFSET)
 
         val bounds = Bounds().apply {
@@ -194,8 +191,8 @@ class BubbleLayoutView: FrameLayout, BubbleLayout {
         this.alpha = MIN_OFFSET
         this.pivotX = pivot.x
         this.pivotY = pivot.y
-        this.scaleX = 0.25f
-        this.scaleY = 0.25f
+        this.scaleX = 0.15f
+        this.scaleY = 0.15f
 
         if (visibility != View.VISIBLE) {
             visibility = View.VISIBLE
@@ -232,8 +229,8 @@ class BubbleLayoutView: FrameLayout, BubbleLayout {
             .setInterpolator(FastOutSlowInInterpolator())
             .setDuration(duration)
             .alpha(MIN_OFFSET)
-            .scaleX(0.3f)
-            .scaleY(0.6f)
+            .scaleX(0.2f)
+            .scaleY(0.3f)
             .start()
     }
 
@@ -257,6 +254,7 @@ class BubbleLayoutView: FrameLayout, BubbleLayout {
     }
 
     companion object {
-
+        val DEFAULT_BUBBLE_POINTER_LENGTH = 15.dp
+        val DEFAULT_BUBBLE_CORNER_RADIUS = 6.dp
     }
 }
