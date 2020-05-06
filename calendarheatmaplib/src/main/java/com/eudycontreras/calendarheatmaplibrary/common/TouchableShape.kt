@@ -11,10 +11,22 @@ import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 internal interface TouchableShape {
-    fun onTouch(event: MotionEvent, x: Float, y: Float, viewBounds: Rect, shapeManager: ShapeManager)
-    fun onLongPressed(event: MotionEvent, x: Float, y: Float, viewBounds: Rect, shapeManager: ShapeManager)
+    fun onTouch(
+        event: MotionEvent,
+        x: Float,
+        y: Float,
+        viewBounds: Rect,
+        shapeManager: ShapeManager
+    )
+
+    fun onLongPressed(
+        event: MotionEvent,
+        x: Float,
+        y: Float,
+        viewBounds: Rect,
+        shapeManager: ShapeManager
+    )
 
     var touchHandler: ((TouchableShape, MotionEvent, Float, Float) -> Unit)?
     var hovered: Boolean

@@ -18,7 +18,6 @@ import com.eudycontreras.calendarheatmaplibrary.utilities.ColorUtility
  *
  * @see Color
  */
-
 class MutableColor(
     alpha: Int = MAX_COLOR,
     red: Int = MIN_COLOR,
@@ -85,6 +84,21 @@ class MutableColor(
         color.red = (this.red * amount).toInt()
         color.green = (this.green * amount).toInt()
         color.blue = (this.blue * amount).toInt()
+
+        color.red = clamp(color.red)
+        color.green = clamp(color.green)
+        color.blue = clamp(color.blue)
+        return color
+    }
+
+    fun adjustMin(amount: Float): MutableColor {
+        val color = MutableColor(this)
+        val minColor  = if (this.green < this.red) this.green else if (this.blue < this.red) this.blue else this.red
+        val offset = minColor * amount
+
+        color.red = (this.red + offset).toInt()
+        color.green = (this.green + offset).toInt()
+        color.blue = (this.blue + offset).toInt()
 
         color.red = clamp(color.red)
         color.green = clamp(color.green)

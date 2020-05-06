@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.eudycontreras.calendarheatmaplibrary.framework.data.WeekDay" />
+
+        <import
+            alias="Utils"
+            type="com.eudycontreras.calendarheatmaplibrary.extensions.NumberExtensionsKt" />
+
+        <import type="android.graphics.Typeface" />
+    </data>
+
+    <com.eudycontreras.calendarheatmaplibrary.framework.BubbleLayoutView
+        android:id="@+id/cellInfoBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="12dp"
+        app:bubbleColor="@color/cellInfoBubble"
+        app:bubbleCornerRadius="4dp"
+        app:bubblePointerLength="15dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
+
+            <TextView
+                android:id="@+id/contributionCountLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:alpha="0.9"
+                android:gravity="center_vertical|end"
+                android:text="@{viewModel.frequencyData.countString + ` contributions`}"
+                android:textAlignment="gravity"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="No contributions" />
+
+            <TextView
+                android:id="@+id/contributionDateLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:layout_marginStart="4dp"
+                android:alpha="0.4"
+                android:gravity="center_vertical|start"
+                android:text="@{`on ` + viewModel.dateString }"
+                android:textAlignment="gravity"
+                android:textColor="@color/white"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/contributionCountLabel"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="on Apr, 6, 2020" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.eudycontreras.calendarheatmaplibrary.framework.BubbleLayoutView>
+</layout>

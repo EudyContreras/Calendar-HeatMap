@@ -1,16 +1,13 @@
 package com.eudycontreras.calendarheatmaplibrary
 
-import android.graphics.Paint
-import android.graphics.Rect
-import android.graphics.Typeface
 import android.view.ViewGroup
 import android.view.ViewParent
 import androidx.core.math.MathUtils
-import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
-import com.eudycontreras.calendarheatmaplibrary.properties.Coordinate
 import com.eudycontreras.calendarheatmaplibrary.properties.Property
 import kotlin.math.abs
-import kotlin.math.hypot
+import kotlin.math.roundToInt
+
+internal const val VIEWMODEL = 1
 
 internal const val MIN_OFFSET = 0.0f
 internal const val MAX_OFFSET = 1.0f
@@ -49,6 +46,10 @@ internal fun mapRange(value: Float, fromMin: Float, fromMax: Float, toMin: Float
 }
 
 internal fun mapRange(value: Long, fromMin: Long, fromMax: Long, toMin: Float, toMax: Float): Float {
+    return mapRange(value, fromMin, fromMax, toMin, toMax, toMin, toMax)
+}
+
+internal fun mapRange(value: Int, fromMin: Int, fromMax: Int, toMin: Int, toMax: Int): Int {
     return mapRange(value, fromMin, fromMax, toMin, toMax, toMin, toMax)
 }
 
@@ -92,6 +93,36 @@ internal fun mapRange(value: Long, fromMin: Long, fromMax: Long, toMin: Float, t
     )
 }
 
+internal fun mapRange(value: Int, fromMin: Int, fromMax: Int, toMin: Int, toMax: Int, clampMin: Int, clampMax: Int): Int {
+    return MathUtils.clamp(
+        (value - fromMin) * (toMax - toMin) / (fromMax - fromMin) + toMin,
+        clampMin,
+        clampMax
+    )
+}
+
+/**
+ * Returns the linear interpolation of a start value
+ * to an end value given the specified fraction of progress.
+ * @param from the start value
+ * @param to the end value
+ * @param fraction the amount to lerp to given the range
+ */
+fun lerp(from: Float, to: Float, fraction: Float): Float {
+    return from + (to - from) * fraction
+}
+
+/**
+ * Returns the linear interpolation of a start value
+ * to an end value given the specified fraction of progress.
+ * @param from the start value
+ * @param to the end value
+ * @param fraction the amount to lerp to given the range
+ */
+fun lerp(from: Int, to: Int, fraction: Float): Int {
+    return (from + (to - from) * fraction).roundToInt()
+}
+
 /**
  * Returns the distance between two locations.
  * @param x0 The x axis coordinates of the first point
@@ -101,83 +132,6 @@ internal fun mapRange(value: Long, fromMin: Long, fromMax: Long, toMin: Float, t
  */
 internal fun manDistance(x0: Float, y0: Float, x1: Float, y1: Float) = abs(x1 - x0) + abs(y1 - y0)
 internal fun manDistance(x0: Int, y0: Int, x1: Int, y1: Int) = abs(x1 - x0) + abs(y1 - y0)
-
-/**
- * Returns the distance between two coordinates.
- * @param x1 The x axis coordinates of the first point
- * @param y1 The y axis coordinates of the first point
- * @param x2 The x axis coordinates of the second point
- * @param y2 The y axis coordinates of the second point
- */
-internal fun distance(x1: Float, y1: Float, x2: Float, y2: Float): Double {
-    val x = (x2 - x1)
-    val y = (y2 - y1)
-    return hypot(x.toDouble(), y.toDouble())
-}
-
-/**
- * Returns the distance between two coordinates.
- * @param locationOne The [Coordinate] of the first point
- * @param locationTwo The [Coordinate] of the second point
- */
-internal fun distance(locationOne: Coordinate, locationTwo: Coordinate): Double {
-    return distance(locationOne.x, locationOne.y, locationTwo.x, locationTwo.y)
-}
-
-internal fun tryWith(block: () -> Unit) {
-    try {
-        block()
-    } catch (_: Exception) {
-    }
-}
-
-internal fun <T> tryGet(block: () -> T): T? {
-    return try {
-        block()
-    } catch (ex: Exception) {
-        null
-    }
-}
-
-internal infix fun <T> T?.or(block: () -> T): T {
-    return try {
-        if (this == null) {
-            throw NullPointerException()
-        }
-        this
-    } catch (ex: Exception) {
-        block()
-    }
-}
-
-internal infix fun <T> T?.or(target: T): T {
-    return try {
-        if (this == null) {
-            throw NullPointerException()
-        }
-        this
-    } catch (ex: Exception) {
-        target
-    }
-}
-
-internal infix fun <T> Boolean?.take(target: T?): T? {
-    return if (this == true) {
-        target
-    } else null
-}
-
-internal infix fun <T> T?.tryTake(other: T?): T? {
-    return other ?: this
-}
-
-internal inline fun <T> doWith(receiver: T, block: (T) -> Unit) {
-    block(receiver)
-}
-
-internal inline fun <reified T, X> T.map(block: (T) -> X): X {
-    return block(this)
-}
 
 fun findScrollParent(parent: ViewGroup, criteria: (ViewGroup) -> Boolean): ViewParent? {
     val property: Property<ViewGroup?> = Property(parent)

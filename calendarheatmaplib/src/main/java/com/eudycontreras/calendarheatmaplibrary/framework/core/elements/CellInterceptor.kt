@@ -24,16 +24,14 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 internal class CellInterceptor(
+    val infoBubble: CellInfoBubble?,
     markerRadius: Float = MIN_OFFSET,
     lineThickness: Float = MIN_OFFSET
 ) : RenderTarget, TouchableShape {
     var bounds: Bounds = Bounds()
 
     var viewPort: Dimension = Dimension(MIN_OFFSET, MIN_OFFSET)
-
-    var maxX: Float = MIN_OFFSET
 
     var markerRadius: Float = markerRadius
         set(value) {
@@ -105,6 +103,16 @@ internal class CellInterceptor(
                 lineTop.render = false
                 lineBottom.render = false
             }
+            if (showTopLine) {
+                lineTop.render = value
+            } else {
+                lineTop.render = false
+            }
+            if (showBottomLine) {
+                lineBottom.render = value
+            } else {
+                lineBottom.render = false
+            }
             marker.render = value
         }
 
@@ -112,6 +120,18 @@ internal class CellInterceptor(
         set(value) {
             field = value
             shouldRender = false
+        }
+
+    var showTopLine: Boolean = true
+        set(value) {
+            field = value
+            lineTop.render = value
+        }
+
+    var showBottomLine: Boolean = true
+        set(value) {
+            field = value
+            lineBottom.render = value
         }
 
     var showVerticalLine: Boolean = true
@@ -128,12 +148,10 @@ internal class CellInterceptor(
             lineRight.render = value
         }
 
-    fun setPositionX(value: Float, viewBounds: Rect) {
+    private fun setPositionX(value: Float, minX: Float, maxX: Float) {
         val section = (viewPort.width / 2)
-        val offset = mapRange(viewBounds.left.toFloat(), MIN_OFFSET, -bounds.left, 0f, bounds.left)
-        val minX = (bounds.left - viewBounds.left) - offset
-        val maxX = (bounds.left + viewPort.width) - viewBounds.left
-        val shift = mapRange(value - (minX + section), -section, section, -(shiftOffsetX * 1.5f), shiftOffsetX)
+
+        val shift = mapRange(value - (minX + section), -section, section, -(shiftOffsetX * 3f), shiftOffsetX)
 
         marker.centerX = (value + shift)
 
@@ -156,28 +174,31 @@ internal class CellInterceptor(
         lineRight.bounds.right = bounds.right
     }
 
-    var positionY: Float = 0f
-        private set(value) {
-            field = value
-            marker.centerY = (value - shiftOffsetY)
-            if (marker.centerY < (bounds.top + marker.radius)) {
-                marker.centerY = (bounds.top + marker.radius)
-            } else if (marker.centerY > (bounds.bottom - marker.radius)) {
-                marker.centerY = (bounds.bottom - marker.radius)
-            }
+    private fun setPositionY(value: Float,  minY: Float, maxY: Float) {
+        val section = bounds.height / 2
 
-            lineTop.bounds.y = bounds.top
-            lineTop.bounds.bottom = (marker.centerY - marker.radius)
+        val shift = mapRange(value - section, -section, bounds.height, -(shiftOffsetY * 3), shiftOffsetY / 3)
 
-            lineBottom.bounds.top = (marker.centerY + marker.radius)
-            lineBottom.bounds.bottom = bounds.bottom
+        marker.centerY = (value + shift)
 
-            lineLeft.bounds.top = (marker.centerY - (lineThickness / 2))
-            lineLeft.bounds.bottom = lineLeft.bounds.top + lineThickness
-
-            lineRight.bounds.top = (marker.centerY - (lineThickness / 2))
-            lineRight.bounds.bottom = lineRight.bounds.top + lineThickness
+        if (marker.centerY < (bounds.top + marker.radius)) {
+            marker.centerY = (bounds.top + marker.radius)
+        } else if (marker.centerY > (bounds.bottom - marker.radius)) {
+            marker.centerY = (bounds.bottom - marker.radius)
         }
+
+        lineTop.bounds.y = bounds.top
+        lineTop.bounds.bottom = (marker.centerY - marker.radius)
+
+        lineBottom.bounds.top = (marker.centerY + marker.radius)
+        lineBottom.bounds.bottom = bounds.bottom
+
+        lineLeft.bounds.top = (marker.centerY - (lineThickness / 2))
+        lineLeft.bounds.bottom = lineLeft.bounds.top + lineThickness
+
+        lineRight.bounds.top = (marker.centerY - (lineThickness / 2))
+        lineRight.bounds.bottom = lineRight.bounds.top + lineThickness
+    }
 
     var shiftOffsetX: Float = Float.MAX_VALUE
         get() = if (field == Float.MAX_VALUE) (marker.radius) else field
@@ -222,32 +243,6 @@ internal class CellInterceptor(
         }
     }
 
-    override fun onTouch(event: MotionEvent, x: Float, y: Float, viewBounds: Rect, shapeManager: ShapeManager) {
-        if (!allowIntercept || !shouldRender)
-            return
-
-        when (event.action) {
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {
-                if (shouldRender && visible) {
-                    shouldRender = false
-                }
-                hovered = false
-                shapeManager.delegateTouchEvent(event, marker.bounds, marker.centerX, marker.centerY, this)
-            }
-            MotionEvent.ACTION_MOVE, MotionEvent.ACTION_DOWN -> {
-                if (visible) {
-                    setPositionX(x, viewBounds)
-                    positionY = y
-                    shapeManager.delegateTouchEvent(event, marker.bounds, marker.centerX, marker.centerY, this)
-                } else {
-                    setPositionX(x, viewBounds)
-                    positionY = y
-                    shapeManager.delegateTouchEvent(event, marker.bounds, marker.centerX, marker.centerY, this)
-                }
-            }
-        }
-    }
-
     override fun onLongPressed(
         event: MotionEvent,
         x: Float,
@@ -259,14 +254,69 @@ internal class CellInterceptor(
             return
         if (!shouldRender && visible) {
             shouldRender = true
-            setPositionX(x, viewBounds)
-            positionY = y
+            applyPositions(viewBounds, x, y, shapeManager, MotionEvent.ACTION_BUTTON_PRESS)
         }
+    }
+
+    override fun onTouch(event: MotionEvent, x: Float, y: Float, viewBounds: Rect, shapeManager: ShapeManager) {
+        if (!allowIntercept || !shouldRender)
+            return
+
+        when (event.action) {
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {
+                if (shouldRender && visible) {
+                    shouldRender = false
+                }
+                hovered = false
+            }
+        }
+        applyPositions(viewBounds, x, y, shapeManager, event.action)
+    }
+
+    private fun applyPositions(
+        viewBounds: Rect,
+        x: Float,
+        y: Float,
+        shapeManager: ShapeManager,
+        eventAction: Int
+    ) {
+        val offsetx = mapRange(viewBounds.left.toFloat(), MIN_OFFSET, -bounds.left, MIN_OFFSET, bounds.left)
+        val offsetY = mapRange(viewBounds.top.toFloat(), MIN_OFFSET, -bounds.top, MIN_OFFSET, bounds.top)
+
+        val minX = (bounds.left - viewBounds.left) - offsetx
+        val maxX = (bounds.left + viewPort.width) - viewBounds.left
+
+        val minY = (bounds.top - viewBounds.top) - offsetY
+        val maxY = (bounds.top + viewPort.height) - viewBounds.top
+
+        setPositionX(x, minX, maxX)
+        setPositionY(y, minY, maxY)
+
+        infoBubble?.offsetY = viewBounds.top.toFloat()
+        infoBubble?.offsetX = viewBounds.left.toFloat()
+
+        infoBubble?.onInterception(
+            x = marker.centerX,
+            y = marker.centerY,
+            minInX = minX,
+            maxInX = maxX
+        )
+
+        shapeManager.delegateTouchEvent(
+            eventAction = eventAction,
+            bounds = marker.bounds,
+            x = marker.centerX,
+            y = marker.centerY,
+            minX = minX,
+            maxX = maxX,
+            minY = minY,
+            maxY = maxY,
+            caller = this
+        )
     }
 
     companion object {
         const val MARKER_FILL_ALPHA = 0.35f
         const val MARKER_STROKE_FILL_ALPHA = 0.8f
-        const val MARKER_STROKE_WIDTH = 2.5f
     }
 }

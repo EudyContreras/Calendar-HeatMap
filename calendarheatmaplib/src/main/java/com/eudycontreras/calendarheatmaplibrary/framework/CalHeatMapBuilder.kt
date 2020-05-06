@@ -1,10 +1,11 @@
 package com.eudycontreras.calendarheatmaplibrary.framework
 
-import android.content.Context
 import android.graphics.Rect
 import android.util.SparseArray
 import com.eudycontreras.calendarheatmaplibrary.AndroidColor
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
+import com.eudycontreras.calendarheatmaplibrary.common.BubbleLayout
+import com.eudycontreras.calendarheatmaplibrary.common.CalHeatMap
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.core.elements.*
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
@@ -22,22 +23,28 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
 /**
  * TODO list:
- * - Take overlay input in order to render the tooltip information. Or better yet
- * allow the user to specify a layout for the tooltip. The layout should take the frequency data
- * draw the the given layout inside of the tooltip somehow.
+ * - Handle vertical horientation where month labels on
+ * side and weekday labels on top
+ * - Refactor code for better standards
+ * - Put relevant styling and settings data inside the
+ * data wrappers for easier user customization.
  */
 internal class CalHeatMapBuilder(
     private val shapeManager: ShapeManager,
     private var styleContext: () -> HeatMapStyle,
     private var optionsContext: () -> HeatMapOptions,
-    private var contextProvider: (() -> Context)?,
     private var viewportProvider: () -> Rect
 ) {
     private var calHeatMapData: HeatMapData = generatePlaceholderData()
 
     fun getData(): HeatMapData? = calHeatMapData
 
-    fun buildWithBounds(heatMap: CalHeatMap, bounds: Bounds, measurements: Measurements) {
+    fun buildWithBounds(
+        heatMap: CalHeatMap,
+        bounds: Bounds,
+        measurements: Measurements,
+        bubbleLayout: BubbleLayout?
+    ) {
         val data = calHeatMapData
         val style = styleContext.invoke()
         val options = optionsContext.invoke()
@@ -45,26 +52,27 @@ internal class CalHeatMapBuilder(
         val legendArea = buildLegendArea(options, style, bounds, measurements)
         val dayLabelArea = buildDayLabelArea(options, style, bounds, measurements)
         val monthLabelArea = buildMonthLabelArea(options, style, bounds, measurements)
+        val cellInfoBubble: CellInfoBubble? = buildCellBubble(bounds, bubbleLayout, measurements)
 
         val monthIndexes = SparseArray<HeatMapLabel>()
 
         val heatMapArea = buildHeatMapArea(
             options, heatMap, style, bounds,
             paddingLeft = dayLabelArea?.bounds?.width ?: MIN_OFFSET,
-            paddingTop = monthLabelArea?.bounds?.height ?: MIN_OFFSET,
-            paddingBottom = legendArea?.bounds?.height ?: MIN_OFFSET,
+            paddingTop = monthLabelArea?.bounds?.height ?: measurements.cellGap * 2,
+            paddingBottom = legendArea?.bounds?.height ?: measurements.cellGap * 2,
             viewportArea = Dimension(
                 width = measurements.viewportWidth,
                 height = measurements.viewportHeight
-            )
+            ),
+            cellInfoBubble = cellInfoBubble
         ).buildWith(
             measurements = measurements,
             monthIndexes = monthIndexes,
             monthLabels = options.monthLabels
         )
 
-        val interceptor: CellInterceptor =
-            buildInterceptor(options, style, heatMapArea.bounds, measurements)
+        val interceptor: CellInterceptor = buildInterceptor(options, style, heatMapArea.bounds, measurements, cellInfoBubble)
 
         legendArea?.buildWith(measurements, options)
         dayLabelArea?.buildWith(measurements, options.dayLabels)
@@ -75,28 +83,32 @@ internal class CalHeatMapBuilder(
         shapeManager.addShape(dayLabelArea)
         shapeManager.addShape(legendArea)
         shapeManager.addShape(interceptor)
+        shapeManager.addShape(cellInfoBubble)
     }
 
     private fun buildInterceptor(
         options: HeatMapOptions,
         style: HeatMapStyle,
         bounds: Bounds,
-        measurements: Measurements
+        measurements: Measurements,
+        cellInfoBubble: CellInfoBubble?
     ): CellInterceptor {
         val gapSize: Float = measurements.cellGap
         val cellSize: Float = measurements.cellSize
 
         val interceptor = CellInterceptor(
+            infoBubble = cellInfoBubble,
             markerRadius = cellSize / 3,
             lineThickness = style.interceptorLineThickness
         ).apply {
             visible = true
+            showTopLine = false
             viewPort = Dimension(measurements.viewportWidth, measurements.viewportHeight)
             lineColor = MutableColor(AndroidColor.WHITE)
             markerFillColor = MutableColor(style.minCellColor)
             markerStrokeColor = MutableColor(AndroidColor.WHITE)
-            shiftOffsetX = options.interceptorOffsetX
-            shiftOffsetY = options.interceptorOffsetY
+            shiftOffsetX = options.interceptorOffsetX * measurements.viewportWidth
+            shiftOffsetY = options.interceptorOffsetY * measurements.viewportHeight
             elevation = style.interceptorElevation
         }
         interceptor.build(
@@ -109,6 +121,22 @@ internal class CalHeatMapBuilder(
         return interceptor
     }
 
+    private fun buildCellBubble(
+        bounds: Bounds,
+        bubbleLayout: BubbleLayout?,
+        measurements: Measurements
+    ): CellInfoBubble? {
+        if (bubbleLayout != null) {
+            return CellInfoBubble(
+                bounds = bounds,
+                topOffset = measurements.cellSize + measurements.cellGap,
+                sideOffset = measurements.cellGap,
+                bubbleLayout = bubbleLayout
+            )
+        }
+        return null
+    }
+
     private fun buildHeatMapArea(
         options: HeatMapOptions,
         heatMap: CalHeatMap,
@@ -117,9 +145,11 @@ internal class CalHeatMapBuilder(
         paddingLeft: Float,
         paddingTop: Float,
         paddingBottom: Float,
-        viewportArea: Dimension
+        viewportArea: Dimension,
+        cellInfoBubble: CellInfoBubble?
     ): HeatMapArea {
         return HeatMapArea(
+            cellInfoBubble,
             viewportProvider, viewportArea, options, heatMap, calHeatMapData, style, bounds.copy(
                 left = bounds.left + paddingLeft,
                 top = bounds.top + paddingTop,
@@ -154,11 +184,11 @@ internal class CalHeatMapBuilder(
         bounds: Bounds,
         measurements: Measurements
     ): DayLabelArea? {
-        if (options.showDayLabels) {
+        if (options.showDayLabels && options.dayLabels.any { it.active }) {
             return DayLabelArea(
                 style, bounds.copy(
                     left = bounds.left,
-                    top = if (options.showMonthLabels) {
+                    top = if (options.showMonthLabels && options.monthLabels.any { it.active }) {
                         measurements.monthLabelAreaHeight
                     } else MIN_OFFSET,
                     right = measurements.dayLabelAreaWidth
@@ -174,7 +204,7 @@ internal class CalHeatMapBuilder(
         bounds: Bounds,
         measurements: Measurements
     ): MonthLabelArea? {
-        if (options.showMonthLabels) {
+        if (options.showMonthLabels && options.monthLabels.any { it.active }) {
             return MonthLabelArea(
                 style, bounds.copy(
                     left = if (options.showDayLabels) {
@@ -213,6 +243,7 @@ internal class CalHeatMapBuilder(
                     WeekDay(
                         index = day,
                         date = Date(dayCounter, monthIndex, yearCounter),
+                        dateString = "$dayCounter-$monthIndex-$yearCounter",
                         frequencyData = Frequency(count = 0, data = null)
                     )
                 )

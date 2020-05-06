@@ -7,7 +7,6 @@ package com.eudycontreras.calendarheatmaplibrary.common
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 internal interface Cloneable<T> {
     fun clone(): T
 }

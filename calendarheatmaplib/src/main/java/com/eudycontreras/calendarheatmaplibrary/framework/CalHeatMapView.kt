@@ -7,6 +7,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Typeface
+import android.os.Build
 import android.util.AttributeSet
 import android.view.*
 import android.view.animation.LinearInterpolator
@@ -15,18 +16,18 @@ import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
 import androidx.annotation.MainThread
 import androidx.core.widget.NestedScrollView
+import androidx.databinding.ViewDataBinding
 import com.eudycontreras.calendarheatmaplibrary.*
-import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.animations.AnimationEvent
+import com.eudycontreras.calendarheatmaplibrary.common.BubbleLayout
+import com.eudycontreras.calendarheatmaplibrary.common.CalHeatMap
 import com.eudycontreras.calendarheatmaplibrary.extensions.findMaster
-import com.eudycontreras.calendarheatmaplibrary.extensions.findParent
 import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 import com.eudycontreras.calendarheatmaplibrary.properties.Padding
-import kotlin.collections.map
 import kotlin.math.max
 
 /**
@@ -37,25 +38,19 @@ import kotlin.math.max
  * @since April 2020
  */
 
-interface CalHeatMap: ValueAnimator.AnimatorUpdateListener {
-    fun startAnimation()
-    fun stopAnimation()
-    fun fullyVisible(): Boolean
-    fun addAnimation(animation: AnimationEvent?)
-    fun removeAnimation(animation: AnimationEvent?)
-    var animationCollection: MutableList<AnimationEvent>
-    var onFullyVisible: ((CalHeatMap, Boolean) -> Unit)?
-}
-
 @MainThread
 class CalHeatMapView : View, CalHeatMap {
 
     private var sizeRatio = 0.75f
 
+    private var interactive: Boolean = false
     private var animStarted: Boolean = false
     private var fullyVisible: Boolean = false
 
+    private var infoViewBinding: ViewDataBinding? = null
+
     private val viewBounds: Rect = Rect()
+    private val scrollBounds: Rect = Rect()
 
     private var scrollingParent: ViewParent? = null
 
@@ -67,6 +62,7 @@ class CalHeatMapView : View, CalHeatMap {
     private var animationProposals: MutableList<AnimationEvent> = mutableListOf()
     private var animationRemovals: MutableList<AnimationEvent> = mutableListOf()
     override var animationCollection: MutableList<AnimationEvent> = mutableListOf()
+
     private var infiniteAnimator: ValueAnimator? = ValueAnimator.ofFloat(MAX_OFFSET, MIN_OFFSET)
 
     private var shapeManager: ShapeManager = ShapeManager()
@@ -75,7 +71,6 @@ class CalHeatMapView : View, CalHeatMap {
         shapeManager = shapeManager,
         styleContext = { calHeatMapStyle },
         optionsContext = { calHeatMapOptions },
-        contextProvider = { context },
         viewportProvider = { viewBounds }
     )
 
@@ -95,9 +90,8 @@ class CalHeatMapView : View, CalHeatMap {
     }
 
     private fun setUpAttributes(typedArray: TypedArray) {
-        val defaultColor = MutableColor(255, 225, 225, 225).toColor()
-        calHeatMapStyle.emptyCellColor = defaultColor
-
+        val defaultColor = MutableColor(AndroidColor.LTGRAY).toColor()
+        x
         typedArray.getColor(R.styleable.CalHeatMapView_legendLabelColor, -1).let {
             calHeatMapStyle.legendLabelStyle.textColor = if (it != -1) { it } else defaultColor
         }
@@ -217,8 +211,16 @@ class CalHeatMapView : View, CalHeatMap {
         this.calHeatMapOptions.legendMoreLabel = moreLabelText
     }
 
-    fun setRevealOnVisible(revealOnVisible: Boolean) {
+    fun setCellInfoView(cellInfoView: ViewDataBinding?) {
+        this.infoViewBinding = cellInfoView
+    }
 
+    override fun hapticFeeback(feedback: Int) {
+        if (!this.isHapticFeedbackEnabled) return
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            performHapticFeedback(feedback)
+        }
     }
 
     override fun addAnimation(animation: AnimationEvent?) {
@@ -306,6 +308,19 @@ class CalHeatMapView : View, CalHeatMap {
             paddingBottom = paddingBottom
         )
 
+        val cellBubbleLayout: BubbleLayout? = infoViewBinding?.run {
+            val view = this.root
+            if (view is BubbleLayoutView) {
+                view.attachOverlay {
+                    setRenderData(shapeManager.renderData)
+                }
+                view.setDataInteceptListener {
+                    setVariable(VIEWMODEL, it as WeekDay)
+                }
+                view
+            } else null
+        }
+
         this.heatMapBuilder.buildWithBounds(
             this,
             bounds = Bounds(
@@ -314,20 +329,22 @@ class CalHeatMapView : View, CalHeatMap {
                 top = padding.paddingTop.toFloat(),
                 bottom = (height - padding.paddingBottom).toFloat()
             ),
-            measurements = measurements
+            measurements = measurements,
+            bubbleLayout = cellBubbleLayout
         )
-
-        observeVisibility()
-
-        if (scrollingParent == null){
-            fullyVisible = true
-            onFullyVisible?.invoke(this, fullyVisible)
-            return
-        }
 
         if (!animStarted) {
             startAnimation()
         }
+        scrollingParent = observeVisibility()
+
+        if (scrollingParent == null){
+            if (!fullyVisible) {
+                fullyVisible = true
+                onFullyVisible?.invoke(this)
+            }
+        }
+
         invalidate()
     }
 
@@ -371,22 +388,18 @@ class CalHeatMapView : View, CalHeatMap {
         measuredHeight: Int,
         onMeasured: (Int, Int) -> Unit
     ) {
-        val cellSize = data.cellSize
 
-        val gapSize = data.cellGap ?: if (cellSize != null) {
-            cellSize * HeatMapData.CELL_SIZE_RATIO
-        } else {
-            (measuredHeight / TimeSpan.MAX_DAYS) * HeatMapData.CELL_SIZE_RATIO
-        }
+        val rawSize = (measuredHeight / TimeSpan.MAX_DAYS).toFloat()
+        val gapSize = rawSize * HeatMapData.CELL_SIZE_RATIO
 
-        val legendAreaHeight = getLegendAreaMeasurement(gapSize)
+        val legendAreaHeight = getLegendAreaMeasurement(rawSize, gapSize)
         val dayAreaWidth = getDayLabelAreaMeasurement(gapSize)
         val monthAreaHeight = getMonthLabelAreaMeasurement(gapSize)
 
         val matrixHeight = measuredHeight.toFloat() - (legendAreaHeight + monthAreaHeight)
         val viewportWidth = measuredWidth.toFloat() - (dayAreaWidth + gapSize)
 
-        val size = data.cellSize ?: ((matrixHeight - (gapSize * TimeSpan.MAX_DAYS)) / TimeSpan.MAX_DAYS)
+        val size = ((matrixHeight - (gapSize * TimeSpan.MAX_DAYS)) / TimeSpan.MAX_DAYS)
 
         val count = data.getColumnCount()
         val width = dayAreaWidth + (size * count + (gapSize * count)) + gapSize
@@ -406,7 +419,7 @@ class CalHeatMapView : View, CalHeatMap {
         onMeasured(width.toInt(), measuredHeight)
     }
 
-    private fun getLegendAreaMeasurement(gapSize: Float): Float {
+    private fun getLegendAreaMeasurement(rawSize: Float, gapSize: Float): Float {
         val legendAreaTextHeight = if (calHeatMapOptions.showLegend) {
             val textMeasurement = getTextMeasurement(
                 paint = shapeManager.paint,
@@ -414,17 +427,17 @@ class CalHeatMapView : View, CalHeatMap {
                 textSize = calHeatMapStyle.legendLabelStyle.textSize,
                 typeFace = calHeatMapStyle.legendLabelStyle.typeFace
             )
-            textMeasurement.height() + gapSize
+            textMeasurement.height() + (gapSize * 2)
         } else MIN_OFFSET
 
         return if (calHeatMapOptions.showLegend) {
-            max(HeatMapOptions.LEGEND_AREA_HEIGHT, legendAreaTextHeight + (gapSize * 2))
+            max(legendAreaTextHeight, rawSize)
         } else MIN_OFFSET
     }
 
     private fun getDayLabelAreaMeasurement(gapSize: Float): Float {
-        return if (calHeatMapOptions.showDayLabels) {
-            val textMeasurement = calHeatMapOptions.dayLabels.map { label ->
+        return if (calHeatMapOptions.showDayLabels && calHeatMapOptions.dayLabels.any { it.active }) {
+            val textMeasurement = calHeatMapOptions.dayLabels.mapIndexed { _, label ->
                 getTextMeasurement(
                     paint = shapeManager.paint,
                     text = label.text,
@@ -437,61 +450,69 @@ class CalHeatMapView : View, CalHeatMap {
     }
 
     private fun getMonthLabelAreaMeasurement(gapSize: Float): Float {
-        return if (calHeatMapOptions.showMonthLabels) {
+        return if (calHeatMapOptions.showMonthLabels && calHeatMapOptions.monthLabels.any { it.active }) {
             val textMeasurement = getTextMeasurement(
                 paint = shapeManager.paint,
-                text = calHeatMapOptions.monthLabels.map { it.text }.first { it.any { text -> Character.isUpperCase(text) } },
+                text = calHeatMapOptions.monthLabels.mapIndexed { _, it -> it.text }.first { it.any { text -> Character.isUpperCase(text) } },
                 textSize = calHeatMapStyle.monthLabelStyle.textSize,
                 typeFace = calHeatMapStyle.monthLabelStyle.typeFace
             )
             textMeasurement.height() + (gapSize * 2)
-        } else MIN_OFFSET
+        } else gapSize * 2
     }
 
-    override var onFullyVisible: ((CalHeatMap, Boolean) -> Unit)? = null
+    override var onFullyVisible: ((CalHeatMap) -> Unit)? = null
 
     override fun fullyVisible(): Boolean = fullyVisible
 
-    private fun observeVisibility() {
+    private fun observeVisibility(): ViewGroup? {
+        val viewBounds = Rect()
         val scrollBounds = Rect()
 
-        scrollingParent = findScrollParent(this.parent as ViewGroup) {
+        val scrollingParent = findScrollParent(this.parent as ViewGroup) {
             it !is NestedScrollView && it is ScrollView || it is NestedScrollView
         }
 
         if (scrollingParent == null) {
-            retrieveBounds(viewBounds, this.findMaster(), scrollBounds)
+            retrieveBounds(viewBounds, scrollBounds, this.findMaster())
+            notifyVisibility(viewBounds, scrollBounds)
+        } else {
+            retrieveBounds(viewBounds, scrollBounds, scrollingParent as ViewGroup)
             notifyVisibility(viewBounds, scrollBounds)
         }
         scrollingParent?.let { parent ->
-            retrieveBounds(viewBounds, parent as ViewGroup, scrollBounds)
-            notifyVisibility(viewBounds, scrollBounds)
-
             when (parent) {
                 is ScrollView -> {
                     parent.viewTreeObserver.addOnScrollChangedListener {
-                        retrieveBounds(viewBounds, parent, scrollBounds)
+                        retrieveBounds(viewBounds, scrollBounds, parent)
                         notifyVisibility(viewBounds, scrollBounds)
                     }
                 }
                 is NestedScrollView -> {
                     parent.setOnScrollChangeListener { _: NestedScrollView?, _: Int, _: Int, _: Int, _: Int ->
-                        retrieveBounds(viewBounds, parent, scrollBounds)
+                        retrieveBounds(viewBounds, scrollBounds, parent)
                         notifyVisibility(viewBounds, scrollBounds)
                     }
                 }
             }
         }
+        return scrollingParent as? ViewGroup?
     }
 
     private fun retrieveBounds(
         viewBounds: Rect,
+        scrollBounds: Rect,
         parent: ViewGroup?,
-        scrollBounds: Rect
+        modifyBounds: Boolean = false
     ) {
         getDrawingRect(viewBounds)
         parent?.offsetDescendantRectToMyCoords(this, viewBounds)
         parent?.getDrawingRect(scrollBounds)
+
+        if (modifyBounds) {
+            viewBounds.top = scrollBounds.top
+            viewBounds.bottom = scrollBounds.bottom
+        }
     }
 
     private fun notifyVisibility(
@@ -504,11 +525,8 @@ class CalHeatMapView : View, CalHeatMap {
         if (scrollBounds.top < (top + ((bottom - top) * sizeRatio)) && scrollBounds.bottom > (bottom - ((bottom - top) * sizeRatio))) {
             if (!fullyVisible) {
                 fullyVisible = true
-                onFullyVisible?.invoke(this, fullyVisible)
+                onFullyVisible?.invoke(this)
             }
-        } else {
-            fullyVisible = false
-            onFullyVisible?.invoke(this, false)
         }
     }
 
@@ -521,11 +539,19 @@ class CalHeatMapView : View, CalHeatMap {
             super.onLongPress(event)
             parent.requestDisallowInterceptTouchEvent(true)
 
+            retrieveBounds(viewBounds, scrollBounds, scrollingParent as? ViewGroup, modifyBounds = true)
+
             getDrawingRect(viewBounds)
-            (scrollingParent as? ViewGroup?)?.offsetDescendantRectToMyCoords(this@CalHeatMapView, viewBounds)
+            (scrollingParent as? ViewGroup)?.offsetDescendantRectToMyCoords(this@CalHeatMapView, viewBounds)
+
+            viewBounds.top = viewBounds.top - scrollBounds.top
+            viewBounds.bottom = scrollBounds.bottom
+
+            hapticFeeback(HapticFeedbackConstants.LONG_PRESS)
 
             shapeManager.delegateLongPressEvent(event, event.x, event.y, viewBounds)
 
+            interactive = true
             invalidate()
         }
     }).apply {
@@ -539,7 +565,7 @@ class CalHeatMapView : View, CalHeatMap {
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         return detector.onTouchEvent(event).let { result ->
-            if (animationCollection.size <= 0) {
+            if (animationCollection.size <= 0 && interactive) {
                 invalidate()
             }
 
@@ -549,9 +575,14 @@ class CalHeatMapView : View, CalHeatMap {
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_OUTSIDE -> {
                     performClick()
                     parent.requestDisallowInterceptTouchEvent(false)
+                    interactive = false
                 }
             }
-
+            if (event.action == MotionEvent.ACTION_UP) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                    hapticFeeback(HapticFeedbackConstants.VIRTUAL_KEY_RELEASE)
+                }
+            }
             result
         }
     }

@@ -18,7 +18,6 @@ import com.eudycontreras.calendarheatmaplibrary.utilities.ShadowUtility
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 internal open class Rectangle : DrawableShape() {
 
     protected open var shadowFilter: BlurMaskFilter? = null
@@ -55,6 +54,7 @@ internal open class Rectangle : DrawableShape() {
         }
         paint.recycle()
         paint.shader = null
+        paint.style = Paint.Style.FILL
         paint.maskFilter = shadowFilter
         paint.color = shadowColor?.toColor() ?: ShadowUtility.DEFAULT_COLOR
 

@@ -5,10 +5,12 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
-import com.eudycontreras.calendarheatmaplibrary.extensions.*
+import com.eudycontreras.calendarheatmaplibrary.extensions.addCircle
+import com.eudycontreras.calendarheatmaplibrary.extensions.addShadowOval
+import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
+import com.eudycontreras.calendarheatmaplibrary.properties.Color
 import com.eudycontreras.calendarheatmaplibrary.utilities.ShadowUtility
-import kotlin.math.min
 
 /**
  * Copyright (C) 2020 Project X
@@ -17,23 +19,22 @@ import kotlin.math.min
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 internal open class Circle : DrawableShape() {
 
-    var centerX: Float = MIN_OFFSET
+    var centerX: Float
+        get() = bounds.centerX
         set(value) {
-            field = value
-            x = value - (radius / 2)
+            bounds.centerX = value
         }
 
-    var centerY: Float = MIN_OFFSET
+    var centerY: Float
+        get() = bounds.centerY
         set(value) {
-            field = value
-            y = value - (radius / 2)
+            bounds.centerY = value
         }
 
-
-    var radius: Float = min(width, height)
+    var radius: Float = MIN_OFFSET
+        get() = bounds.radius
         set(value) {
             field = value
             width = value
@@ -51,31 +52,11 @@ internal open class Circle : DrawableShape() {
             renderShadow(canvas, paint, shadowPath)
         }
 
-        paint.recycle()
-        paint.style = Paint.Style.FILL
-        paint.color = color.toColor()
-
-        if (shader != null) {
-            paint.shader = shader
-        }
-
-        shapePath.rewind()
-        canvas.drawOval(left, top, right, bottom, paint)
-
-        shapePath.rewind()
-        shapePath.addCircle(centerX, centerY, radius)
-        canvas.drawPath(shapePath, paint)
+        renderShape(canvas, paint, shapePath)
 
         if (showStroke) {
-
             strokeColor?.let {
-                paint.recycle()
-                paint.style = Paint.Style.STROKE
-                paint.strokeWidth = strokeWidth
-                paint.color = it.toColor()
-
-                shapePath.addCircle(centerX, centerY, radius)
-                canvas.drawPath(shapePath, paint)
+                renderStroke(canvas, paint, shapePath, it)
             }
         }
     }
@@ -89,6 +70,7 @@ internal open class Circle : DrawableShape() {
         }
         paint.recycle()
         paint.shader = null
+        paint.style = Paint.Style.FILL
         paint.maskFilter = shadowFilter
         paint.color = shadowColor?.toColor() ?: ShadowUtility.DEFAULT_COLOR
 
@@ -96,5 +78,29 @@ internal open class Circle : DrawableShape() {
         shadowPath.addShadowOval(centerX, centerY, radius, elevation)
 
         canvas.drawPath(shadowPath, paint)
+    }
+
+    protected open fun renderShape(canvas: Canvas, paint: Paint, shapePath: Path) {
+        paint.recycle()
+        paint.style = Paint.Style.FILL
+        paint.color = color.toColor()
+
+        if (shader != null) {
+            paint.shader = shader
+        }
+
+        shapePath.rewind()
+        shapePath.addCircle(centerX, centerY, radius)
+
+        canvas.drawPath(shapePath, paint)
+    }
+
+    protected open fun renderStroke(canvas: Canvas, paint: Paint, shapePath: Path, stroke: Color) {
+        paint.recycle()
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = strokeWidth
+        paint.color = stroke.toColor()
+
+        canvas.drawPath(shapePath, paint)
     }
 }

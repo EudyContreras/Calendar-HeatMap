@@ -1,5 +1,7 @@
 package com.eudycontreras.calendarheatmaplibrary.properties
 
+import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
+
 /**
  * Copyright (C) 2019 Project X
  *
@@ -7,10 +9,9 @@ package com.eudycontreras.calendarheatmaplibrary.properties
  * @author Eudy Contreras.
  * @since January 2019
  */
-
 data class Dimension(
-    var width: Float,
-    var height: Float
+    var width: Float = MIN_OFFSET,
+    var height: Float = MIN_OFFSET
 ) {
     fun subtractWidth(dp: Float): Dimension {
         val newWidth = width - (dp * 2)

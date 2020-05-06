@@ -15,7 +15,6 @@ import kotlin.math.*
  * @author Eudy Contreras.
  * @since March 2020
  */
-
 internal object ShadowUtility {
     internal const val DEFAULT_COLOR = 0x30000000
 
@@ -23,15 +22,15 @@ internal object ShadowUtility {
     private const val SHADOW_OFFSET_MULTIPLIER = 0.35f
 
     private const val SHADOW_TOP_OFFSET = -0.34f
-    private const val SHADOW_LEFT_OFFSET = 0.15f
-    private const val SHADOW_RIGHT_OFFSET = -0.15f
-    private const val SHADOW_BOTTOM_OFFSET = 0.90f
+    private const val SHADOW_LEFT_OFFSET = 0.1f
+    private const val SHADOW_RIGHT_OFFSET = -0.1f
+    private const val SHADOW_BOTTOM_OFFSET = 0.5f
 
-    private const val MIN_SHADOW_ALPHA = 10f
-    private const val MAX_SHADOW_ALPHA = 50f
+    private const val MIN_SHADOW_ALPHA = 15f
+    private const val MAX_SHADOW_ALPHA = 60f
 
-    private const val MIN_SHADOW_RADIUS = 1f
-    private const val MAX_SHADOW_RADIUS = 60f
+    internal const val MIN_SHADOW_RADIUS = 1f
+    internal const val MAX_SHADOW_RADIUS = 55f
 
     private val MIN_ELEVATION = 0.dp
     private val MAX_ELEVATION = 24.dp
@@ -40,10 +39,10 @@ internal object ShadowUtility {
         get() = MutableColor(DEFAULT_COLOR)
 
 
-    fun getShadowFilter(elevation: Float): BlurMaskFilter? {
+    fun getShadowFilter(elevation: Float, minShadowRadius: Float = MIN_SHADOW_RADIUS, maxShadowRadius: Float = MAX_SHADOW_RADIUS): BlurMaskFilter? {
         if (elevation <= 0) return null
 
-        val radius = mapRange(elevation, MIN_ELEVATION, MAX_ELEVATION, MIN_SHADOW_RADIUS, MAX_SHADOW_RADIUS)
+        val radius = mapRange(elevation, MIN_ELEVATION, MAX_ELEVATION, minShadowRadius, maxShadowRadius)
 
         return BlurMaskFilter(radius, BlurMaskFilter.Blur.NORMAL)
     }
@@ -54,9 +53,8 @@ internal object ShadowUtility {
         val delta = mapRange(elevation, MIN_ELEVATION, MAX_ELEVATION, MIN_OFFSET, MAX_OFFSET)
 
         val alpha = (MAX_SHADOW_ALPHA - abs(MAX_SHADOW_ALPHA * delta) + (MIN_SHADOW_ALPHA * delta))
-        val shadow = alpha.roundToInt()
 
-        return color.clone().updateAlpha(shadow)
+        return color.clone().updateAlpha(alpha.roundToInt())
     }
 
     private fun getShadowOffsetX(elevation: Float, translationZ: Float = MIN_OFFSET, shadowCompatRotation: Double = 0.0): Int {

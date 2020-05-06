@@ -3,8 +3,8 @@ package com.eudycontreras.calendarheatmaplibrary.framework.core.elements
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
-import android.view.MotionEvent
 import android.view.animation.DecelerateInterpolator
+import android.view.animation.OvershootInterpolator
 import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.animations.AnimationEvent
@@ -15,7 +15,6 @@ import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Rectangle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Text
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
-import kotlin.math.abs
 
 /**
  * Copyright (C) 2020 Project X
@@ -24,28 +23,24 @@ import kotlin.math.abs
  * @author Eudy Contreras.
  * @since April 2020
  */
-
 internal class HeatMapCell(
-    var rowIndex: Int,
-    var colIndex: Int
+    val cellGap: Float,
+    var cellText: Text? = null
 ) : Rectangle(), TouchConsumer, Animateable {
 
-    var hovered: Boolean = false
-
-    var isHighlighting = false
-
-    var cellText: Text? = null
+    internal var hovered: Boolean = false
+    internal var isHighlighting: Boolean = false
 
     private var allowInteraction: Boolean = true
 
-    private val interpolatorIn = DecelerateInterpolator()
+    private val interpolatorIn = OvershootInterpolator()
     private val interpolatorOut = DecelerateInterpolator()
 
     private var highlightSavedState: Triple<Float, Bounds, MutableColor>? = null
-    private var highlightSavedStateText: Pair<Float, Bounds>? = null
+    private var highlightSavedStateText: Pair<Float, MutableColor>? = null
     private var revealAnimationState: Triple<Int, Bounds, Float?> = Triple(0, Bounds(), null)
 
-    override var touchHandler: ((TouchConsumer, MotionEvent, Bounds, Float, Float) -> Unit)? = null
+    override var touchHandler: ((TouchConsumer, Int, Bounds, Float, Float, Float, Float, Float, Float) -> Unit)? = null
 
     override var render: Boolean
         get() = super.render
@@ -54,9 +49,9 @@ internal class HeatMapCell(
             cellText?.render = value
         }
 
-    override fun onTouch(event: MotionEvent, bounds: Bounds, x: Float, y: Float) {
+    override fun onTouch(eventAction: Int, bounds: Bounds, x: Float, y: Float, minX: Float, maxX: Float, minY: Float, maxY: Float) {
         if (allowInteraction) {
-            touchHandler?.invoke(this, event, bounds, x, y)
+            touchHandler?.invoke(this, eventAction, bounds, x, y, minX, maxX, minY, maxY)
         }
     }
 
@@ -75,18 +70,22 @@ internal class HeatMapCell(
         if (highlightSavedState == null) {
             highlightSavedState = Triple(elevation, bounds.copy(), color.clone())
             cellText?.let {
-                highlightSavedStateText = Pair(it.textSize, it.bounds.copy())
+                highlightSavedStateText = Pair(it.textSize, it.textColor)
             }
         }
         return highlightSavedState?.let { savedState ->
             isHighlighting = true
+            val elevate = DEPTH_AMOUNT.dp
+            val adjust = COLOR_AMOUNT
+            val darkAdjust = COLOR_AMOUNT_DARK
+            val brightAdjust = COLOR_AMOUNT_BRIGHT
+            val zoom = cellGap * ZOOM_AMOUNT
             AnimationEvent(
                 duration = duration,
-                onEnd = { isHighlighting = true },
+                onEnd = {
+                    isHighlighting = true
+                },
                 updateListener = { _, _, offset ->
-                    val zoom = 6.dp
-                    val elevate = 6.dp
-                    val adjust = 0.2f
                     val delta = interpolatorIn.getInterpolation(offset)
                     bounds.left = savedState.second.left - (zoom * delta)
                     bounds.right = savedState.second.right + (zoom * delta)
@@ -97,6 +96,11 @@ internal class HeatMapCell(
 
                     cellText?.let {
                         highlightSavedStateText?.let { textState ->
+                            if (savedState.third.isBright(TEXT_COLOR_BRIGHT_THRESHOLD)) {
+                                it.textColor = textState.second.adjust(MAX_OFFSET + (darkAdjust * delta))
+                            } else {
+                                it.textColor = textState.second.adjust(MAX_OFFSET + (brightAdjust * delta))
+                            }
                             it.textSize = textState.first + (zoom * delta)
                         }
                     }
@@ -107,22 +111,31 @@ internal class HeatMapCell(
 
     fun removeHighlight(duration: Long): AnimationEvent? {
         return highlightSavedState?.let { savedState ->
+            val elevate = DEPTH_AMOUNT.dp
+            val adjust = COLOR_AMOUNT
+            val darkAdjust = COLOR_AMOUNT_DARK
+            val brightAdjust = COLOR_AMOUNT_BRIGHT
+            val zoom = cellGap * ZOOM_AMOUNT
             AnimationEvent(
                 duration = duration,
                 onEnd = { isHighlighting = false },
                 updateListener = { _, _, offset ->
-                    val zoom = 6.dp
-                    val adjust = 0.2f
-                    val delta = interpolatorOut.getInterpolation(MAX_OFFSET - offset)
-                    bounds.left = savedState.second.left - abs(bounds.left - savedState.second.left) * delta
-                    bounds.right = savedState.second.right + abs(bounds.right - savedState.second.right) * delta
-                    bounds.top =  savedState.second.top - abs(bounds.top - savedState.second.top) * delta
-                    bounds.bottom =  savedState.second.bottom + abs(bounds.bottom - savedState.second.bottom) * delta
-                    color = savedState.third.adjust(MAX_OFFSET + (adjust * delta))
-                    elevation =  savedState.first - abs(elevation - savedState.first) * delta
+                    val delta = interpolatorOut.getInterpolation(offset)
+                    bounds.left = (savedState.second.left - zoom) + (zoom * delta)
+                    bounds.right = (savedState.second.right + zoom) - (zoom * delta)
+                    bounds.top = (savedState.second.top - zoom) + (zoom * delta)
+                    bounds.bottom = (savedState.second.bottom + zoom) - (zoom * delta)
+                    color = savedState.third.adjust((MAX_OFFSET + adjust) - (adjust * delta))
+                    elevation = (savedState.first + elevate) - (elevate * delta)
+
                     cellText?.let {
                         highlightSavedStateText?.let { textState ->
-                            it.textSize = textState.first + (zoom * delta)
+                            if (savedState.third.isBright(TEXT_COLOR_BRIGHT_THRESHOLD)) {
+                                it.textColor = textState.second.adjust((MAX_OFFSET + darkAdjust) - (darkAdjust * delta))
+                            } else {
+                                it.textColor = textState.second.adjust((MAX_OFFSET + brightAdjust) - (brightAdjust * delta))
+                            }
+                            it.textSize = (textState.first + zoom) - (zoom * delta)
                         }
                     }
                 }
@@ -130,18 +143,18 @@ internal class HeatMapCell(
         }
     }
 
-    fun moveTo(rowIndex: Int, colIndex: Int, shapes: Array<Array<HeatMapCell>>) {
-        val lastInRender = shapes[rowIndex][colIndex]
-
-        lastInRender.rowIndex = rowIndex
-        lastInRender.colIndex = colIndex
-
-        shapes[rowIndex][colIndex] = this
-
-        shapes[this.rowIndex][this.colIndex] = lastInRender
-
-        this.rowIndex = rowIndex
-        this.colIndex = colIndex
+    fun getAdjustedColor(color: MutableColor, offset: Float = MAX_OFFSET): MutableColor {
+        return when {
+            color.isBright(TEXT_COLOR_BRIGHT_THRESHOLD) -> {
+                color.adjustMin(TEXT_COLOR_DARKEN_OFFSET * offset)
+            }
+            color.isDark(TEXT_COLOR_DARK_THRESHOLD) -> {
+                color.adjustMin(TEXT_COLOR_BRIGHTEN_OFFSET * offset)
+            }
+            else -> {
+                color.adjustMin(TEXT_COLOR_DEFAUlT_OFFSET * offset)
+            }
+        }
     }
 
     fun isInViewport(viewport: Bounds): Boolean {
@@ -167,5 +180,21 @@ internal class HeatMapCell(
         bounds.width = revealAnimationState.second.width * delta
         bounds.height = revealAnimationState.second.height * delta
         cellText?.textSize =  (revealAnimationState.third?: MIN_OFFSET) * delta
+    }
+
+    companion object {
+        const val DEPTH_AMOUNT = 4f
+        const val ZOOM_AMOUNT = 1f
+        const val COLOR_AMOUNT = 0.2f
+
+        const val COLOR_AMOUNT_BRIGHT = 0.2f
+        const val COLOR_AMOUNT_DARK = -0.05f
+
+        const val TEXT_COLOR_BRIGHT_THRESHOLD = 225
+        const val TEXT_COLOR_DARK_THRESHOLD = 140
+
+        const val TEXT_COLOR_DARKEN_OFFSET = -0.16f
+        const val TEXT_COLOR_DEFAUlT_OFFSET = 0.5f
+        const val TEXT_COLOR_BRIGHTEN_OFFSET = 1.1f
     }
 }

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.framework.data.Date
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.time.temporal.WeekFields
 import java.util.*
@@ -35,9 +36,6 @@ internal class SomeViewModel : ViewModel() {
         get() = getSafeData()
 
     val demoData5: HeatMapData
-        get() = getSafeData()
-
-    val demoData6: HeatMapData
         get() = getSafeData()
 
     private fun getSafeData(): HeatMapData {
@@ -71,6 +69,8 @@ internal class SomeViewModel : ViewModel() {
         }
         var maxFrequencyValue = 0
 
+        val dateFormatter = DateTimeFormatter.ofPattern(DEFAULT_DATE_FORMAT)
+
         weeks@ for (index in 0L..weeksInYear) {
             val weekFields: WeekFields = WeekFields.of(Locale.getDefault())
             val weekNumber = dateFrom.get(weekFields.weekOfWeekBasedYear())
@@ -83,12 +83,13 @@ internal class SomeViewModel : ViewModel() {
                 }
                 val date = dateFrom.toDate()
 
-                val frequency = if (holidays.contains(date)) {
+                val frequency = if (holidays.contains(date) || vacation.contains(date)) {
                     0
                 } else if (day > 0 && day < DAYS_IN_WEEK - 1) {
+                    (Frequency.MIN_VALUE .. Frequency.MAX_VALUE).random()
                     Random.nextInt(Frequency.MAX_VALUE + 1)
                 } else if (Random.nextBoolean()) {
-                    Random.nextInt(Frequency.MAX_VALUE / 2)
+                    (Frequency.MIN_VALUE until Frequency.MAX_VALUE.div(2)).random()
                 } else 0
 
                 if (frequency > maxFrequencyValue) {
@@ -98,6 +99,7 @@ internal class SomeViewModel : ViewModel() {
                     WeekDay(
                         index = day,
                         date = date,
+                        dateString = dateFrom.format(dateFormatter),
                         frequencyData = Frequency(count = frequency, data = null)
                     )
                 )
@@ -126,5 +128,7 @@ internal class SomeViewModel : ViewModel() {
     private companion object {
         const val DAYS_IN_WEEK = 7
         const val WEEKS_IN_YEAR = 52
+
+        const val DEFAULT_DATE_FORMAT = "MMM dd, YYYY"
     }
 }

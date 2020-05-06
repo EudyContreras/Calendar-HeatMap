@@ -2,6 +2,14 @@ package com.eudycontreras.calendarheatmaplibrary.framework.data
 
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 
+/**
+ * Copyright (C) 2020 Project X
+ *
+ * @Project ProjectX
+ * @author Eudy Contreras.
+ * @since April 2020
+ */
+
 data class Measurements(
     val cellGap: Float = MIN_OFFSET,
     val cellSize: Float = MIN_OFFSET,

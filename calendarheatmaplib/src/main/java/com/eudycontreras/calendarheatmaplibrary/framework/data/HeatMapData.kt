@@ -20,8 +20,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class HeatMapData(
-    @Dimension var cellGap: Float? = null,
-    @Dimension var cellSize: Float? = null,
     val timeSpan: TimeSpan,
     val options: HeatMapOptions? = null
 ) {
@@ -78,6 +76,7 @@ data class Week(
 data class WeekDay(
     val index: Int,
     val date: Date,
+    val dateString: String,
     val frequencyData: Frequency
 )
 
@@ -86,6 +85,10 @@ data class Frequency(
     val count: Int,
     @ContextualSerialization val data: Any?
 ) {
+    val countString: String
+        get() = if (count > 0) { count.toString().padStart(2, '0')
+        } else "No"
+
     companion object {
         const val MIN_VALUE = 0
         const val MAX_VALUE = 50
