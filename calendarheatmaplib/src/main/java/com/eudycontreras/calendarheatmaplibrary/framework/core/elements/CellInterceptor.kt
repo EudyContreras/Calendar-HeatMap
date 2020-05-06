@@ -151,7 +151,7 @@ internal class CellInterceptor(
     private fun setPositionX(value: Float, minX: Float, maxX: Float) {
         val section = (viewPort.width / 2)
 
-        val shift = mapRange(value - (minX + section), -section, section, -(shiftOffsetX * 4f), shiftOffsetX)
+        val shift = mapRange(value - (minX + section), -section, section, -(shiftOffsetX * 3f), shiftOffsetX)
 
         marker.centerX = (value + shift)
 
@@ -177,7 +177,7 @@ internal class CellInterceptor(
     private fun setPositionY(value: Float,  minY: Float, maxY: Float) {
         val section = bounds.height / 2
 
-        val shift = mapRange(value - section, -section, bounds.height, -(shiftOffsetY * 3), MIN_OFFSET)
+        val shift = mapRange(value - section, -section, bounds.height, -(shiftOffsetY * 3), shiftOffsetY / 3)
 
         marker.centerY = (value + shift)
 

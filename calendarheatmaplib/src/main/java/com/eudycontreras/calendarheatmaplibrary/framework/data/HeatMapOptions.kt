@@ -1,5 +1,6 @@
 package com.eudycontreras.calendarheatmaplibrary.framework.data
 
+import androidx.annotation.Dimension
 import com.eudycontreras.calendarheatmaplibrary.extensions.dp
 import com.eudycontreras.calendarheatmaplibrary.properties.Index
 import kotlinx.serialization.Serializable
@@ -29,16 +30,17 @@ data class AnimationData(
 
 @Serializable
 data class HeatMapOptions(
+    @Dimension var cellGap: Float? = null,
+    var showLegend: Boolean = false,
+    var legendAlignment: Alignment = Alignment.LEFT,
     var legendLessLabel: String = LESS,
     var legendMoreLabel: String = MORE,
     var showCellDayText: Boolean = false,
     var showMonthLabels: Boolean = true,
     var showDayLabels: Boolean = true,
-    var showLegend: Boolean = false,
-    var legendAlignment: Alignment = Alignment.LEFT,
     var cellHighlightDuration: Long = 250,
-    var interceptorOffsetX: Float = 80.dp,
-    var interceptorOffsetY: Float = 70.dp,
+    var interceptorOffsetX: Float = 0.25f,
+    var interceptorOffsetY: Float = 0.25f,
     var maxFrequencyValue: Int = Frequency.MAX_VALUE,
     var matrixRevealAnimation: AnimationData? = AnimationData(),
     var dayLabels: List<HeatMapLabel> = listOf(

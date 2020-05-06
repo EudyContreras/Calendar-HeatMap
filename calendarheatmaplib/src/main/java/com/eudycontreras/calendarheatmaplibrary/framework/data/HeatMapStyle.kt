@@ -18,6 +18,7 @@ import com.eudycontreras.calendarheatmaplibrary.extensions.sp
 data class HeatMapStyle(
     var cellTextColor: Int? = null,
     var cellElevation: Float = MIN_OFFSET,
+    val cellTypeFace: Typeface = Typeface.DEFAULT_BOLD,
     var minCellColor: Int = AndroidColor.TRANSPARENT,
     var maxCellColor: Int = AndroidColor.TRANSPARENT,
     var emptyCellColor: Int = AndroidColor.TRANSPARENT,
@@ -25,9 +26,9 @@ data class HeatMapStyle(
     var interceptorCenterColor: Int = AndroidColor.WHITE,
     var interceptorElevation: Float = 4.dp,
     var interceptorLineThickness: Float = 1.5f.dp,
-    var dayLabelStyle: TextStyle = TextStyle(Typeface.DEFAULT, 12.sp, AndroidColor.DKGRAY),
-    var monthLabelStyle: TextStyle = TextStyle(Typeface.DEFAULT, 12.sp, AndroidColor.DKGRAY),
-    var legendLabelStyle: TextStyle = TextStyle(Typeface.DEFAULT, 12.sp, AndroidColor.DKGRAY)
+    var dayLabelStyle: TextStyle = TextStyle(Typeface.DEFAULT_BOLD, 12.sp, AndroidColor.DKGRAY),
+    var monthLabelStyle: TextStyle = TextStyle(Typeface.DEFAULT_BOLD, 12.sp, AndroidColor.DKGRAY),
+    var legendLabelStyle: TextStyle = TextStyle(Typeface.DEFAULT_BOLD, 12.sp, AndroidColor.DKGRAY)
 )
 
 data class TextStyle(

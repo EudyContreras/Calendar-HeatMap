@@ -1,6 +1,7 @@
 package com.eudycontreras.calendarheatmaplibrary.extensions
 
 import android.content.res.Resources
+import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
 /**
  * Copyright (C) 2020 Project X
@@ -41,14 +42,12 @@ val Double.sp: Float
     get() = this.toFloat() * Resources.getSystem().displayMetrics.scaledDensity
 
 
-fun getDps(value: Float): Float {
-    return value.dp
-}
-
 private fun Int.clamp(max: Int): Int {
     if (this >= max) return max
     return this
 }
+
+fun Int.toMutableColor() = MutableColor(this)
 
 fun Float.clamp(min: Float? = null, max: Float? = null): Float {
     if (min == null && max == null) return this

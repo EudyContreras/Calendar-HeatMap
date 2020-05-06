@@ -20,8 +20,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class HeatMapData(
-    @Dimension var cellGap: Float? = null,
-    @Dimension var cellSize: Float? = null,
     val timeSpan: TimeSpan,
     val options: HeatMapOptions? = null
 ) {

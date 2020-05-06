@@ -333,17 +333,18 @@ class CalHeatMapView : View, CalHeatMap {
             bubbleLayout = cellBubbleLayout
         )
 
-        observeVisibility()
-
-        if (scrollingParent == null){
-            fullyVisible = true
-            onFullyVisible?.invoke(this, fullyVisible)
-            return
-        }
-
         if (!animStarted) {
             startAnimation()
         }
+        scrollingParent = observeVisibility()
+
+        if (scrollingParent == null){
+            if (!fullyVisible) {
+                fullyVisible = true
+                onFullyVisible?.invoke(this)
+            }
+        }
+
         invalidate()
     }
 
@@ -387,22 +388,18 @@ class CalHeatMapView : View, CalHeatMap {
         measuredHeight: Int,
         onMeasured: (Int, Int) -> Unit
     ) {
-        val cellSize = data.cellSize
 
-        val gapSize = data.cellGap ?: if (cellSize != null) {
-            cellSize * HeatMapData.CELL_SIZE_RATIO
-        } else {
-            (measuredHeight / TimeSpan.MAX_DAYS) * HeatMapData.CELL_SIZE_RATIO
-        }
+        val rawSize = (measuredHeight / TimeSpan.MAX_DAYS).toFloat()
+        val gapSize = rawSize * HeatMapData.CELL_SIZE_RATIO
 
-        val legendAreaHeight = getLegendAreaMeasurement(gapSize)
+        val legendAreaHeight = getLegendAreaMeasurement(rawSize, gapSize)
         val dayAreaWidth = getDayLabelAreaMeasurement(gapSize)
         val monthAreaHeight = getMonthLabelAreaMeasurement(gapSize)
 
         val matrixHeight = measuredHeight.toFloat() - (legendAreaHeight + monthAreaHeight)
         val viewportWidth = measuredWidth.toFloat() - (dayAreaWidth + gapSize)
 
-        val size = data.cellSize ?: ((matrixHeight - (gapSize * TimeSpan.MAX_DAYS)) / TimeSpan.MAX_DAYS)
+        val size = ((matrixHeight - (gapSize * TimeSpan.MAX_DAYS)) / TimeSpan.MAX_DAYS)
 
         val count = data.getColumnCount()
         val width = dayAreaWidth + (size * count + (gapSize * count)) + gapSize
@@ -422,7 +419,7 @@ class CalHeatMapView : View, CalHeatMap {
         onMeasured(width.toInt(), measuredHeight)
     }
 
-    private fun getLegendAreaMeasurement(gapSize: Float): Float {
+    private fun getLegendAreaMeasurement(rawSize: Float, gapSize: Float): Float {
         val legendAreaTextHeight = if (calHeatMapOptions.showLegend) {
             val textMeasurement = getTextMeasurement(
                 paint = shapeManager.paint,
@@ -430,11 +427,11 @@ class CalHeatMapView : View, CalHeatMap {
                 textSize = calHeatMapStyle.legendLabelStyle.textSize,
                 typeFace = calHeatMapStyle.legendLabelStyle.typeFace
             )
-            textMeasurement.height() + gapSize
+            textMeasurement.height() + (gapSize * 2)
         } else MIN_OFFSET
 
         return if (calHeatMapOptions.showLegend) {
-            max(HeatMapOptions.LEGEND_AREA_HEIGHT, legendAreaTextHeight + (gapSize * 2))
+            max(legendAreaTextHeight, rawSize)
         } else MIN_OFFSET
     }
 
@@ -464,26 +461,26 @@ class CalHeatMapView : View, CalHeatMap {
         } else gapSize * 2
     }
 
-    override var onFullyVisible: ((CalHeatMap, Boolean) -> Unit)? = null
+    override var onFullyVisible: ((CalHeatMap) -> Unit)? = null
 
     override fun fullyVisible(): Boolean = fullyVisible
 
-    private fun observeVisibility() {
+    private fun observeVisibility(): ViewGroup? {
         val viewBounds = Rect()
         val scrollBounds = Rect()
 
-        scrollingParent = findScrollParent(this.parent as ViewGroup) {
+        val scrollingParent = findScrollParent(this.parent as ViewGroup) {
             it !is NestedScrollView && it is ScrollView || it is NestedScrollView
         }
 
         if (scrollingParent == null) {
             retrieveBounds(viewBounds, scrollBounds, this.findMaster())
             notifyVisibility(viewBounds, scrollBounds)
+        } else {
+            retrieveBounds(viewBounds, scrollBounds, scrollingParent as ViewGroup)
+            notifyVisibility(viewBounds, scrollBounds)
         }
         scrollingParent?.let { parent ->
-            retrieveBounds(viewBounds, scrollBounds, parent as ViewGroup)
-            notifyVisibility(viewBounds, scrollBounds)
-
             when (parent) {
                 is ScrollView -> {
                     parent.viewTreeObserver.addOnScrollChangedListener {
@@ -499,6 +496,7 @@ class CalHeatMapView : View, CalHeatMap {
                 }
             }
         }
+        return scrollingParent as? ViewGroup?
     }
 
     private fun retrieveBounds(
@@ -527,11 +525,8 @@ class CalHeatMapView : View, CalHeatMap {
         if (scrollBounds.top < (top + ((bottom - top) * sizeRatio)) && scrollBounds.bottom > (bottom - ((bottom - top) * sizeRatio))) {
             if (!fullyVisible) {
                 fullyVisible = true
-                onFullyVisible?.invoke(this, fullyVisible)
+                onFullyVisible?.invoke(this)
             }
-        } else {
-            fullyVisible = false
-            onFullyVisible?.invoke(this, false)
         }
     }
 

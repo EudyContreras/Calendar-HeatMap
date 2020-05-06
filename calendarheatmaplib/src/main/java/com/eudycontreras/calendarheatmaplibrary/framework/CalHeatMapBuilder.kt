@@ -107,8 +107,8 @@ internal class CalHeatMapBuilder(
             lineColor = MutableColor(AndroidColor.WHITE)
             markerFillColor = MutableColor(style.minCellColor)
             markerStrokeColor = MutableColor(AndroidColor.WHITE)
-            shiftOffsetX = options.interceptorOffsetX
-            shiftOffsetY = options.interceptorOffsetY
+            shiftOffsetX = options.interceptorOffsetX * measurements.viewportWidth
+            shiftOffsetY = options.interceptorOffsetY * measurements.viewportHeight
             elevation = style.interceptorElevation
         }
         interceptor.build(

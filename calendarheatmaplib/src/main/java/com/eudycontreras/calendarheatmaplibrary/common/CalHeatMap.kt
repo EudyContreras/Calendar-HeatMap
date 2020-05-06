@@ -11,5 +11,5 @@ interface CalHeatMap: ValueAnimator.AnimatorUpdateListener {
     fun addAnimation(animation: AnimationEvent?)
     fun removeAnimation(animation: AnimationEvent?)
     var animationCollection: MutableList<AnimationEvent>
-    var onFullyVisible: ((CalHeatMap, Boolean) -> Unit)?
+    var onFullyVisible: ((CalHeatMap) -> Unit)?
 }

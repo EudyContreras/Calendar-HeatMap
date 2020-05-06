@@ -12,6 +12,7 @@ import com.eudycontreras.calendarheatmaplibrary.animations.MatrixRevealAnimation
 import com.eudycontreras.calendarheatmaplibrary.common.CalHeatMap
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchConsumer
+import com.eudycontreras.calendarheatmaplibrary.extensions.toMutableColor
 import com.eudycontreras.calendarheatmaplibrary.framework.core.DrawableShape
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Text
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
@@ -138,10 +139,8 @@ internal class HeatMapArea(
     }
 
     private fun setUpAnimation() {
-        heatMap.onFullyVisible = { _, visible ->
-            if (visible) {
-                animateReveal()
-            }
+        heatMap.onFullyVisible = {
+            animateReveal()
         }
     }
 
@@ -240,7 +239,8 @@ internal class HeatMapArea(
                 x = shape.bounds.centerX
                 y = shape.bounds.centerY + (height / 2)
                 alignment = Alignment.CENTER
-                textColor = shape.getAdjustedColor(shape.color)
+                typeFace = style.cellTypeFace
+                textColor = style.cellTextColor?.toMutableColor() ?: shape.getAdjustedColor(shape.color)
             }
         }
         return null
