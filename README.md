@@ -1,6 +1,6 @@
 
 [banner]: ./calheatmap.png
-[demo]: ./calheatmap.gif
+[demo]: ./calheatmap-alt.png
 
 <div align="center">
 
@@ -15,15 +15,9 @@
 
 </div>
 
-![Banner Demo][banner]
+![Banner Demo][demo]
 
 Library for dynamically generating calendar heatmap view.
-
-<div align="center">
- 
-![Demo][demo]
- 
- </div>
 
 ## License
 
