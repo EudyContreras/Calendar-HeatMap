@@ -17,7 +17,7 @@
 
 ![Banner Demo][demo]
 
-Library for dynamically generating calendar heatmap view.
+Library for dynamically generating calendar heatmap view similar to the ones on GitHub. Simply especify the data and the Calendar will be generated.
 
 ## License
 
