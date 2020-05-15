@@ -58,15 +58,15 @@ class CalHeatMapView : View, CalHeatMap {
     private var calHeatMapStyle: HeatMapStyle = HeatMapStyle()
     private var calHeatMapOptions: HeatMapOptions = HeatMapOptions()
 
-    private var animationProposals: MutableList<AnimationEvent> = mutableListOf()
-    private var animationRemovals: MutableList<AnimationEvent> = mutableListOf()
+    private val animationProposals: MutableList<AnimationEvent> = mutableListOf()
+    private val animationRemovals: MutableList<AnimationEvent> = mutableListOf()
     override var animationCollection: MutableList<AnimationEvent> = mutableListOf()
 
     private var infiniteAnimator: ValueAnimator? = ValueAnimator.ofFloat(MAX_OFFSET, MIN_OFFSET)
 
     private var shapeManager: ShapeManager = ShapeManager()
 
-    private var heatMapBuilder: CalHeatMapBuilder = CalHeatMapBuilder(
+    private val heatMapBuilder: CalHeatMapBuilder = CalHeatMapBuilder(
         shapeManager = shapeManager,
         styleContext = { calHeatMapStyle },
         optionsContext = { calHeatMapOptions },

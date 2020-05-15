@@ -13,10 +13,4 @@ data class Padding(
     val paddingEnd: Int,
     val paddingTop: Int,
     val paddingBottom: Int
-) {
-    val verticalPadding: Int
-        get() = paddingTop + paddingBottom
-
-    val horizontalPadding: Int
-        get() = paddingStart + paddingEnd
-}
+)

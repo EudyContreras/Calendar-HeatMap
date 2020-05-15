@@ -1,6 +1,5 @@
 package com.eudycontreras.calendarheatmaplibrary.framework.data
 
-import androidx.annotation.Dimension
 import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.mapRange

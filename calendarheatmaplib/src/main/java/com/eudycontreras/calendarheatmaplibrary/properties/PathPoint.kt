@@ -10,13 +10,11 @@ import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
  * @since April 2020
  */
 
-sealed class PathPoint(
-) {
+sealed class PathPoint {
 
+    data class Point(var x: Float, var y: Float) : PathPoint()
 
-    data class Point(var x: Float, var y: Float): PathPoint()
-
-    data class Corner(var corner: PathCorner, val cornerRadius: Float): PathPoint() {
+    data class Corner(var corner: PathCorner, val cornerRadius: Float) : PathPoint() {
         var startX: Float = MIN_OFFSET
         var startY: Float = MIN_OFFSET
         var endX: Float = MIN_OFFSET
@@ -24,7 +22,7 @@ sealed class PathPoint(
 
         init {
             when (corner) {
-                PathCorner.TOP_LEFT ->  {
+                PathCorner.TOP_LEFT -> {
                     startX = MIN_OFFSET
                     startY = -cornerRadius
                     endX = cornerRadius

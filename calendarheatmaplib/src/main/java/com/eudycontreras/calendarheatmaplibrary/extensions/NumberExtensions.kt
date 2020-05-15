@@ -11,12 +11,6 @@ import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
  * @since April 2020
  */
 
-val Int.f: Float
-    get() = this.toFloat()
-
-val Float.i: Int
-    get() = this.toInt()
-
 /**
  * Use the float as density independent pixels and return the pixel value
  */
@@ -26,9 +20,6 @@ val Int.dp: Float
 val Float.dp: Float
     get() = this * Resources.getSystem().displayMetrics.density
 
-val Double.dp: Float
-    get() = this.toFloat() * Resources.getSystem().displayMetrics.density
-
 /**
  * Use the float as scale independent pixels and return the pixel value
  */
@@ -37,15 +28,6 @@ val Int.sp: Float
 
 val Float.sp: Float
     get() = this * Resources.getSystem().displayMetrics.scaledDensity
-
-val Double.sp: Float
-    get() = this.toFloat() * Resources.getSystem().displayMetrics.scaledDensity
-
-
-private fun Int.clamp(max: Int): Int {
-    if (this >= max) return max
-    return this
-}
 
 fun Int.toMutableColor() = MutableColor(this)
 
