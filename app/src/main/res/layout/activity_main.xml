@@ -88,25 +88,6 @@
                         android:layout_height="250dp"
                         app:calHeatMapData="@{viewModel.demoData3}"
                         app:cellColorEmpty="@{@color/colorEmpty}"
-                        app:cellColorMax="@{@color/colorMaxAlt2}"
-                        app:cellColorMin="@{@color/colorMinAlt2}"
-                        app:cellElevation="@{Utils.getDp(1)}"
-                        app:cellInfoView="@{cellInfoBox}"
-                        app:legendLabelColor="@{@color/colorPrimaryVeryLight}"
-                        app:monthLabelColor="@{@color/colorPrimaryVeryLight}"
-                        app:showLegend="@{true}"
-                        app:weekDayLabelColor="@{@color/colorPrimaryVeryLight}" />
-                </HorizontalScrollView>
-
-                <HorizontalScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
-                        android:layout_width="wrap_content"
-                        android:layout_height="250dp"
-                        app:calHeatMapData="@{viewModel.demoData4}"
-                        app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMaxAlt0}"
                         app:cellColorMin="@{@color/colorMinAlt0}"
                         app:cellElevation="@{Utils.getDp(0)}"
@@ -127,7 +108,7 @@
                     <com.eudycontreras.calendarheatmaplibrary.framework.CalHeatMapView
                         android:layout_width="wrap_content"
                         android:layout_height="175dp"
-                        app:calHeatMapData="@{viewModel.demoData5}"
+                        app:calHeatMapData="@{viewModel.demoData4}"
                         app:cellColorEmpty="@{@color/colorEmpty}"
                         app:cellColorMax="@{@color/colorMaxAlt1}"
                         app:cellColorMin="@{@color/colorMinAlt1}"

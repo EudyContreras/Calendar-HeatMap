@@ -6,6 +6,7 @@ import com.eudycontreras.calendarheatmaplibrary.AndroidColor
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.extensions.dp
 import com.eudycontreras.calendarheatmaplibrary.extensions.sp
+import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
 /**
  * Copyright (C) 2020 Project X
@@ -34,5 +35,5 @@ data class HeatMapStyle(
 data class TextStyle(
     var typeFace: Typeface,
     var textSize: Float,
-    @ColorInt var textColor: Int
+    @ColorInt var textColor: Int =  MutableColor(AndroidColor.LTGRAY).toColor()
 )

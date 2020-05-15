@@ -35,9 +35,6 @@ internal class SomeViewModel : ViewModel() {
     val demoData4: HeatMapData
         get() = getSafeData()
 
-    val demoData5: HeatMapData
-        get() = getSafeData()
-
     private fun getSafeData(): HeatMapData {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             generateData()

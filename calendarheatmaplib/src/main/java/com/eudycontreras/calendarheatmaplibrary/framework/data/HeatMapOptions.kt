@@ -40,7 +40,7 @@ data class HeatMapOptions(
     var showDayLabels: Boolean = true,
     var cellHighlightDuration: Long = 250,
     var interceptorOffsetX: Float = 0.25f,
-    var interceptorOffsetY: Float = 0.25f,
+    var interceptorOffsetY: Float = 0.65f,
     var maxFrequencyValue: Int = Frequency.MAX_VALUE,
     var matrixRevealAnimation: AnimationData? = AnimationData(),
     var dayLabels: List<HeatMapLabel> = listOf(

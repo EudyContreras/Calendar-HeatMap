@@ -1,10 +1,8 @@
 package com.eudycontreras.calendarheatmaplibrary.framework.core.elements
 
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Path
-import android.graphics.Rect
+import android.graphics.*
 import android.view.MotionEvent
+import com.eudycontreras.calendarheatmaplibrary.MAX_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.MIN_OFFSET
 import com.eudycontreras.calendarheatmaplibrary.common.RenderTarget
 import com.eudycontreras.calendarheatmaplibrary.common.TouchableShape
@@ -14,6 +12,7 @@ import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Circle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.shapes.Rectangle
 import com.eudycontreras.calendarheatmaplibrary.mapRange
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
+import com.eudycontreras.calendarheatmaplibrary.properties.Coordinate
 import com.eudycontreras.calendarheatmaplibrary.properties.Dimension
 import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 
@@ -148,10 +147,13 @@ internal class CellInterceptor(
             lineRight.render = value
         }
 
-    private fun setPositionX(value: Float, minX: Float, maxX: Float) {
-        val section = (viewPort.width / 2)
+    var pivotPoint: Coordinate = Coordinate(0f,0f)
 
-        val shift = mapRange(value - (minX + section), -section, section, -(shiftOffsetX * 3f), shiftOffsetX)
+    private fun setPositionX(value: Float, minX: Float, maxX: Float) {
+        val offset = ((pivotPoint.x - minX) / viewPort.width)
+        val section = viewPort.width * offset
+
+        val shift = mapRange(value - (minX + section), -section, section, -section, section)
 
         marker.centerX = (value + shift)
 
@@ -174,10 +176,12 @@ internal class CellInterceptor(
         lineRight.bounds.right = bounds.right
     }
 
-    private fun setPositionY(value: Float,  minY: Float, maxY: Float) {
-        val section = bounds.height / 2
+    private fun setPositionY(value: Float, minY: Float, maxY: Float) {
+        val offset = (pivotPoint.y / bounds.height)
+        val section = (bounds.height * offset)
+        val shiftOffset = bounds.height * (MAX_OFFSET + shiftOffsetY)
 
-        val shift = mapRange(value - section, -section, bounds.height, -(shiftOffsetY * 3), shiftOffsetY / 3)
+        val shift = mapRange(value - section, -section, shiftOffset, -section, section)
 
         marker.centerY = (value + shift)
 
@@ -250,6 +254,7 @@ internal class CellInterceptor(
         viewBounds: Rect,
         shapeManager: ShapeManager
     ) {
+        pivotPoint = Coordinate(x, y)
         if (!allowIntercept)
             return
         if (!shouldRender && visible) {

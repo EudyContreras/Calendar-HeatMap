@@ -26,7 +26,6 @@ import com.eudycontreras.calendarheatmaplibrary.extensions.recycle
 import com.eudycontreras.calendarheatmaplibrary.framework.core.ShapeManager
 import com.eudycontreras.calendarheatmaplibrary.framework.data.*
 import com.eudycontreras.calendarheatmaplibrary.properties.Bounds
-import com.eudycontreras.calendarheatmaplibrary.properties.MutableColor
 import com.eudycontreras.calendarheatmaplibrary.properties.Padding
 import kotlin.math.max
 
@@ -89,19 +88,7 @@ class CalHeatMapView : View, CalHeatMap {
         }
     }
 
-    private fun setUpAttributes(typedArray: TypedArray) {
-        val defaultColor = MutableColor(AndroidColor.LTGRAY).toColor()
-        x
-        typedArray.getColor(R.styleable.CalHeatMapView_legendLabelColor, -1).let {
-            calHeatMapStyle.legendLabelStyle.textColor = if (it != -1) { it } else defaultColor
-        }
-        typedArray.getColor(R.styleable.CalHeatMapView_monthLabelColor, -1).let {
-            calHeatMapStyle.monthLabelStyle.textColor = if (it != -1) { it } else defaultColor
-        }
-        typedArray.getColor(R.styleable.CalHeatMapView_weekDayLabelColor, -1).let {
-            calHeatMapStyle.dayLabelStyle.textColor = if (it != -1) { it } else defaultColor
-        }
-    }
+    private fun setUpAttributes(typedArray: TypedArray) { }
 
     fun setCalHeatMapData(calHeatMapData: HeatMapData) {
         heatMapBuilder.buildWithData(calHeatMapData)
